@@ -1,0 +1,55 @@
+---
+/**
+ * Reading Progress Bar
+ * Shows scroll progress at the top of the page
+ */
+---
+
+<div id="reading-progress" class="reading-progress" aria-hidden="true">
+  <div class="reading-progress-bar"></div>
+</div>
+
+<script>
+  // Update reading progress on scroll
+  function updateReadingProgress() {
+    const progressBar = document.querySelector('.reading-progress-bar') as HTMLElement;
+    if (!progressBar) return;
+
+    const windowHeight = window.innerHeight;
+    const documentHeight = document.documentElement.scrollHeight;
+    const scrollTop = window.scrollY;
+    const scrollableHeight = documentHeight - windowHeight;
+    
+    if (scrollableHeight > 0) {
+      const progress = (scrollTop / scrollableHeight) * 100;
+      progressBar.style.width = `${Math.min(progress, 100)}%`;
+    }
+  }
+
+  // Initialize on page load
+  document.addEventListener('DOMContentLoaded', updateReadingProgress);
+  
+  // Update on scroll
+  window.addEventListener('scroll', updateReadingProgress, { passive: true });
+</script>
+
+<style>
+  .reading-progress {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: rgba(0, 0, 0, 0.05);
+    z-index: 100;
+    pointer-events: none;
+  }
+
+  .reading-progress-bar {
+    height: 100%;
+    width: 0;
+    background: linear-gradient(90deg, #000 0%, #333 100%);
+    transition: width 0.1s ease-out;
+  }
+</style>
+

@@ -1,0 +1,128 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import AdSlot from '../../components/AdSlot.astro';
+import SocialShare from '../../components/SocialShare.astro';
+import ReadingProgress from '../../components/ReadingProgress.astro';
+import PopularPosts from '../../components/PopularPosts.astro';
+import { getAllPosts, getAuthorBySlug } from '../../lib/keystatic-reader';
+
+export async function getStaticPaths() {
+  const posts = await getAllPosts();
+  return posts.map((post) => ({
+    params: { slug: post.slug },
+    props: { post },
+  }));
+}
+
+const { post } = Astro.props;
+const { entry } = post;
+
+const { Content } = await entry.content();
+const author = entry.author ? await getAuthorBySlug(entry.author) : null;
+
+const featuredImage = entry.featuredImage ? `/images/posts/${entry.featuredImage}` : '/images/og/default.jpg';
+const postUrl = new URL(`/posts/${post.slug}/`, Astro.site).toString();
+
+const formattedDate = new Date(entry.publishedDate).toLocaleDateString('en-US', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+});
+---
+
+<Layout
+  title={`${entry.title} - Fashion Blog`}
+  description={entry.description}
+  image={featuredImage}
+  article={true}
+  publishedTime={entry.publishedDate}
+  modifiedTime={entry.updatedDate}
+  author={author?.name}
+  tags={entry.tags}
+>
+  <ReadingProgress />
+  <Header currentPath={`/posts/${post.slug}`} />
+
+  <main class="container mx-auto px-4 py-10">
+    <div class="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-10">
+      <article>
+        <!-- Header -->
+        <header class="mb-6">
+          {entry.categories && entry.categories.length > 0 && (
+            <div class="flex gap-2 mb-3">
+              {entry.categories.map((cat: string) => (
+                <a href={`/category/${cat}/`} class="text-xs font-semibold uppercase tracking-wide bg-gray-100 px-3 py-1 rounded-full hover:bg-gray-200 transition">
+                  {cat}
+                </a>
+              ))}
+            </div>
+          )}
+          <h1 class="text-3xl md:text-5xl font-extrabold mb-4 leading-tight">{entry.title}</h1>
+          <div class="flex items-center gap-2 text-sm text-gray-600">
+            {author && <span class="font-medium">{author.entry.name}</span>}
+            {author && <span>•</span>}
+            <time datetime={entry.publishedDate}>{formattedDate}</time>
+          </div>
+        </header>
+
+        <!-- Featured image -->
+        {entry.featuredImage && (
+          <img
+            src={featuredImage}
+            alt={entry.title}
+            width="1200"
+            height="675"
+            class="w-full rounded-xl mb-8 object-cover aspect-video"
+            loading="eager"
+            decoding="async"
+          />
+        )}
+
+        <!-- Pinterest "Pin it" overlay hint for images -->
+        <div class="prose">
+          <Content />
+        </div>
+
+        <AdSlot slot="in-content" format="horizontal" />
+
+        <SocialShare
+          title={entry.title}
+          description={entry.description}
+          url={postUrl}
+          image={new URL(featuredImage, Astro.site).toString()}
+        />
+
+        {author && (
+          <div class="mt-10 p-5 bg-gray-50 rounded-xl flex items-start gap-4">
+            {author.entry.avatar && (
+              <img
+                src={`/images/authors/${author.entry.avatar}`}
+                alt={author.entry.name}
+                width="56"
+                height="56"
+                loading="lazy"
+                decoding="async"
+                class="w-14 h-14 rounded-full object-cover"
+              />
+            )}
+            <div>
+              <p class="font-bold">{author.entry.name}</p>
+              <p class="text-sm text-gray-600">{author.entry.bio}</p>
+            </div>
+          </div>
+        )}
+      </article>
+
+      <!-- Sidebar -->
+      <aside class="flex flex-col gap-8">
+        <AdSlot slot="sidebar" format="rectangle" />
+        <PopularPosts />
+        <AdSlot slot="sidebar" format="rectangle" />
+      </aside>
+    </div>
+  </main>
+
+  <Footer />
+</Layout>

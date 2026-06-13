@@ -1,0 +1,30 @@
+---
+import { getFeaturedPosts } from '../lib/keystatic-reader';
+
+const popularPosts = await getFeaturedPosts(5);
+---
+
+{popularPosts.length > 0 && (
+  <aside class="popular-posts bg-gray-50 rounded-xl p-5 border border-gray-200">
+    <h3 class="text-sm font-bold uppercase tracking-wide text-gray-500 mb-4">
+      Popular Posts
+    </h3>
+    <div class="flex flex-col gap-4">
+      {popularPosts.map((post, index) => (
+        <a
+          href={`/posts/${post.slug}/`}
+          class="flex items-start gap-3 group"
+        >
+          <span class="text-2xl font-extrabold text-gray-200 group-hover:text-gray-400 transition leading-none">
+            {String(index + 1).padStart(2, '0')}
+          </span>
+          <div>
+            <p class="font-semibold text-sm leading-snug group-hover:underline">
+              {post.entry.title}
+            </p>
+          </div>
+        </a>
+      ))}
+    </div>
+  </aside>
+)}

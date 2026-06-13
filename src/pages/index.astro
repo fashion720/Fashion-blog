@@ -1,0 +1,135 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import PostCard from '../components/PostCard.astro';
+import AdSlot from '../components/AdSlot.astro';
+import { getAllPosts, getFeaturedPosts } from '../lib/keystatic-reader';
+
+const featuredPosts = await getFeaturedPosts(3);
+const allPosts = await getAllPosts();
+const displayPosts = allPosts.slice(0, 9);
+---
+
+<Layout title="Fashion Blog - Outfit Inspiration & Style Tips">
+  <Header currentPath="/" />
+
+  <main class="min-h-screen bg-white">
+    <!-- Hero -->
+    <section class="bg-gradient-to-br from-gray-50 to-gray-100 py-20">
+      <div class="container mx-auto px-4">
+        <div class="text-center max-w-3xl mx-auto">
+          <h1 class="text-5xl md:text-6xl font-extrabold mb-6 text-gray-900 tracking-tight">
+            Your Ultimate Fashion Inspiration
+          </h1>
+          <p class="text-xl text-gray-600 mb-8">
+            Discover the latest outfit ideas, style tips, and trending fashion
+            looks. From summer dresses to winter coats, we've got you covered.
+          </p>
+          <div class="flex flex-wrap gap-4 justify-center">
+            <a
+              href="/posts/"
+              class="bg-black text-white px-8 py-3 rounded-lg hover:bg-gray-800 transition font-semibold"
+            >
+              Explore Posts
+            </a>
+            <a
+              href="/categories/"
+              class="bg-white text-black px-8 py-3 rounded-lg hover:bg-gray-50 transition font-semibold border border-gray-200"
+            >
+              Browse Categories
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <AdSlot slot="header" format="horizontal" className="container mx-auto px-4 mt-8" />
+
+    <!-- Featured -->
+    {featuredPosts.length > 0 && (
+      <section class="container mx-auto px-4 py-16">
+        <div class="flex items-center justify-between mb-8">
+          <h2 class="text-3xl font-bold">Featured Posts</h2>
+          <a href="/posts/" class="text-black font-semibold hover:underline">View All →</a>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {featuredPosts.map((post) => (
+            <PostCard
+              title={post.entry.title}
+              slug={post.slug}
+              description={post.entry.description}
+              featuredImage={post.entry.featuredImage ? `/images/posts/${post.entry.featuredImage}` : undefined}
+              publishedDate={post.entry.publishedDate}
+              categories={post.entry.categories}
+              tags={post.entry.tags}
+            />
+          ))}
+        </div>
+      </section>
+    )}
+
+    <!-- In-content ad -->
+    <div class="container mx-auto px-4">
+      <AdSlot slot="in-content" format="horizontal" />
+    </div>
+
+    <!-- Latest -->
+    <section class="container mx-auto px-4 py-12">
+      <div class="flex items-center justify-between mb-8">
+        <h2 class="text-3xl font-bold">Latest Posts</h2>
+      </div>
+
+      {displayPosts.length > 0 ? (
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {displayPosts.map((post) => (
+            <PostCard
+              title={post.entry.title}
+              slug={post.slug}
+              description={post.entry.description}
+              featuredImage={post.entry.featuredImage ? `/images/posts/${post.entry.featuredImage}` : undefined}
+              publishedDate={post.entry.publishedDate}
+              categories={post.entry.categories}
+              tags={post.entry.tags}
+            />
+          ))}
+        </div>
+      ) : (
+        <div class="text-center py-16 border border-dashed border-gray-300 rounded-xl">
+          <p class="text-gray-600 mb-4">No posts yet. Start creating content!</p>
+          <p class="text-sm text-gray-400">
+            Run <code class="bg-gray-100 px-2 py-1 rounded">npm run dev</code> and open
+            <code class="bg-gray-100 px-2 py-1 rounded">/keystatic</code> to add your first post.
+          </p>
+        </div>
+      )}
+    </section>
+
+    <!-- Newsletter -->
+    <section class="bg-gray-50 py-16">
+      <div class="container mx-auto px-4 text-center">
+        <h2 class="text-3xl font-bold mb-4">Stay in the Loop</h2>
+        <p class="text-gray-600 mb-8 max-w-2xl mx-auto">
+          Subscribe to our newsletter for the latest fashion trends, outfit
+          ideas, and exclusive styling tips delivered straight to your inbox.
+        </p>
+        <form class="max-w-md mx-auto flex gap-4">
+          <input
+            type="email"
+            placeholder="Your email address"
+            class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
+            required
+          />
+          <button
+            type="submit"
+            class="bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition font-semibold"
+          >
+            Subscribe
+          </button>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <Footer />
+</Layout>

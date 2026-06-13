@@ -1,0 +1,52 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import PostCard from '../../components/PostCard.astro';
+import { getAllCategories, getPostsByCategory } from '../../lib/keystatic-reader';
+
+export async function getStaticPaths() {
+  const categories = await getAllCategories();
+  return categories.map((cat) => ({
+    params: { slug: cat.slug },
+    props: { category: cat },
+  }));
+}
+
+const { category } = Astro.props;
+const posts = await getPostsByCategory(category.slug);
+---
+
+<Layout
+  title={`${category.entry.name} - Fashion Blog`}
+  description={category.entry.description || `Posts about ${category.entry.name}`}
+>
+  <Header currentPath={`/category/${category.slug}`} />
+
+  <main class="min-h-screen container mx-auto px-4 py-12">
+    <h1 class="text-4xl font-extrabold mb-2">{category.entry.name}</h1>
+    {category.entry.description && (
+      <p class="text-gray-600 mb-10 max-w-2xl">{category.entry.description}</p>
+    )}
+
+    {posts.length > 0 ? (
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {posts.map((post) => (
+          <PostCard
+            title={post.entry.title}
+            slug={post.slug}
+            description={post.entry.description}
+            featuredImage={post.entry.featuredImage ? `/images/posts/${post.entry.featuredImage}` : undefined}
+            publishedDate={post.entry.publishedDate}
+            categories={post.entry.categories}
+            tags={post.entry.tags}
+          />
+        ))}
+      </div>
+    ) : (
+      <p class="text-gray-600">No posts in this category yet.</p>
+    )}
+  </main>
+
+  <Footer />
+</Layout>

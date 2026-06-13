@@ -1,0 +1,218 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+
+const title = 'Disclaimer | Fashion Editorial';
+const description = 'Important disclaimer regarding affiliate links, advertising, and the use of content on Fashion Editorial.';
+---
+
+<Layout title={title} description={description}>
+  <Header currentPath="/disclaimer" />
+
+  <main class="max-w-4xl mx-auto px-4 md:px-6 py-16 md:py-24">
+    <!-- Page Header -->
+    <div class="mb-16 md:mb-20">
+      <h1 class="text-4xl md:text-5xl font-light tracking-wide mb-6 text-black">
+        Disclaimer
+      </h1>
+      <p class="text-sm md:text-base text-gray-600 font-light">
+        Last updated: June 2026
+      </p>
+    </div>
+
+    <!-- Content -->
+    <article class="space-y-8 md:space-y-10 prose prose-sm md:prose-base">
+      <!-- Introduction -->
+      <section>
+        <h2 class="text-2xl md:text-3xl font-light tracking-wide mb-4">1. General Disclaimer</h2>
+        <p class="text-gray-700 font-light leading-relaxed">
+          Fashion Editorial is provided "as is" without warranties of any kind, either express or implied. We make no representations or warranties regarding the accuracy, completeness, or reliability of any content on this website. Your use of this website is entirely at your own risk.
+        </p>
+      </section>
+
+      <!-- Affiliate Disclosure -->
+      <section>
+        <h2 class="text-2xl md:text-3xl font-light tracking-wide mb-4">2. Affiliate Links and Commissions</h2>
+        
+        <h3 class="text-xl font-light tracking-wide mb-3 mt-6">2.1 Affiliate Program Participation</h3>
+        <p class="text-gray-700 font-light leading-relaxed">
+          Fashion Editorial participates in various affiliate marketing programs including but not limited to Amazon Associates, ASOS, and other retail partnerships. When you click on affiliate links and make a purchase, we may earn a commission at no additional cost to you.
+        </p>
+
+        <h3 class="text-xl font-light tracking-wide mb-3 mt-6">2.2 Disclosure of Financial Interest</h3>
+        <p class="text-gray-700 font-light leading-relaxed">
+          In compliance with FTC guidelines and advertising standards:
+        </p>
+        <ul class="list-disc list-inside text-gray-700 font-light leading-relaxed ml-4 space-y-2">
+          <li>All affiliate links are clearly marked or disclosed within our content</li>
+          <li>We only recommend products and brands we genuinely believe in</li>
+          <li>Our product recommendations are not influenced solely by commission potential</li>
+          <li>We maintain editorial integrity separate from affiliate relationships</li>
+        </ul>
+
+        <h3 class="text-xl font-light tracking-wide mb-3 mt-6">2.3 Your Independence</h3>
+        <p class="text-gray-700 font-light leading-relaxed">
+          Your decision to purchase through affiliate links is entirely voluntary. You are not obligated to use our links to make purchases. You can search for products directly on retailers' websites without using our affiliate links.
+        </p>
+      </section>
+
+      <!-- Advertising Disclosure -->
+      <section>
+        <h2 class="text-2xl md:text-3xl font-light tracking-wide mb-4">3. Advertising and Ad Networks</h2>
+        
+        <h3 class="text-xl font-light tracking-wide mb-3 mt-6">3.1 Google AdSense and Third-Party Advertising</h3>
+        <p class="text-gray-700 font-light leading-relaxed">
+          Fashion Editorial uses Google AdSense and other advertising networks to display advertisements on our website. These ad networks:
+        </p>
+        <ul class="list-disc list-inside text-gray-700 font-light leading-relaxed ml-4 space-y-2">
+          <li>May collect data about your browsing behavior</li>
+          <li>Use cookies and similar technologies for targeting</li>
+          <li>May display personalized ads based on your interests</li>
+          <li>Operate under their own privacy policies</li>
+        </ul>
+
+        <h3 class="text-xl font-light tracking-wide mb-3 mt-6">3.2 Ad Compliance</h3>
+        <p class="text-gray-700 font-light leading-relaxed">
+          We comply with all applicable advertising regulations including Google's AdSense policies. We do not engage in:
+        </p>
+        <ul class="list-disc list-inside text-gray-700 font-light leading-relaxed ml-4 space-y-2">
+          <li>Click fraud or incentivized clicks</li>
+          <li>Misleading ad content</li>
+          <li>Violations of advertiser guidelines</li>
+        </ul>
+
+        <h3 class="text-xl font-light tracking-wide mb-3 mt-6">3.3 Revenue Generation</h3>
+        <p class="text-gray-700 font-light leading-relaxed">
+          Fashion Editorial is partially monetized through advertising and affiliate partnerships. This supports our ability to provide high-quality editorial content and maintain our website.
+        </p>
+      </section>
+
+      <!-- Editorial Standards -->
+      <section>
+        <h2 class="text-2xl md:text-3xl font-light tracking-wide mb-4">4. Editorial Standards and Content</h2>
+        
+        <h3 class="text-xl font-light tracking-wide mb-3 mt-6">4.1 Professional Opinions</h3>
+        <p class="text-gray-700 font-light leading-relaxed">
+          All editorial content, fashion recommendations, and styling advice represent our professional opinions based on current trends, design principles, and industry knowledge. Fashion is subjective, and personal style varies.
+        </p>
+
+        <h3 class="text-xl font-light tracking-wide mb-3 mt-6">4.2 No Professional Advice</h3>
+        <p class="text-gray-700 font-light leading-relaxed">
+          The content on Fashion Editorial is for informational and entertainment purposes only. It is not professional fashion styling advice, personal consultation, or expert guidance. We recommend consulting with professional stylists for personalized recommendations.
+        </p>
+
+        <h3 class="text-xl font-light tracking-wide mb-3 mt-6">4.3 Product Information Accuracy</h3>
+        <p class="text-gray-700 font-light leading-relaxed">
+          While we strive to provide accurate product information, sizes, prices, availability, and specifications may change without notice. Always verify product details directly with retailers before making purchases.
+        </p>
+      </section>
+
+      <!-- Limitation of Liability -->
+      <section>
+        <h2 class="text-2xl md:text-3xl font-light tracking-wide mb-4">5. Limitation of Liability</h2>
+        <p class="text-gray-700 font-light leading-relaxed">
+          To the maximum extent permitted by law, Fashion Editorial, its owners, editors, and contributors shall not be liable for:
+        </p>
+        <ul class="list-disc list-inside text-gray-700 font-light leading-relaxed ml-4 space-y-2">
+          <li>Any direct, indirect, incidental, special, or consequential damages</li>
+          <li>Loss of profits, data, or business opportunities</li>
+          <li>Damages from unauthorized access or use of our website</li>
+          <li>Reliance on any content or recommendations</li>
+          <li>Technical errors or website downtime</li>
+        </ul>
+      </section>
+
+      <!-- Third-Party Content -->
+      <section>
+        <h2 class="text-2xl md:text-3xl font-light tracking-wide mb-4">6. Third-Party Links and Websites</h2>
+        <p class="text-gray-700 font-light leading-relaxed">
+          Fashion Editorial may contain links to third-party websites. We are not responsible for:
+        </p>
+        <ul class="list-disc list-inside text-gray-700 font-light leading-relaxed ml-4 space-y-2">
+          <li>The content, accuracy, or availability of external websites</li>
+          <li>The privacy practices of linked websites</li>
+          <li>Any products or services offered by third parties</li>
+          <li>Any damages resulting from third-party content or services</li>
+        </ul>
+        <p class="text-gray-700 font-light leading-relaxed mt-4">
+          Please review the terms and policies of any external website before providing information or making purchases.
+        </p>
+      </section>
+
+      <!-- Intellectual Property -->
+      <section>
+        <h2 class="text-2xl md:text-3xl font-light tracking-wide mb-4">7. Intellectual Property Rights</h2>
+        <p class="text-gray-700 font-light leading-relaxed">
+          All content, including text, images, graphics, and design, on Fashion Editorial is the property of Fashion Editorial or licensed from third parties. You may not:
+        </p>
+        <ul class="list-disc list-inside text-gray-700 font-light leading-relaxed ml-4 space-y-2">
+          <li>Reproduce or republish content without permission</li>
+          <li>Use our content for commercial purposes</li>
+          <li>Modify or distribute our materials</li>
+          <li>Remove copyright or attribution notices</li>
+        </ul>
+        <p class="text-gray-700 font-light leading-relaxed mt-4">
+          Personal, non-commercial sharing is permitted with proper attribution and links back to original content.
+        </p>
+      </section>
+
+      <!-- Medical and Health Disclaimer -->
+      <section>
+        <h2 class="text-2xl md:text-3xl font-light tracking-wide mb-4">8. Medical and Health Disclaimer</h2>
+        <p class="text-gray-700 font-light leading-relaxed">
+          Fashion Editorial is not a medical or health information resource. If content includes information about fitness, wellness, or health topics, it is for informational purposes only. We are not medical professionals. Always consult qualified healthcare providers before making health-related decisions.
+        </p>
+      </section>
+
+      <!-- User Conduct -->
+      <section>
+        <h2 class="text-2xl md:text-3xl font-light tracking-wide mb-4">9. User Conduct</h2>
+        <p class="text-gray-700 font-light leading-relaxed">
+          When using Fashion Editorial, you agree not to:
+        </p>
+        <ul class="list-disc list-inside text-gray-700 font-light leading-relaxed ml-4 space-y-2">
+          <li>Engage in illegal activities</li>
+          <li>Post harassing, defamatory, or offensive content</li>
+          <li>Attempt to gain unauthorized access to our systems</li>
+          <li>Use automated tools or scripts to scrape content</li>
+          <li>Violate any intellectual property rights</li>
+        </ul>
+      </section>
+
+      <!-- Governing Law -->
+      <section>
+        <h2 class="text-2xl md:text-3xl font-light tracking-wide mb-4">10. Governing Law</h2>
+        <p class="text-gray-700 font-light leading-relaxed">
+          This disclaimer is governed by applicable laws and regulations. Any disputes arising from the use of Fashion Editorial shall be resolved in accordance with local jurisdiction rules.
+        </p>
+      </section>
+
+      <!-- Contact -->
+      <section>
+        <h2 class="text-2xl md:text-3xl font-light tracking-wide mb-4">11. Contact Us</h2>
+        <p class="text-gray-700 font-light leading-relaxed">
+          For questions about this disclaimer or our practices:
+        </p>
+        <div class="mt-6 p-6 bg-gray-50 border border-gray-200">
+          <p class="text-gray-700 font-light">
+            Email: <a href="mailto:legal@fashioneditorial.com" class="underline hover:text-gray-900">legal@fashioneditorial.com</a>
+          </p>
+          <p class="text-gray-700 font-light mt-3">
+            Or use our <a href="/contact" class="underline hover:text-gray-900">contact form</a>.
+          </p>
+        </div>
+      </section>
+
+      <!-- Changes -->
+      <section>
+        <h2 class="text-2xl md:text-3xl font-light tracking-wide mb-4">12. Updates to This Disclaimer</h2>
+        <p class="text-gray-700 font-light leading-relaxed">
+          We may update this disclaimer at any time. Changes are effective immediately upon posting. Your continued use of Fashion Editorial constitutes acceptance of any updates.
+        </p>
+      </section>
+    </article>
+  </main>
+
+  <Footer />
+</Layout>
