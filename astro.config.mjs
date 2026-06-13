@@ -5,21 +5,20 @@ import keystatic from '@keystatic/astro';
 import react from '@astrojs/react';
 import sitemap from '@astrojs/sitemap';
 
-// Only include Keystatic in dev mode
-const devIntegrations = process.env.NODE_ENV !== 'production' 
-  ? [keystatic()] 
-  : [];
+// Only add Keystatic integration in development mode
+const integrations = [react()];
+if (process.env.NODE_ENV !== 'production') {
+  integrations.push(keystatic());
+}
+// Uncomment when sitemap is fixed
+// integrations.push(sitemap());
 
 // https://astro.build/config
 export default defineConfig({
   // CHANGE THIS to your real domain once you buy it, e.g. https://yourblog.com
   site: 'https://example.com',
 
-  integrations: [
-    react(),     // needed for Keystatic admin UI (dev only)
-    ...devIntegrations,
-    // sitemap(),  // TODO: Fix sitemap generation with dynamic post routes
-  ],
+  integrations,
 
   // Static output = free hosting on Cloudflare Pages, no server/Node required
   output: 'static',

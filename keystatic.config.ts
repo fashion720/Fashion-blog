@@ -1,18 +1,9 @@
 import { config, fields, collection } from '@keystatic/core';
 
-const isProd = process.env.NODE_ENV === 'production';
-
 export default config({
-  storage: isProd
-    ? {
-        kind: 'github',
-        // CHANGE THESE to your real GitHub username/repo before deploying.
-        // Also requires connecting Keystatic Cloud (free) — see README.md
-        repo: { owner: 'your-github-username', name: 'your-repo-name' },
-      }
-    : {
-        kind: 'local',
-      },
+  storage: {
+    kind: 'local',
+  },
 
   collections: {
     posts: collection({
