@@ -26,8 +26,15 @@ export default defineConfig({
 
   vite: {
     ssr: {
-      // ✅ FIX: node:path worker bundle crash khatam karne ke liye
-      external: ['node:path', 'node:fs', 'node:crypto'],
+      // ✅ FIX: node:path, node:fs/promises aur baqi saare worker bundle crash khatam karne ke liye
+      external: [
+        'node:path',
+        'node:fs',
+        'node:fs/promises',
+        'node:crypto',
+        'node:process',
+        'node:util'
+      ],
     },
     plugins: [
       tailwindcss(),
