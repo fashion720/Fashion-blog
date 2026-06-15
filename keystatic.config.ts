@@ -5,10 +5,15 @@ export default config({
   storage: {
     kind: 'github',
     repo: {
-      owner: 'fashion720',     // Direct string taake env variables ka koi jhanjhat na rahe
+      owner: 'fashion720',     // Direct string taake env variables ka jhanjhat na rahe
       name: 'Fashion-blog',    // Direct repo name
     },
     branch: 'main',
+  },
+
+  // ✅ FIX: Cloudflare Pages production deployment ke liye GitHub OAuth login support
+  __experimental__auth: {
+    clientId: process.env.KEYSTATIC_GITHUB_CLIENT_ID || process.env.NEXT_PUBLIC_KEYSTATIC_GITHUB_CLIENT_ID || '',
   },
 
   singletons: {
@@ -24,7 +29,7 @@ export default config({
         adSlotHeader: fields.text({ label: '📌 Ad Slot — Header', defaultValue: '' }),
         adSlotContent: fields.text({ label: '📌 Ad Slot — Content ke beech mein', defaultValue: '' }),
         adSlotSidebar: fields.text({ label: '📌 Ad Slot — Sidebar rectangle', defaultValue: '' }),
-        adSlotFooter: fields.text({ label: '📌 Ad Slot — Footer', defaultValue: '' }), // ✅ FIXED: Syntax error yahan bilkul theek kar diya hai
+        adSlotFooter: fields.text({ label: '📌 Ad Slot — Footer', defaultValue: '' }), 
         ga4Id: fields.text({ label: '📊 Google Analytics 4 ID', defaultValue: '' }),
         pinterestTag: fields.text({ label: '📌 Pinterest Tag ID', defaultValue: '' }),
         cloudflareAnalytics: fields.text({ label: '☁️ Cloudflare Analytics Token', defaultValue: '' }),
