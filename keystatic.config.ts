@@ -1,15 +1,10 @@
 import { config, fields, collection, singleton } from '@keystatic/core';
 
 export default config({
-  // Use GitHub-backed storage so Keystatic writes content directly to the repo.
-  storage: {
-    kind: 'github',
-    repo: {
-      owner: 'fashion720',     // Direct string taake env variables ka jhanjhat na rahe
-      name: 'Fashion-blog',    // Direct repo name
-    },
-    branch: 'main',
-  },
+
+storage: {
+  kind: 'local',
+},
 
   // ✅ FIX: Cloudflare Pages production deployment ke liye GitHub OAuth login support
   __experimental__auth: {
