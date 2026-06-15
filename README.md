@@ -1,4 +1,4 @@
-# Fashion Blog — Astro + Keystatic
+ko # Fashion Blog — Astro + Keystatic
 
 A fast, free-to-host fashion/Pinterest blog built with **Astro (static)**,
 **Keystatic CMS**, and **Tailwind CSS v4**.
