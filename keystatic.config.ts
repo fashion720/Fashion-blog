@@ -1,11 +1,11 @@
 import { config, fields, collection, singleton } from '@keystatic/core';
 
 export default config({
-  // ✅ FIXED STORAGE CONFIGURATION FOR CLOUDFLARE PAGES
+  // Use GitHub-backed storage so Keystatic writes content directly to the repo.
   storage: {
     kind: 'github',
     repo: {
-      owner: 'fashion720',     // Direct string taake process.env ka roona hi khatam ho jaye
+      owner: 'fashion720',     // Direct string taake env variables ka koi jhanjhat na rahe
       name: 'Fashion-blog',    // Direct repo name
     },
     branch: 'main',
@@ -24,7 +24,7 @@ export default config({
         adSlotHeader: fields.text({ label: '📌 Ad Slot — Header', defaultValue: '' }),
         adSlotContent: fields.text({ label: '📌 Ad Slot — Content ke beech mein', defaultValue: '' }),
         adSlotSidebar: fields.text({ label: '📌 Ad Slot — Sidebar rectangle', defaultValue: '' }),
-        adSlotFooter: fields.text({ fields.text({ label: '📌 Ad Slot — Footer', defaultValue: '' }),
+        adSlotFooter: fields.text({ label: '📌 Ad Slot — Footer', defaultValue: '' }), // ✅ FIXED: Syntax error yahan bilkul theek kar diya hai
         ga4Id: fields.text({ label: '📊 Google Analytics 4 ID', defaultValue: '' }),
         pinterestTag: fields.text({ label: '📌 Pinterest Tag ID', defaultValue: '' }),
         cloudflareAnalytics: fields.text({ label: '☁️ Cloudflare Analytics Token', defaultValue: '' }),
