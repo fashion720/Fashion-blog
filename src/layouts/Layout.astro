@@ -1,7 +1,7 @@
 ---
 import '../styles/global.css';
-import Analytics from '../components/Analytics.astro';
 import BackToTop from '../components/BackToTop.astro';
+import { getSiteSettings } from '../lib/keystatic-reader';
 
 interface Props {
   title: string;
@@ -27,9 +27,12 @@ const {
   showBackToTop = true,
 } = Astro.props;
 
-const canonicalURL = new URL(Astro.url.pathname, Astro.site);
-const fullImageUrl = new URL(image, Astro.site);
-const siteName = 'Fashion Blog';
+// Settings Keystatic admin panel se aati hain (Site Settings section)
+const settings = await getSiteSettings();
+
+const canonicalURL  = new URL(Astro.url.pathname, Astro.site);
+const fullImageUrl  = new URL(image, Astro.site);
+const siteName      = settings.siteName || 'Fashion Blog';
 ---
 
 <!doctype html>
@@ -76,7 +79,8 @@ const siteName = 'Fashion Blog';
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 
     <!-- RSS -->
-    <link rel="alternate" type="application/rss+xml" title={`${siteName} RSS Feed`} href="/rss.xml" />
+    <link rel="alternate" type="application/rss+xml"
+          title={`${siteName} RSS Feed`} href="/rss.xml" />
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -86,7 +90,63 @@ const siteName = 'Fashion Blog';
       rel="stylesheet"
     />
 
-    <Analytics />
+    <!-- ═══════════════════════════════════════════════════
+         ANALYTICS & ADS — Keystatic admin panel se control karo
+         Site Settings => Analytics / Ads section
+         ═══════════════════════════════════════════════════ -->
+
+    <!-- Google AdSense (tab load hota hai jab admin panel mein ON karo) -->
+    {settings.adsenseEnabled && settings.adsenseClientId && (
+      <script
+        async
+        src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${settings.adsenseClientId}`}
+        crossorigin="anonymous"
+      ></script>
+    )}
+
+    <!-- Google Analytics 4 -->
+    {settings.ga4Id && (
+      <>
+        <script async src={`https://www.googletagmanager.com/gtag/js?id=${settings.ga4Id}`}></script>
+        <script is:inline define:vars={{ ga4Id: settings.ga4Id }}>
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', ga4Id, { page_path: window.location.pathname });
+        </script>
+      </>
+    )}
+
+    <!-- Pinterest Analytics -->
+    {settings.pinterestTag && (
+      <>
+        <script is:inline define:vars={{ pTag: settings.pinterestTag }}>
+          !function(e){if(!window.pintrk){window.pintrk = function(){
+            window.pintrk.queue.push(Array.prototype.slice.call(arguments))};
+            var n=window.pintrk;n.queue=[],n.version="3.0";
+            var t=document.createElement("script");t.async=!0,t.src=e;
+            var r=document.getElementsByTagName("script")[0];
+            r.parentNode.insertBefore(t,r)
+          }}("https://s.pinimg.com/ct/core.js");
+          pintrk('load', pTag);
+          pintrk('page');
+        </script>
+        <noscript>
+          <img height="1" width="1" style="display:none;" alt=""
+            src={`https://ct.pinterest.com/v3/?tid=${settings.pinterestTag}&noscript=1`} />
+        </noscript>
+      </>
+    )}
+
+    <!-- Cloudflare Web Analytics -->
+    {settings.cloudflareAnalytics && (
+      <script
+        defer
+        src="https://static.cloudflareinsights.com/beacon.min.js"
+        data-cf-beacon={`{"token": "${settings.cloudflareAnalytics}"}`}
+      ></script>
+    )}
+
   </head>
   <body class="bg-white text-gray-900">
     <slot />

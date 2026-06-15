@@ -3,32 +3,30 @@ import { defineConfig } from 'astro/config';
 import tailwindcss from '@tailwindcss/vite';
 import keystatic from '@keystatic/astro';
 import react from '@astrojs/react';
-import sitemap from '@astrojs/sitemap';
+import node from '@astrojs/node';
 
-// Only add Keystatic integration in development mode
-const integrations = [react()];
-if (process.env.NODE_ENV !== 'production') {
-  integrations.push(keystatic());
-}
-// Uncomment when sitemap is fixed
-// integrations.push(sitemap());
-
-// https://astro.build/config
 export default defineConfig({
-  // CHANGE THIS to your real domain once you buy it, e.g. https://yourblog.com
-  site: 'https://example.com',
+  site: 'https://example.com', // ← apna domain yahan daalo
 
-  integrations,
+  integrations: [
+    react(),
+    keystatic(), // HAMESHA on — sirf isi se /keystatic panel kaam karta hai
+  ],
 
-  // Static output = free hosting on Cloudflare Pages, no server/Node required
-  output: 'static',
+  // ⚠️ IMPORTANT: 'static' mein Keystatic kaam nahi karta
+  // 'hybrid' = blog pages build time par static rahenge
+  //            lekin /keystatic route server se chalega
+  output: 'hybrid',
+
+  adapter: node({
+    mode: 'standalone',
+  }),
 
   vite: {
     plugins: [tailwindcss()],
   },
 
   image: {
-    // allow remote images if you ever load from Cloudflare R2 / a CDN
     domains: ['r2.cloudflarestorage.com'],
   },
 });

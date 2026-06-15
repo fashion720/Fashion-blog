@@ -1,5 +1,5 @@
 ---
-import { getCategoriesHierarchy } from '../lib/keystatic-reader';
+import { getCategoriesHierarchy, getSiteSettings } from '../lib/keystatic-reader';
 
 interface Props {
   currentPath?: string;
@@ -7,276 +7,320 @@ interface Props {
 
 const { currentPath = '/' } = Astro.props;
 
-// Fetch categories with hierarchy (parent-child structure)
 const categoriesHierarchy = await getCategoriesHierarchy();
+const settings = await getSiteSettings();
 
 const primaryNavItems = [
-  { label: 'HOME', href: '/', lowercase: false },
-  { label: 'EDITORIAL', href: '/posts', lowercase: false },
-  { label: 'ABOUT', href: '/about', lowercase: false },
-  { label: 'CONTACT', href: '/contact', lowercase: false },
+  { label: 'HOME',      href: '/' },
+  { label: 'EDITORIAL', href: '/posts' },
+  { label: 'ABOUT',     href: '/about' },
+  { label: 'CONTACT',   href: '/contact' },
 ];
 ---
 
 <header class="bg-white border-b border-gray-200 sticky top-0 z-50 w-full">
-  <!-- Main Header Navigation Container -->
   <nav class="w-full py-6 px-4 md:py-8 md:px-6">
     <div class="max-w-7xl mx-auto">
-      <!-- Centered Logo/Brand -->
+
+      <!-- ── LOGO — admin panel se manage hota hai ─────────── -->
       <div class="text-center mb-8 md:mb-10">
-        <a 
-          href="/" 
-          class="text-3xl md:text-4xl font-light tracking-widest text-black hover:text-gray-600 transition-colors duration-300"
-        >
-          FASHION EDITORIAL
+        <a href="/" class="inline-block hover:opacity-75 transition-opacity duration-300">
+          {settings.logoImage ? (
+            <!-- Logo image upload ki hai to yeh dikhega -->
+            <img
+              src={settings.logoImage}
+              alt={settings.siteName}
+              class="h-12 md:h-16 mx-auto object-contain"
+            />
+          ) : (
+            <!-- Koi image nahi to text dikhega -->
+            <span class="text-3xl md:text-4xl font-light tracking-widest text-black">
+              {settings.siteName}
+            </span>
+          )}
         </a>
-        <p class="text-xs md:text-sm text-gray-500 tracking-widest mt-3 font-light">
-          CURATED STYLE & FASHION INSIGHTS
-        </p>
+        {settings.tagline && (
+          <p class="text-xs md:text-sm text-gray-500 tracking-widest mt-3 font-light">
+            {settings.tagline}
+          </p>
+        )}
       </div>
 
-      <!-- Primary Navigation Bar -->
+      <!-- ── PRIMARY NAV (HOME, EDITORIAL, etc.) ───────────── -->
       <div class="flex items-center justify-center gap-8 md:gap-12 mb-6 md:mb-8 border-y border-gray-200 py-4">
         {primaryNavItems.map((item) => (
           <a
             href={item.href}
-            class={`text-xs md:text-sm font-light tracking-widest transition-all duration-300 relative group ${
-              currentPath === item.href 
-                ? 'text-black' 
-                : 'text-gray-600 hover:text-black'
-            }`}
+            class={`text-xs md:text-sm font-light tracking-widest transition-all duration-300 relative group
+              ${currentPath === item.href ? 'text-black' : 'text-gray-600 hover:text-black'}`}
           >
             {item.label}
-            <span class={`absolute bottom-0 left-0 w-0 h-px bg-black transition-all duration-300 group-hover:w-full ${
-              currentPath === item.href ? 'w-full' : ''
-            }`}></span>
+            <span class={`absolute -bottom-1 left-0 h-px bg-black transition-all duration-300
+              ${currentPath === item.href ? 'w-full' : 'w-0 group-hover:w-full'}`}></span>
           </a>
         ))}
       </div>
 
-      <!-- Categories Row & Search -->
-      <div class="flex items-center justify-between gap-4 md:gap-6">
-        <!-- Main Categories with Nested Dropdowns -->
+      <!-- ── CATEGORIES + SEARCH ROW ───────────────────────── -->
+      <div class="flex items-center gap-4 md:gap-6">
+
+        <!-- Desktop: Category buttons with JS dropdown -->
         {categoriesHierarchy.length > 0 && (
-          <div class="flex items-center justify-start gap-4 md:gap-6 flex-1 overflow-x-auto">
-            {categoriesHierarchy.map((mainCategory) => (
-              <div class="relative group flex-shrink-0">
-                <!-- Main Category Link -->
-                <a
-                  href={`/category/${mainCategory.slug}`}
-                  class="text-xs md:text-sm font-light tracking-widest text-gray-600 hover:text-black transition-colors duration-300 flex items-center gap-2 whitespace-nowrap group/cat"
+          <div class="hidden md:flex items-center gap-4 md:gap-6 flex-1 overflow-x-auto">
+            {categoriesHierarchy.map((cat, i) => (
+              <div class="cat-wrap relative flex-shrink-0">
+
+                <!-- Button: hover → dropdown, click → navigate (agar dropdown open hai) -->
+                <button
+                  class="cat-btn flex items-center gap-1 text-xs md:text-sm font-light tracking-widest
+                         text-gray-600 hover:text-black transition-colors duration-200
+                         whitespace-nowrap bg-transparent border-0 p-0 cursor-pointer"
+                  data-href={`/category/${cat.slug}`}
+                  data-has-children={cat.children.length > 0 ? 'true' : 'false'}
                 >
-                  {mainCategory.name ? mainCategory.name.toUpperCase() : 'Category'}
-                  {mainCategory.children && mainCategory.children.length > 0 && (
-                    <svg class="w-3 h-3 md:w-4 md:h-4 transition-transform duration-300 group-hover/cat:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+                  {cat.name ? cat.name.toUpperCase() : 'CATEGORY'}
+                  {cat.children.length > 0 && (
+                    <svg class="cat-arrow w-3 h-3 transition-transform duration-200 flex-shrink-0"
+                         fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round"
+                            stroke-width="2" d="M19 9l-7 7-7-7"/>
                     </svg>
                   )}
-                </a>
+                </button>
 
-                <!-- Nested Dropdown (shows on hover if has children) -->
-                {mainCategory.children && mainCategory.children.length > 0 && (
-                  <div class="hidden absolute top-full left-0 mt-3 bg-white border border-gray-200 shadow-lg z-40 w-56 opacity-0 transition-all duration-300 translate-y-2 pointer-events-none group-hover:block group-hover:opacity-100 group-hover:translate-y-0 group-hover:pointer-events-auto">
-                    <div class="p-4 space-y-0">
-                      {/* Main category link in dropdown */}
-                      <a
-                        href={`/category/${mainCategory.slug}`}
-                        class="block text-xs font-light tracking-wide text-black hover:bg-gray-50 transition-colors duration-200 py-3 px-3 rounded font-semibold border-b border-gray-100 mb-2"
-                      >
-                        All {mainCategory.name ? mainCategory.name : 'Category'}
+                <!-- Dropdown panel (JS se control hota hai) -->
+                {cat.children.length > 0 && (
+                  <div class="cat-panel absolute top-[calc(100%+10px)] left-0 w-52 bg-white
+                              border border-gray-200 shadow-xl z-50"
+                       style="display:none;">
+                    <div class="p-3">
+                      <!-- "All X" link -->
+                      <a href={`/category/${cat.slug}`}
+                         class="block text-xs font-semibold tracking-wide text-black
+                                hover:bg-gray-50 py-2.5 px-3 border-b border-gray-100 mb-1.5
+                                transition-colors rounded-sm">
+                        All {cat.name}
                       </a>
-                      
-                      {/* Sub-categories */}
-                      <div class="space-y-1">
-                        {mainCategory.children.map((subCategory) => (
-                          <a
-                            href={`/category/${subCategory.slug}`}
-                            class="block text-xs font-light tracking-wide text-gray-700 hover:text-black hover:bg-gray-50 transition-colors duration-200 py-2 px-3 rounded"
-                          >
-                            {subCategory.name}
-                          </a>
-                        ))}
-                      </div>
+                      <!-- Sub categories -->
+                      {cat.children.map((sub) => (
+                        <a href={`/category/${sub.slug}`}
+                           class="block text-xs font-light text-gray-600 hover:text-black
+                                  hover:bg-gray-50 py-2 px-3 transition-colors rounded-sm">
+                          {sub.name}
+                        </a>
+                      ))}
                     </div>
                   </div>
                 )}
+
               </div>
             ))}
           </div>
         )}
 
-        <!-- Search Icon (Right-aligned) -->
-        <button 
-          id="search-trigger"
-          class="p-2 md:p-3 hover:bg-gray-100 rounded-sm transition-colors duration-300 ml-auto flex-shrink-0"
-          aria-label="Search"
-        >
-          <svg
-            class="w-4 h-4 md:w-5 md:h-5 text-gray-700"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="1.5"
-              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-            />
+        <!-- Search Button -->
+        <button id="search-trigger"
+                class="ml-auto flex-shrink-0 p-2 hover:bg-gray-100 rounded-sm transition-colors duration-200"
+                aria-label="Search">
+          <svg class="w-4 h-4 md:w-5 md:h-5 text-gray-700"
+               fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
           </svg>
         </button>
 
-        <!-- Mobile Menu Button -->
-        <button
-          id="mobile-menu-button"
-          class="hidden md:hidden p-2 hover:bg-gray-100 rounded-sm transition-colors duration-300 flex-shrink-0"
-          aria-label="Menu"
-        >
-          <svg
-            class="w-5 h-5 text-gray-700"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="1.5"
-              d="M4 6h16M4 12h16M4 18h16"
-            />
+        <!-- Hamburger (mobile only) -->
+        <button id="mobile-menu-button"
+                class="flex-shrink-0 p-2 hover:bg-gray-100 rounded-sm transition-colors md:hidden"
+                aria-label="Menu">
+          <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round"
+                  stroke-width="1.5" d="M4 6h16M4 12h16M4 18h16"/>
           </svg>
         </button>
       </div>
+
     </div>
   </nav>
 
-  <!-- Expandable Search Bar (Initially Hidden) -->
-  <div 
-    id="search-bar"
-    class="hidden border-t border-gray-200 bg-white transition-all duration-300"
-  >
-    <div class="max-w-7xl mx-auto px-4 md:px-6 py-6">
+  <!-- ── SEARCH BAR ──────────────────────────────────────────── -->
+  <div id="search-bar" class="hidden border-t border-gray-200 bg-white">
+    <div class="max-w-7xl mx-auto px-4 md:px-6 py-5">
       <div class="relative">
-        <input
-          id="search-input"
-          type="text"
-          placeholder="SEARCH ARTICLES & CATEGORIES..."
-          class="w-full bg-white border-b border-gray-300 py-3 px-0 text-sm font-light tracking-wide placeholder-gray-400 focus:outline-none focus:border-black transition-colors duration-300"
-        />
-        <div id="search-results" class="absolute top-full left-0 right-0 mt-4 bg-white border border-gray-200 shadow-lg hidden max-h-96 overflow-y-auto">
-          <!-- Results will be populated here -->
+        <input id="search-input" type="text"
+               placeholder="SEARCH ARTICLES & CATEGORIES..."
+               class="w-full border-b border-gray-300 py-3 text-sm font-light tracking-wide
+                      placeholder-gray-400 focus:outline-none focus:border-black transition-colors duration-200"/>
+        <div id="search-results"
+             class="absolute top-full left-0 right-0 mt-4 bg-white border border-gray-200 shadow-lg hidden max-h-96 overflow-y-auto">
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Mobile Menu (Hidden by default) -->
-  <div id="mobile-menu" class="hidden md:hidden border-t border-gray-200 bg-white">
-    <div class="px-4 py-6 space-y-4">
+  <!-- ── MOBILE MENU ─────────────────────────────────────────── -->
+  <div id="mobile-menu" class="hidden border-t border-gray-200 bg-white md:hidden">
+    <div class="px-4 py-6 space-y-3">
+
       {primaryNavItems.map((item) => (
-        <a
-          href={item.href}
-          class={`block text-xs font-light tracking-widest transition-colors duration-300 ${
-            currentPath === item.href 
-              ? 'text-black font-normal' 
-              : 'text-gray-600 hover:text-black'
-          }`}
-        >
+        <a href={item.href}
+           class={`block text-xs font-light tracking-widest py-1 transition-colors
+             ${currentPath === item.href ? 'text-black' : 'text-gray-600 hover:text-black'}`}>
           {item.label}
         </a>
       ))}
-      
-      {/* Mobile Category Menu */}
+
       {categoriesHierarchy.length > 0 && (
-        <div class="pt-4 border-t border-gray-200">
-          <p class="text-xs font-light tracking-widest text-gray-600 mb-3">CATEGORIES</p>
-          <div class="space-y-1">
-            {categoriesHierarchy.map((mainCategory) => (
-              <>
-                <a
-                  href={`/category/${mainCategory.slug}`}
-                  class="block text-xs font-light text-gray-600 hover:text-black transition-colors duration-300 py-2 pl-0 font-semibold"
-                >
-                  {mainCategory.name ? mainCategory.name.toUpperCase() : 'Category'}
-                </a>
-                {mainCategory.children && mainCategory.children.length > 0 && (
-                  <div class="pl-4 space-y-1">
-                    {mainCategory.children.map((subCategory) => (
-                      <a
-                        href={`/category/${subCategory.slug}`}
-                        class="block text-xs font-light text-gray-600 hover:text-black transition-colors duration-300 py-1"
-                      >
-                        {subCategory.name}
-                      </a>
-                    ))}
-                  </div>
+        <div class="pt-4 border-t border-gray-100">
+          <p class="text-xs text-gray-400 tracking-widest mb-3">CATEGORIES</p>
+          {categoriesHierarchy.map((cat) => (
+            <div class="mb-1">
+              <button
+                class="mob-cat-btn w-full text-left flex items-center justify-between
+                       text-xs font-semibold tracking-widest text-gray-700 hover:text-black
+                       py-2 bg-transparent border-0 cursor-pointer"
+                data-href={`/category/${cat.slug}`}
+              >
+                {cat.name ? cat.name.toUpperCase() : 'CATEGORY'}
+                {cat.children.length > 0 && (
+                  <svg class="mob-arrow w-3 h-3 transition-transform duration-200"
+                       fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                          stroke-width="2" d="M19 9l-7 7-7-7"/>
+                  </svg>
                 )}
-              </>
-            ))}
-          </div>
+              </button>
+              {cat.children.length > 0 && (
+                <div class="mob-sub hidden pl-3 pb-1 space-y-0.5">
+                  <a href={`/category/${cat.slug}`}
+                     class="block text-xs font-semibold text-gray-500 hover:text-black py-1.5">
+                    All {cat.name}
+                  </a>
+                  {cat.children.map((sub) => (
+                    <a href={`/category/${sub.slug}`}
+                       class="block text-xs font-light text-gray-500 hover:text-black py-1.5">
+                      {sub.name}
+                    </a>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
         </div>
       )}
+
     </div>
   </div>
 </header>
 
 <script>
-  // Search bar toggle
-  const searchTrigger = document.getElementById('search-trigger');
-  const searchBar = document.getElementById('search-bar');
-  const searchInput = document.getElementById('search-input');
-  const searchResults = document.getElementById('search-results');
+// ════════════════════════════════════════════════════════
+//  DESKTOP CATEGORY DROPDOWNS — pure JS
+//  Tailwind group-hover static build mein reliable nahi
+//  isliye JS se control kiya hai
+// ════════════════════════════════════════════════════════
+(function () {
+  const wraps = document.querySelectorAll<HTMLElement>('.cat-wrap');
+  let active: HTMLElement | null = null;
+  let timer: ReturnType<typeof setTimeout>;
 
-  searchTrigger?.addEventListener('click', () => {
-    const isHidden = searchBar?.classList.contains('hidden');
-    if (isHidden) {
-      searchBar?.classList.remove('hidden');
-      setTimeout(() => {
-        searchInput?.focus();
-      }, 10);
-    } else {
-      searchBar?.classList.add('hidden');
-    }
-  });
+  function open(wrap: HTMLElement) {
+    if (active && active !== wrap) close(active);
+    const panel = wrap.querySelector<HTMLElement>('.cat-panel');
+    const arrow = wrap.querySelector<HTMLElement>('.cat-arrow');
+    if (!panel) return;
+    panel.style.display = 'block';
+    arrow?.classList.add('rotate-180');
+    active = wrap;
+  }
 
-  // Close search bar on Escape
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      searchBar?.classList.add('hidden');
-    }
-  });
+  function close(wrap: HTMLElement) {
+    const panel = wrap.querySelector<HTMLElement>('.cat-panel');
+    const arrow = wrap.querySelector<HTMLElement>('.cat-arrow');
+    if (!panel) return;
+    panel.style.display = 'none';
+    arrow?.classList.remove('rotate-180');
+    if (active === wrap) active = null;
+  }
 
-  // Simple client-side search across posts
-  searchInput?.addEventListener('input', async (e) => {
-    const query = (e.target as HTMLInputElement).value.toLowerCase().trim();
-    
-    if (query.length < 2) {
-      searchResults?.classList.add('hidden');
-      return;
-    }
+  wraps.forEach((wrap) => {
+    const btn   = wrap.querySelector<HTMLElement>('.cat-btn');
+    const panel = wrap.querySelector<HTMLElement>('.cat-panel');
 
-    searchResults?.classList.remove('hidden');
-    
-    // Placeholder for search implementation
-    searchResults!.innerHTML = `
-      <div class="p-4">
-        <p class="text-xs text-gray-500">Search feature coming soon...</p>
-      </div>
-    `;
-  });
+    // Hover pe open karo
+    wrap.addEventListener('mouseenter', () => { clearTimeout(timer); if (panel) open(wrap); });
+    wrap.addEventListener('mouseleave', () => { timer = setTimeout(() => close(wrap), 150); });
 
-  // Mobile menu toggle
-  const mobileMenuButton = document.getElementById('mobile-menu-button');
-  const mobileMenu = document.getElementById('mobile-menu');
-
-  mobileMenuButton?.addEventListener('click', () => {
-    mobileMenu?.classList.toggle('hidden');
-  });
-
-  // Close mobile menu when clicking a link
-  mobileMenu?.querySelectorAll('a').forEach(link => {
-    link.addEventListener('click', () => {
-      mobileMenu?.classList.add('hidden');
+    // Click logic:
+    // children nahi hain  → seedha navigate
+    // children hain + band → dropdown kholo
+    // children hain + khula → navigate (second click)
+    btn?.addEventListener('click', () => {
+      const href        = btn.dataset.href || '';
+      const hasChildren = btn.dataset.hasChildren === 'true';
+      if (!hasChildren) { window.location.href = href; return; }
+      const isOpen = panel?.style.display === 'block';
+      if (isOpen) { window.location.href = href; } else { open(wrap); }
     });
   });
+
+  // Bahar click karne par close karo
+  document.addEventListener('click', (e) => {
+    if (active && !active.contains(e.target as Node)) close(active);
+  });
+
+  // Escape se close karo
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && active) close(active);
+  });
+})();
+
+// ════════════════════════════════════════════════════════
+//  SEARCH
+// ════════════════════════════════════════════════════════
+(function () {
+  const trigger = document.getElementById('search-trigger');
+  const bar     = document.getElementById('search-bar');
+  const input   = document.getElementById('search-input') as HTMLInputElement | null;
+  const results = document.getElementById('search-results');
+
+  trigger?.addEventListener('click', () => {
+    const hidden = bar?.classList.contains('hidden');
+    bar?.classList.toggle('hidden');
+    if (hidden) setTimeout(() => input?.focus(), 30);
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') bar?.classList.add('hidden');
+  });
+
+  input?.addEventListener('input', (e) => {
+    const q = (e.target as HTMLInputElement).value.trim();
+    if (q.length < 2) { results?.classList.add('hidden'); return; }
+    results?.classList.remove('hidden');
+    results!.innerHTML = '<div class="p-4"><p class="text-xs text-gray-500">Search coming soon…</p></div>';
+  });
+})();
+
+// ════════════════════════════════════════════════════════
+//  MOBILE MENU
+// ════════════════════════════════════════════════════════
+(function () {
+  document.getElementById('mobile-menu-button')
+    ?.addEventListener('click', () =>
+      document.getElementById('mobile-menu')?.classList.toggle('hidden')
+    );
+
+  document.querySelectorAll<HTMLElement>('.mob-cat-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const sub   = btn.nextElementSibling as HTMLElement | null;
+      const arrow = btn.querySelector<HTMLElement>('.mob-arrow');
+      const href  = btn.dataset.href || '';
+      if (!sub) { window.location.href = href; return; }
+      const open = !sub.classList.contains('hidden');
+      sub.classList.toggle('hidden', open);
+      arrow?.classList.toggle('rotate-180', !open);
+    });
+  });
+})();
 </script>
