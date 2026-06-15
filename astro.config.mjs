@@ -19,10 +19,16 @@ export default defineConfig({
   //            lekin /keystatic route server se chalega
   output: 'hybrid',
 
-  // Use Cloudflare adapter so hybrid output runs server routes on Workers
-  adapter: cloudflare(),
+  // Cloudflare adapter setup with image configuration
+  adapter: cloudflare({
+    imageService: 'passthrough', // ✅ FIX: Sharp image error khatam karne ke liye
+  }),
 
   vite: {
+    ssr: {
+      // ✅ FIX: node:path worker bundle crash khatam karne ke liye
+      external: ['node:path', 'node:fs', 'node:crypto'],
+    },
     plugins: [
       tailwindcss(),
       // Dev-time Basic Auth middleware for /keystatic
