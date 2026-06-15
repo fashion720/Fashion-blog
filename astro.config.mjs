@@ -4,10 +4,9 @@ import tailwindcss from '@tailwindcss/vite';
 import keystatic from '@keystatic/astro';
 import react from '@astrojs/react';
 import cloudflare from '@astrojs/cloudflare';
-import basicAuth from 'basic-auth';
 
 export default defineConfig({
-  site: 'https://example.com', // ← apna domain yahan daalo
+  site: 'https://fashion-blog.pages.dev', // ← Aapka live pages url yahan set kar diya hai
 
   integrations: [
     react(),
@@ -15,13 +14,15 @@ export default defineConfig({
   ],
 
   // ⚠️ IMPORTANT: 'static' mein Keystatic kaam nahi karta
-  // 'hybrid' = blog pages build time par static rahenge
-  //            lekin /keystatic route server se chalega
+  // 'hybrid' = blog pages build time par static rahenge lekin /keystatic route server se chalega
   output: 'hybrid',
 
-  // Cloudflare adapter setup with image configuration
+  // Cloudflare adapter setup with image configuration and platformProxy enabled
   adapter: cloudflare({
     imageService: 'passthrough', // ✅ FIX: Sharp image error khatam karne ke liye
+    platformProxy: {
+      enabled: true, // ✅ FIX: Server side par Cloudflare variables (GITHUB_TOKEN) ko Keystatic tak pohnchane ke liye
+    },
   }),
 
   vite: {
@@ -37,32 +38,7 @@ export default defineConfig({
       ],
     },
     plugins: [
-      tailwindcss(),
-      // Dev-time Basic Auth middleware for /keystatic
-      {
-        name: 'vite-plugin-keystatic-basic-auth',
-        configureServer(server) {
-          server.middlewares.use((req, res, next) => {
-            try {
-              const url = req.url || '';
-              if (!url.startsWith('/keystatic')) return next();
-
-              const user = process.env.ADMIN_USER;
-              const pass = process.env.ADMIN_PASS;
-              if (!user || !pass) return next(); // no creds set => allow
-
-              const auth = basicAuth(req) || {};
-              if (auth.name === user && auth.pass === pass) return next();
-
-              res.statusCode = 401;
-              res.setHeader('WWW-Authenticate', 'Basic realm="Keystatic Admin"');
-              res.end('Unauthorized');
-            } catch (e) {
-              next(e);
-            }
-          });
-        },
-      },
+      tailwindcss(), // Dev-time basicAuth plugin yahan se bilkul saaf kar diya hai taake browser crash na ho
     ],
   },
 
