@@ -4,6 +4,7 @@ import tailwindcss from '@tailwindcss/vite';
 import keystatic from '@keystatic/astro';
 import react from '@astrojs/react';
 import node from '@astrojs/node';
+import basicAuth from 'basic-auth';
 
 export default defineConfig({
   site: 'https://example.com', // ← apna domain yahan daalo
@@ -23,7 +24,34 @@ export default defineConfig({
   }),
 
   vite: {
-    plugins: [tailwindcss()],
+    plugins: [
+      tailwindcss(),
+      // Dev-time Basic Auth middleware for /keystatic
+      {
+        name: 'vite-plugin-keystatic-basic-auth',
+        configureServer(server) {
+          server.middlewares.use((req, res, next) => {
+            try {
+              const url = req.url || '';
+              if (!url.startsWith('/keystatic')) return next();
+
+              const user = process.env.ADMIN_USER;
+              const pass = process.env.ADMIN_PASS;
+              if (!user || !pass) return next(); // no creds set => allow
+
+              const auth = basicAuth(req) || {};
+              if (auth.name === user && auth.pass === pass) return next();
+
+              res.statusCode = 401;
+              res.setHeader('WWW-Authenticate', 'Basic realm="Keystatic Admin"');
+              res.end('Unauthorized');
+            } catch (e) {
+              next(e);
+            }
+          });
+        },
+      },
+    ],
   },
 
   image: {
