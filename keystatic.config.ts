@@ -7,13 +7,10 @@ export default config({
   storage: {
     kind: 'github',
     repo: {
-      owner: process.env.GITHUB_OWNER || 'fashion720',
-      repo: process.env.GITHUB_REPO || 'Fashion-blog',
-      branch: process.env.GITHUB_BRANCH || 'main',
+      owner: process.env.NEXT_PUBLIC_GITHUB_OWNER || process.env.GITHUB_OWNER || 'fashion720',
+      name: process.env.NEXT_PUBLIC_GITHUB_REPO || process.env.GITHUB_REPO || 'Fashion-blog', // ✅ FIX: 'repo' ko badal kar 'name' kar diya
     },
-    auth: {
-      token: process.env.GITHUB_TOKEN,
-    },
+    branch: process.env.NEXT_PUBLIC_GITHUB_BRANCH || process.env.GITHUB_BRANCH || 'main',
   },
 
   // ══════════════════════════════════════════════════════
@@ -47,7 +44,7 @@ export default config({
         adsenseEnabled: fields.checkbox({
           label: '📢 Google AdSense ON karo',
           defaultValue: false,
-          description: 'Tab ON karo jab AdSense account approve ho jaye',
+          description: 'Tab ON karo james Adsense account approve ho jaye',
         }),
         adsenseClientId: fields.text({
           label: '🔑 AdSense Publisher ID',
