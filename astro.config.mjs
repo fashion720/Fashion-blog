@@ -3,7 +3,7 @@ import { defineConfig } from 'astro/config';
 import tailwindcss from '@tailwindcss/vite';
 import keystatic from '@keystatic/astro';
 import react from '@astrojs/react';
-import node from '@astrojs/node';
+import cloudflare from '@astrojs/cloudflare';
 import basicAuth from 'basic-auth';
 
 export default defineConfig({
@@ -19,9 +19,8 @@ export default defineConfig({
   //            lekin /keystatic route server se chalega
   output: 'hybrid',
 
-  adapter: node({
-    mode: 'standalone',
-  }),
+  // Use Cloudflare adapter so hybrid output runs server routes on Workers
+  adapter: cloudflare(),
 
   vite: {
     plugins: [

@@ -10,7 +10,13 @@ export async function onRequest(context, next) {
     if (!user || !pass) return await next(); // no creds set => allow access
 
     const authHeader = request.headers.get('authorization') || '';
-    const expected = 'Basic ' + Buffer.from(`${user}:${pass}`).toString('base64');
+    const encode = (s) =>
+      typeof Buffer !== 'undefined'
+        ? Buffer.from(s).toString('base64')
+        : typeof btoa !== 'undefined'
+        ? btoa(s)
+        : '';
+    const expected = 'Basic ' + encode(`${user}:${pass}`);
     if (authHeader === expected) return await next();
 
     return new Response('Unauthorized', {

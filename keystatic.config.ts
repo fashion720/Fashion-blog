@@ -1,8 +1,19 @@
 import { config, fields, collection, singleton } from '@keystatic/core';
 
 export default config({
+  // Use GitHub-backed storage so Keystatic writes content directly to the repo.
+  // When deployed to Cloudflare Pages/Workers the admin will commit changes
+  // to GitHub using the token below.
   storage: {
-    kind: 'local',
+    kind: 'github',
+    repo: {
+      owner: process.env.GITHUB_OWNER || 'fashion720',
+      repo: process.env.GITHUB_REPO || 'Fashion-blog',
+      branch: process.env.GITHUB_BRANCH || 'main',
+    },
+    auth: {
+      token: process.env.GITHUB_TOKEN,
+    },
   },
 
   // ══════════════════════════════════════════════════════
