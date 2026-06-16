@@ -3,13 +3,12 @@ import { config, fields, collection, singleton } from '@keystatic/core';
 export default config({
 
 storage: {
-  kind: 'local',
+  kind: 'cloud',
 },
 
-  // ✅ FIX: Cloudflare Pages production deployment ke liye GitHub OAuth login support
-  __experimental__auth: {
-    clientId: process.env.KEYSTATIC_GITHUB_CLIENT_ID || process.env.NEXT_PUBLIC_KEYSTATIC_GITHUB_CLIENT_ID || '',
-  },
+cloud: {
+  project: 'fashionblog/fashion-blog',
+},
 
   singletons: {
     siteSettings: singleton({
