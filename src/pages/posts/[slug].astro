@@ -6,6 +6,7 @@ import AdSlot from '../../components/AdSlot.astro';
 import SocialShare from '../../components/SocialShare.astro';
 import ReadingProgress from '../../components/ReadingProgress.astro';
 import PopularPosts from '../../components/PopularPosts.astro';
+import { Markdown } from 'astro-remote';
 import { getAllPosts, getAuthorBySlug } from '../../lib/keystatic-reader';
 
 export async function getStaticPaths() {
@@ -19,7 +20,7 @@ export async function getStaticPaths() {
 const { post } = Astro.props;
 const { entry } = post;
 
-const { Content } = await entry.content();
+const content = entry.content as string;
 const author = entry.author ? await getAuthorBySlug(entry.author) : null;
 
 const featuredImage = entry.featuredImage ? `/images/posts/${entry.featuredImage}` : '/images/og/default.jpg';
@@ -62,7 +63,7 @@ const formattedDate = new Date(entry.publishedDate).toLocaleDateString('en-US', 
           <h1 class="text-3xl md:text-5xl font-extrabold mb-4 leading-tight">{entry.title}</h1>
           <div class="flex items-center gap-2 text-sm text-gray-600">
             {author && <span class="font-medium">{author.name}</span>}
-            {author && <span>â€¢</span>}
+            {author && <span>•</span>}
             <time datetime={entry.publishedDate}>{formattedDate}</time>
           </div>
         </header>
@@ -80,9 +81,8 @@ const formattedDate = new Date(entry.publishedDate).toLocaleDateString('en-US', 
           />
         )}
 
-        <!-- Pinterest "Pin it" overlay hint for images -->
         <div class="prose">
-          <Content />
+          <Markdown content={content} />
         </div>
 
         <AdSlot slot="in-content" format="horizontal" />
