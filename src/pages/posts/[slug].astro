@@ -61,7 +61,7 @@ const formattedDate = new Date(entry.publishedDate).toLocaleDateString('en-US', 
           )}
           <h1 class="text-3xl md:text-5xl font-extrabold mb-4 leading-tight">{entry.title}</h1>
           <div class="flex items-center gap-2 text-sm text-gray-600">
-            {author && <span class="font-medium">{author.entry.name}</span>}
+            {author && <span class="font-medium">{author.name}</span>}
             {author && <span>•</span>}
             <time datetime={entry.publishedDate}>{formattedDate}</time>
           </div>
@@ -96,10 +96,10 @@ const formattedDate = new Date(entry.publishedDate).toLocaleDateString('en-US', 
 
         {author && (
           <div class="mt-10 p-5 bg-gray-50 rounded-xl flex items-start gap-4">
-            {author.entry.avatar && (
+            {author.avatar && (
               <img
-                src={`/images/authors/${author.entry.avatar}`}
-                alt={author.entry.name}
+                src={`/images/authors/${author.avatar}`}
+                alt={author.name}
                 width="56"
                 height="56"
                 loading="lazy"
@@ -108,8 +108,8 @@ const formattedDate = new Date(entry.publishedDate).toLocaleDateString('en-US', 
               />
             )}
             <div>
-              <p class="font-bold">{author.entry.name}</p>
-              <p class="text-sm text-gray-600">{author.entry.bio}</p>
+              <p class="font-bold">{author.name}</p>
+              <p class="text-sm text-gray-600">{author.bio}</p>
             </div>
           </div>
         )}
