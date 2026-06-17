@@ -22,7 +22,7 @@ export async function getStaticPaths() {
 const { post } = Astro.props;
 const { entry } = post;
 
-const rawContent = entry.content as string;
+const rawContent = await entry.content() as string;
 const renderedContent = marked(rawContent ?? '');
 const author = entry.author ? await getAuthorBySlug(entry.author) : null;
 
