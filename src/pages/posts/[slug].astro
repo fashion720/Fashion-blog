@@ -26,14 +26,18 @@ const rawContent = await entry.content() as string;
 const renderedContent = marked(rawContent ?? '');
 const author = entry.author ? await getAuthorBySlug(entry.author) : null;
 
-const featuredImage = entry.featuredImage ? `/images/posts/${entry.featuredImage}` : '/images/og/default.jpg';
+const featuredImage = entry.featuredImage
+  ? (entry.featuredImage.startsWith('/') ? entry.featuredImage : `/images/posts/${entry.featuredImage}`)
+  : '/images/og/default.jpg';
 const postUrl = new URL(`/posts/${post.slug}/`, Astro.site).toString();
 
-const formattedDate = new Date(entry.publishedDate).toLocaleDateString('en-US', {
-  year: 'numeric',
-  month: 'long',
-  day: 'numeric',
-});
+const formattedDate = entry.publishedDate
+  ? new Date(entry.publishedDate).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    })
+  : '';
 ---
 
 <Layout
@@ -127,3 +131,4 @@ const formattedDate = new Date(entry.publishedDate).toLocaleDateString('en-US', 
 
   <Footer />
 </Layout>
+
