@@ -15,37 +15,51 @@ export async function getStaticPaths() {
 
 const { category } = Astro.props;
 const posts = await getPostsByCategory(category.slug);
+
+function resolveImage(img?: string) {
+  if (!img) return undefined;
+  if (img.startsWith('/')) return img;
+  return `/images/posts/${img}`;
+}
 ---
 
 <Layout
-  title={`${category.entry.name} - Fashion Blog`}
+  title={`${category.entry.name} - Fashion Editorial`}
   description={category.entry.description || `Posts about ${category.entry.name}`}
 >
   <Header currentPath={`/category/${category.slug}`} />
 
-  <main class="min-h-screen container mx-auto px-4 py-12">
-    <h1 class="text-4xl font-extrabold mb-2">{category.entry.name}</h1>
-    {category.entry.description && (
-      <p class="text-gray-600 mb-10 max-w-2xl">{category.entry.description}</p>
-    )}
+  <main class="min-h-screen bg-white">
+    <!-- Category Header -->
+    <div class="border-b border-gray-200 py-12 text-center">
+      <p class="text-xs tracking-widest uppercase text-gray-400 mb-3">Category</p>
+      <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">{category.entry.name}</h1>
+      {category.entry.description && (
+        <p class="text-gray-500 max-w-xl mx-auto text-sm">{category.entry.description}</p>
+      )}
+    </div>
 
-    {posts.length > 0 ? (
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {posts.map((post) => (
-          <PostCard
-            title={post.entry.title}
-            slug={post.slug}
-            description={post.entry.description}
-            featuredImage={post.entry.featuredImage ? `/images/posts/${post.entry.featuredImage}` : undefined}
-            publishedDate={post.entry.publishedDate}
-            categories={post.entry.categories}
-            tags={post.entry.tags}
-          />
-        ))}
-      </div>
-    ) : (
-      <p class="text-gray-600">No posts in this category yet.</p>
-    )}
+    <div class="max-w-7xl mx-auto px-4 py-12">
+      {posts.length > 0 ? (
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {posts.map((post) => (
+            <PostCard
+              title={post.entry.title}
+              slug={post.slug}
+              description={post.entry.description}
+              featuredImage={resolveImage(post.entry.featuredImage)}
+              publishedDate={post.entry.publishedDate}
+              categories={post.entry.categories}
+              tags={post.entry.tags}
+            />
+          ))}
+        </div>
+      ) : (
+        <div class="text-center py-24 text-gray-400">
+          <p>No posts in this category yet.</p>
+        </div>
+      )}
+    </div>
   </main>
 
   <Footer />
