@@ -3,193 +3,267 @@ import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import AdSlot from '../components/AdSlot.astro';
-import { getAllPosts, getAllCategories, getPostsByCategory, getSiteSettings } from '../lib/keystatic-reader';
+import {
+  getAllPosts,
+  getAllCategories,
+  getPostsByCategory,
+  getSiteSettings,
+} from '../lib/keystatic-reader';
 
 const settings = await getSiteSettings();
 const allCategories = await getAllCategories();
 const parentCategories = allCategories.filter((cat) => !cat.entry.parentCategory);
 
-// Category ke liye articles fetch karo (max 3, date ke hisaab se latest pehle)
+// All posts sorted by date
+const allPosts = await getAllPosts();
+
+// Hero: latest isFeatured post
+const featuredPosts = allPosts.filter((p) => p.entry.isFeatured);
+const heroPost = featuredPosts[0] ?? allPosts[0];
+
+// Secondary featured (for the 3-card banner strip below hero)
+const secondaryPosts = allPosts.filter((p) => p.slug !== heroPost?.slug).slice(0, 3);
+
+// Category sections — latest 3 posts each
 const categoryWithPosts = await Promise.all(
   parentCategories.map(async (cat) => {
     const posts = await getPostsByCategory(cat.slug);
-    const sorted = posts
-      .filter((p) => !p.entry.isDraft)
-      .sort((a, b) => new Date(b.entry.publishedDate).getTime() - new Date(a.entry.publishedDate).getTime());
-    return { category: cat, posts: sorted.slice(0, 3) };
+    return { category: cat, posts: posts.slice(0, 3) };
   })
 );
-
 const activeCategoryWithPosts = categoryWithPosts.filter((c) => c.posts.length > 0);
 
-// Hero: sabse latest featured post
-const allPosts = await getAllPosts();
-const sortedPosts = allPosts
-  .filter((p) => !p.entry.isDraft)
-  .sort((a, b) => new Date(b.entry.publishedDate).getTime() - new Date(a.entry.publishedDate).getTime());
-
-const featuredPosts = sortedPosts.filter((p) => p.entry.isFeatured);
-const heroPost = featuredPosts[0] || sortedPosts[0];
-
-function getImageSrc(img?: string) {
-  if (!img) return '/images/placeholder.jpg';
-  if (img.startsWith('/')) return img;
-  return `/images/posts/${img}`;
+function img(src?: string) {
+  if (!src) return '/images/placeholder.jpg';
+  return src.startsWith('/') ? src : `/images/posts/${src}`;
 }
 
-function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+function fmtDate(d: string) {
+  return new Date(d).toLocaleDateString('en-US', {
+    month: 'long', day: 'numeric', year: 'numeric',
+  });
 }
 ---
 
 <Layout title={`${settings.siteName} — ${settings.tagline}`}>
   <Header currentPath="/" />
 
-  <main class="min-h-screen bg-white">
+  <main class="bg-white min-h-screen">
 
-    <!-- ══ HERO BANNER ══ -->
+    <!-- ═══════════════════════════════════════════════
+         HERO — full-width editorial banner
+    ═══════════════════════════════════════════════ -->
     {heroPost && (
       <section class="border-b border-gray-200">
-        <div class="max-w-7xl mx-auto px-4 py-10 md:py-16">
-          <a href={`/posts/${heroPost.slug}`} class="group block md:flex gap-12 items-center">
-            <!-- Hero Image -->
-            <div class="md:w-1/2 overflow-hidden rounded-sm mb-6 md:mb-0 bg-gray-100">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-16">
+          <a href={`/posts/${heroPost.slug}`} class="group flex flex-col md:flex-row gap-10 lg:gap-16 items-center">
+
+            <!-- Image -->
+            <div class="w-full md:w-1/2 overflow-hidden rounded-sm bg-gray-100 flex-shrink-0">
               <img
-                src={getImageSrc(heroPost.entry.featuredImage)}
+                src={img(heroPost.entry.featuredImage)}
                 alt={heroPost.entry.title}
-                class="w-full h-[420px] object-cover object-top transition-transform duration-500 group-hover:scale-105"
+                class="w-full h-[340px] md:h-[480px] object-cover object-top
+                       transition-transform duration-700 group-hover:scale-[1.03]"
               />
             </div>
-            <!-- Hero Text -->
-            <div class="md:w-1/2">
-              {heroPost.entry.categories && heroPost.entry.categories.length > 0 && (
-                <p class="text-xs font-semibold tracking-widest uppercase text-gray-400 mb-4">
+
+            <!-- Text -->
+            <div class="w-full md:w-1/2 flex flex-col justify-center">
+              {heroPost.entry.categories?.[0] && (
+                <p class="text-[10px] font-bold tracking-[0.25em] uppercase text-gray-400 mb-5">
                   {heroPost.entry.categories[0]}
                 </p>
               )}
-              <h1 class="text-3xl md:text-5xl font-bold text-gray-900 leading-tight mb-4 group-hover:text-gray-700 transition">
+              <h1 class="text-3xl md:text-4xl lg:text-5xl font-bold leading-tight text-gray-900
+                          mb-5 group-hover:text-gray-600 transition-colors duration-300">
                 {heroPost.entry.title}
               </h1>
-              <p class="text-gray-500 text-lg mb-6 leading-relaxed">
+              <p class="text-base lg:text-lg text-gray-500 leading-relaxed mb-6 max-w-lg">
                 {heroPost.entry.description}
               </p>
-              <p class="text-xs text-gray-400 mb-6">{formatDate(heroPost.entry.publishedDate)}</p>
-              <span class="text-sm font-semibold uppercase tracking-wider border-b-2 border-black pb-1">Read More</span>
+              <div class="flex items-center gap-4">
+                <span class="text-xs font-bold uppercase tracking-[0.15em] border-b-2 border-black pb-0.5">
+                  Read More
+                </span>
+                <span class="text-xs text-gray-400">{fmtDate(heroPost.entry.publishedDate)}</span>
+              </div>
             </div>
+
           </a>
         </div>
       </section>
     )}
 
-    <AdSlot slot="header" format="horizontal" className="max-w-7xl mx-auto px-4 mt-6" />
+    <!-- Ad slot -->
+    <AdSlot slot="header" format="horizontal" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6" />
 
-    <!-- ══ CATEGORY SECTIONS (Who What Wear style) ══ -->
-    {activeCategoryWithPosts.map(({ category, posts }) => (
-      <section class="max-w-7xl mx-auto px-4 py-12 border-b border-gray-100">
+    <!-- ═══════════════════════════════════════════════
+         SECONDARY STRIP — 3 cards in a row (like WWW "The Latest")
+    ═══════════════════════════════════════════════ -->
+    {secondaryPosts.length > 0 && (
+      <section class="border-b border-gray-100">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
 
-        <!-- Category Header -->
-        <div class="flex items-center justify-between mb-8">
-          <div class="flex items-center gap-4">
-            <h2 class="text-xs font-bold tracking-widest uppercase text-gray-900">
-              {category.entry.name}
-            </h2>
-            <div class="hidden md:block h-px bg-gray-200 w-32"></div>
-          </div>
-          <a
-            href={`/category/${category.slug}/`}
-            class="text-xs font-semibold tracking-wider uppercase text-gray-400 hover:text-gray-900 transition border-b border-gray-300 hover:border-gray-900 pb-0.5 whitespace-nowrap"
-          >
-            Read More {category.entry.name} Stories →
-          </a>
-        </div>
-
-        <!-- 3 Articles Grid -->
-        <div class={`grid gap-8 ${
-          posts.length === 1
-            ? 'grid-cols-1 max-w-sm'
-            : posts.length === 2
-            ? 'grid-cols-1 md:grid-cols-2'
-            : 'grid-cols-1 md:grid-cols-3'
-        }`}>
-          {posts.map((post) => (
-            <a href={`/posts/${post.slug}`} class="group block">
-              <!-- Image -->
-              <div class="overflow-hidden rounded-sm mb-4 bg-gray-100">
-                <img
-                  src={getImageSrc(post.entry.featuredImage)}
-                  alt={post.entry.title}
-                  class="w-full h-56 object-cover object-top transition-transform duration-300 group-hover:scale-105"
-                />
-              </div>
-              <!-- Text -->
-              {post.entry.categories && post.entry.categories.length > 0 && (
-                <p class="text-xs font-semibold tracking-widest uppercase text-gray-400 mb-2">
-                  {post.entry.categories[0]}
-                </p>
-              )}
-              <h3 class="text-base md:text-lg font-bold text-gray-900 group-hover:text-gray-600 transition leading-snug mb-2">
-                {post.entry.title}
-              </h3>
-              <p class="text-sm text-gray-500 line-clamp-2 mb-3">{post.entry.description}</p>
-              <p class="text-xs text-gray-400">{formatDate(post.entry.publishedDate)}</p>
+          <!-- Section header -->
+          <div class="flex items-center justify-between mb-8">
+            <div class="flex items-center gap-4">
+              <h2 class="text-[10px] font-bold tracking-[0.25em] uppercase text-gray-900">The Latest</h2>
+              <div class="hidden md:block h-px w-20 bg-gray-200"></div>
+            </div>
+            <a href="/posts" class="text-[10px] font-bold tracking-[0.2em] uppercase text-gray-400
+                                    hover:text-gray-900 border-b border-gray-300 hover:border-gray-900
+                                    pb-0.5 transition-colors">
+              View All Stories →
             </a>
-          ))}
-        </div>
+          </div>
 
+          <!-- Grid -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {secondaryPosts.map((post) => (
+              <a href={`/posts/${post.slug}`} class="group block">
+                <div class="overflow-hidden rounded-sm bg-gray-100 mb-4">
+                  <img
+                    src={img(post.entry.featuredImage)}
+                    alt={post.entry.title}
+                    class="w-full h-52 object-cover object-top
+                           transition-transform duration-500 group-hover:scale-105"
+                  />
+                </div>
+                {post.entry.categories?.[0] && (
+                  <p class="text-[10px] font-bold tracking-[0.2em] uppercase text-gray-400 mb-2">
+                    {post.entry.categories[0]}
+                  </p>
+                )}
+                <h3 class="text-base font-bold text-gray-900 leading-snug mb-2
+                            group-hover:text-gray-600 transition-colors">
+                  {post.entry.title}
+                </h3>
+                <p class="text-sm text-gray-500 line-clamp-2 mb-3">{post.entry.description}</p>
+                <p class="text-xs text-gray-400">{fmtDate(post.entry.publishedDate)}</p>
+              </a>
+            ))}
+          </div>
+        </div>
+      </section>
+    )}
+
+    <!-- ═══════════════════════════════════════════════
+         CATEGORY SECTIONS — WWW style: title + 3 articles
+    ═══════════════════════════════════════════════ -->
+    {activeCategoryWithPosts.map(({ category, posts }, sectionIdx) => (
+      <section class="border-b border-gray-100">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+
+          <!-- Category header -->
+          <div class="flex items-center justify-between mb-8">
+            <div class="flex items-center gap-4">
+              <h2 class="text-[10px] font-bold tracking-[0.25em] uppercase text-gray-900">
+                {category.entry.name}
+              </h2>
+              <div class="hidden md:block h-px w-20 bg-gray-200"></div>
+            </div>
+            <a
+              href={`/category/${category.slug}/`}
+              class="text-[10px] font-bold tracking-[0.2em] uppercase text-gray-400
+                     hover:text-gray-900 border-b border-gray-300 hover:border-gray-900
+                     pb-0.5 transition-colors whitespace-nowrap"
+            >
+              Read More {category.entry.name} →
+            </a>
+          </div>
+
+          <!-- 1 big + 2 small layout (WWW style) -->
+          {posts.length === 1 && (
+            <div class="max-w-md">
+              <a href={`/posts/${posts[0].slug}`} class="group block">
+                <div class="overflow-hidden rounded-sm bg-gray-100 mb-4">
+                  <img src={img(posts[0].entry.featuredImage)} alt={posts[0].entry.title}
+                       class="w-full h-64 object-cover object-top transition-transform duration-500 group-hover:scale-105" />
+                </div>
+                <h3 class="text-lg font-bold text-gray-900 group-hover:text-gray-600 transition mb-2">
+                  {posts[0].entry.title}
+                </h3>
+                <p class="text-sm text-gray-500 line-clamp-2">{posts[0].entry.description}</p>
+              </a>
+            </div>
+          )}
+
+          {posts.length === 2 && (
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {posts.map((post) => (
+                <a href={`/posts/${post.slug}`} class="group block">
+                  <div class="overflow-hidden rounded-sm bg-gray-100 mb-4">
+                    <img src={img(post.entry.featuredImage)} alt={post.entry.title}
+                         class="w-full h-64 object-cover object-top transition-transform duration-500 group-hover:scale-105" />
+                  </div>
+                  {post.entry.categories?.[0] && (
+                    <p class="text-[10px] font-bold tracking-[0.2em] uppercase text-gray-400 mb-2">
+                      {post.entry.categories[0]}
+                    </p>
+                  )}
+                  <h3 class="text-base font-bold text-gray-900 group-hover:text-gray-600 transition leading-snug mb-2">
+                    {post.entry.title}
+                  </h3>
+                  <p class="text-sm text-gray-500 line-clamp-2 mb-2">{post.entry.description}</p>
+                  <p class="text-xs text-gray-400">{fmtDate(post.entry.publishedDate)}</p>
+                </a>
+              ))}
+            </div>
+          )}
+
+          {posts.length >= 3 && (
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {posts.slice(0, 3).map((post, i) => (
+                <a href={`/posts/${post.slug}`} class="group block">
+                  <div class="overflow-hidden rounded-sm bg-gray-100 mb-4">
+                    <img
+                      src={img(post.entry.featuredImage)}
+                      alt={post.entry.title}
+                      class={`w-full object-cover object-top transition-transform duration-500 group-hover:scale-105 ${i === 0 ? 'h-72' : 'h-52'}`}
+                    />
+                  </div>
+                  {post.entry.categories?.[0] && (
+                    <p class="text-[10px] font-bold tracking-[0.2em] uppercase text-gray-400 mb-2">
+                      {post.entry.categories[0]}
+                    </p>
+                  )}
+                  <h3 class="text-base font-bold text-gray-900 group-hover:text-gray-600 transition leading-snug mb-2">
+                    {post.entry.title}
+                  </h3>
+                  <p class="text-sm text-gray-500 line-clamp-2 mb-2">{post.entry.description}</p>
+                  <p class="text-xs text-gray-400">{fmtDate(post.entry.publishedDate)}</p>
+                </a>
+              ))}
+            </div>
+          )}
+
+        </div>
       </section>
     ))}
 
-    <!-- ══ FALLBACK: agar koi category nahi ══ -->
-    {activeCategoryWithPosts.length === 0 && sortedPosts.length > 0 && (
-      <section class="max-w-7xl mx-auto px-4 py-12">
-        <div class="text-center mb-10">
-          <h2 class="text-xs font-bold tracking-widest uppercase text-gray-900 mb-2">The Latest</h2>
-          <div class="w-12 h-0.5 bg-black mx-auto"></div>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {sortedPosts.slice(0, 9).map((post) => (
-            <a href={`/posts/${post.slug}`} class="group block">
-              <div class="overflow-hidden mb-4 rounded-sm bg-gray-100">
-                <img
-                  src={getImageSrc(post.entry.featuredImage)}
-                  alt={post.entry.title}
-                  class="w-full h-56 object-cover object-top transition-transform duration-300 group-hover:scale-105"
-                />
-              </div>
-              <h3 class="text-lg font-bold text-gray-900 group-hover:text-gray-600 transition mb-2">{post.entry.title}</h3>
-              <p class="text-sm text-gray-500 line-clamp-2">{post.entry.description}</p>
-            </a>
-          ))}
-        </div>
-      </section>
-    )}
-
-    <!-- ══ EMPTY STATE ══ -->
-    {allPosts.length === 0 && (
-      <div class="max-w-2xl mx-auto text-center py-32 px-4">
-        <p class="text-gray-400 text-lg mb-4">No posts yet — start creating content!</p>
-        <p class="text-sm text-gray-400">Open <code class="bg-gray-100 px-2 py-1 rounded">/keystatic</code> to add your first post.</p>
-      </div>
-    )}
-
-    <!-- ══ NEWSLETTER ══ -->
-    <section class="bg-gray-50 border-t border-gray-200 py-16">
+    <!-- ═══════════════════════════════════════════════
+         NEWSLETTER
+    ═══════════════════════════════════════════════ -->
+    <section class="bg-gray-50 border-t border-gray-200 py-20">
       <div class="max-w-xl mx-auto px-4 text-center">
-        <h2 class="text-xs font-semibold tracking-widest uppercase text-gray-500 mb-3">Newsletter</h2>
-        <p class="text-2xl font-bold text-gray-900 mb-2">Stay in the Loop</p>
-        <p class="text-gray-500 mb-8 text-sm">
+        <p class="text-[10px] font-bold tracking-[0.3em] uppercase text-gray-400 mb-3">Newsletter</p>
+        <h2 class="text-3xl font-bold text-gray-900 mb-3">Stay in the Loop</h2>
+        <p class="text-sm text-gray-500 mb-8 leading-relaxed">
           Get the latest fashion trends and styling tips delivered to your inbox.
         </p>
         <form class="flex gap-3 max-w-md mx-auto">
           <input
             type="email"
             placeholder="Your email address"
-            class="flex-1 px-4 py-3 border border-gray-300 rounded-sm text-sm focus:outline-none focus:border-black"
+            class="flex-1 px-4 py-3 border border-gray-300 text-sm
+                   focus:outline-none focus:border-black transition-colors rounded-sm"
             required
           />
           <button
             type="submit"
-            class="bg-black text-white px-6 py-3 text-xs font-semibold tracking-wider uppercase hover:bg-gray-800 transition rounded-sm"
+            class="bg-black text-white px-6 py-3 text-[10px] font-bold tracking-[0.2em]
+                   uppercase hover:bg-gray-800 transition-colors rounded-sm whitespace-nowrap"
           >
             Subscribe
           </button>
