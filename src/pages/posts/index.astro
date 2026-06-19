@@ -4,16 +4,12 @@ import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import PostCard from '../../components/PostCard.astro';
 import { getAllPosts } from '../../lib/keystatic-reader';
-
 const posts = await getAllPosts();
 ---
-
 <Layout title="All Posts - Fashion Blog" description="Browse all outfit ideas, style guides, and fashion inspiration posts.">
   <Header currentPath="/posts" />
-
   <main class="min-h-screen container mx-auto px-4 py-12">
     <h1 class="text-4xl font-extrabold mb-10">All Posts</h1>
-
     {posts.length > 0 ? (
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {posts.map((post) => (
@@ -21,7 +17,7 @@ const posts = await getAllPosts();
             title={post.entry.title}
             slug={post.slug}
             description={post.entry.description}
-            featuredImage={post.entry.featuredImage ? `/images/posts/${post.entry.featuredImage}` : undefined}
+            featuredImage={post.entry.featuredImage ?? undefined}
             publishedDate={post.entry.publishedDate}
             categories={post.entry.categories}
             tags={post.entry.tags}
@@ -32,6 +28,5 @@ const posts = await getAllPosts();
       <p class="text-gray-600">No posts published yet.</p>
     )}
   </main>
-
   <Footer />
 </Layout>
