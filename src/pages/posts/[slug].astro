@@ -70,7 +70,7 @@ const formattedDate = entry.publishedDate
           <h1 class="text-3xl md:text-5xl font-extrabold mb-4 leading-tight">{entry.title}</h1>
           <div class="flex items-center gap-2 text-sm text-gray-600">
             {author && <span class="font-medium">{author.name}</span>}
-            {author && <span>�</span>}
+            {author && <span>·</span>}
             <time datetime={entry.publishedDate}>{formattedDate}</time>
           </div>
         </header>
@@ -82,7 +82,7 @@ const formattedDate = entry.publishedDate
             alt={entry.title}
             width="1200"
             height="675"
-            class="w-full rounded-xl mb-8 object-cover aspect-video"
+            class="w-full rounded-xl mb-8 object-cover aspect-video object-top"
             loading="eager"
             decoding="async"
           />
