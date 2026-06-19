@@ -20,9 +20,9 @@ const allPosts = await getAllPosts();
 const featuredPosts = allPosts.filter((p) => p.entry.isFeatured);
 const heroPost = featuredPosts[0] ?? allPosts[0];
 
-// Secondary posts (exclude hero, show next 3)
+// Secondary posts (exclude hero, prefer posts with images, show next 3)
 const secondaryPosts = allPosts
-  .filter((p) => p.slug !== heroPost?.slug)
+  .filter((p) => p.slug !== heroPost?.slug && p.entry.featuredImage)
   .slice(0, 3);
 
 // Category sections
