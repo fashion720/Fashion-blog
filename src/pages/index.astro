@@ -9,24 +9,27 @@ const settings = await getSiteSettings();
 const allCategories = await getAllCategories();
 const parentCategories = allCategories.filter((cat) => !cat.entry.parentCategory);
 
-// Har parent category ke liye articles fetch karo (max 3)
+// Category ke liye articles fetch karo (max 3, date ke hisaab se latest pehle)
 const categoryWithPosts = await Promise.all(
   parentCategories.map(async (cat) => {
     const posts = await getPostsByCategory(cat.slug);
-    return { category: cat, posts: posts.slice(0, 3) };
+    const sorted = posts
+      .filter((p) => !p.entry.isDraft)
+      .sort((a, b) => new Date(b.entry.publishedDate).getTime() - new Date(a.entry.publishedDate).getTime());
+    return { category: cat, posts: sorted.slice(0, 3) };
   })
 );
 
-// Sirf woh categories jo kam az kam ek post rakhti hain
 const activeCategoryWithPosts = categoryWithPosts.filter((c) => c.posts.length > 0);
 
-// Latest posts for hero section (all featured first, then newest)
+// Hero: sabse latest featured post
 const allPosts = await getAllPosts();
-const featuredPosts = allPosts
-  .filter((p) => p.entry.isFeatured)
-  .sort((a, b) => new Date(b.entry.publishedDate).getTime() - new Date(a.entry.publishedDate).getTime())
-  .slice(0, 3);
-const heroPost = featuredPosts[0] || allPosts[0];
+const sortedPosts = allPosts
+  .filter((p) => !p.entry.isDraft)
+  .sort((a, b) => new Date(b.entry.publishedDate).getTime() - new Date(a.entry.publishedDate).getTime());
+
+const featuredPosts = sortedPosts.filter((p) => p.entry.isFeatured);
+const heroPost = featuredPosts[0] || sortedPosts[0];
 
 function getImageSrc(img?: string) {
   if (!img) return '/images/placeholder.jpg';
@@ -48,28 +51,29 @@ function formatDate(dateStr: string) {
     {heroPost && (
       <section class="border-b border-gray-200">
         <div class="max-w-7xl mx-auto px-4 py-10 md:py-16">
-          <a href={`/posts/${heroPost.slug}`} class="group block md:flex gap-10 items-center">
+          <a href={`/posts/${heroPost.slug}`} class="group block md:flex gap-12 items-center">
             <!-- Hero Image -->
-            <div class="md:w-1/2 overflow-hidden rounded-sm mb-6 md:mb-0">
+            <div class="md:w-1/2 overflow-hidden rounded-sm mb-6 md:mb-0 bg-gray-100">
               <img
                 src={getImageSrc(heroPost.entry.featuredImage)}
                 alt={heroPost.entry.title}
-                class="w-full aspect-[4/3] object-cover object-top transition-transform duration-500 group-hover:scale-105"
+                class="w-full h-[420px] object-cover object-top transition-transform duration-500 group-hover:scale-105"
               />
             </div>
             <!-- Hero Text -->
             <div class="md:w-1/2">
               {heroPost.entry.categories && heroPost.entry.categories.length > 0 && (
-                <p class="text-xs font-semibold tracking-widest uppercase text-gray-500 mb-4">
+                <p class="text-xs font-semibold tracking-widest uppercase text-gray-400 mb-4">
                   {heroPost.entry.categories[0]}
                 </p>
               )}
               <h1 class="text-3xl md:text-5xl font-bold text-gray-900 leading-tight mb-4 group-hover:text-gray-700 transition">
                 {heroPost.entry.title}
               </h1>
-              <p class="text-gray-600 text-lg mb-6 leading-relaxed">
+              <p class="text-gray-500 text-lg mb-6 leading-relaxed">
                 {heroPost.entry.description}
               </p>
+              <p class="text-xs text-gray-400 mb-6">{formatDate(heroPost.entry.publishedDate)}</p>
               <span class="text-sm font-semibold uppercase tracking-wider border-b-2 border-black pb-1">Read More</span>
             </div>
           </a>
@@ -79,99 +83,77 @@ function formatDate(dateStr: string) {
 
     <AdSlot slot="header" format="horizontal" className="max-w-7xl mx-auto px-4 mt-6" />
 
-    <!-- ══ FEATURED POSTS ROW (if we have 2-3 featured) ══ -->
-    {featuredPosts.length > 1 && (
-      <section class="max-w-7xl mx-auto px-4 py-12 border-b border-gray-100">
-        <div class="text-center mb-10">
-          <h2 class="text-xs font-semibold tracking-widest uppercase text-gray-500 mb-2">Editor's Picks</h2>
-          <div class="w-12 h-0.5 bg-black mx-auto"></div>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {featuredPosts.map((post) => (
-            <a href={`/posts/${post.slug}`} class="group block">
-              <div class="overflow-hidden rounded-sm mb-4">
-                <img
-                  src={getImageSrc(post.entry.featuredImage)}
-                  alt={post.entry.title}
-                  class="w-full aspect-[4/3] object-cover transition-transform duration-300 group-hover:scale-105"
-                />
-              </div>
-              {post.entry.categories && post.entry.categories.length > 0 && (
-                <p class="text-xs font-semibold tracking-widest uppercase text-gray-400 mb-2">{post.entry.categories[0]}</p>
-              )}
-              <h3 class="text-lg font-bold text-gray-900 group-hover:text-gray-600 transition leading-snug mb-2">
-                {post.entry.title}
-              </h3>
-              <p class="text-sm text-gray-500 line-clamp-2">{post.entry.description}</p>
-            </a>
-          ))}
-        </div>
-      </section>
-    )}
-
-    <!-- ══ CATEGORY SECTIONS (WHO WHAT WEAR style) ══ -->
+    <!-- ══ CATEGORY SECTIONS (Who What Wear style) ══ -->
     {activeCategoryWithPosts.map(({ category, posts }) => (
       <section class="max-w-7xl mx-auto px-4 py-12 border-b border-gray-100">
+
         <!-- Category Header -->
         <div class="flex items-center justify-between mb-8">
           <div class="flex items-center gap-4">
             <h2 class="text-xs font-bold tracking-widest uppercase text-gray-900">
               {category.entry.name}
             </h2>
-            <div class="hidden md:block h-px bg-gray-200 w-24"></div>
+            <div class="hidden md:block h-px bg-gray-200 w-32"></div>
           </div>
           <a
             href={`/category/${category.slug}/`}
-            class="text-xs font-semibold tracking-wider uppercase text-gray-500 hover:text-gray-900 transition border-b border-gray-300 hover:border-gray-900 pb-0.5"
+            class="text-xs font-semibold tracking-wider uppercase text-gray-400 hover:text-gray-900 transition border-b border-gray-300 hover:border-gray-900 pb-0.5 whitespace-nowrap"
           >
             Read More {category.entry.name} Stories →
           </a>
         </div>
 
-        <!-- Articles Grid -->
-        <div class={`grid gap-8 ${posts.length === 1 ? 'grid-cols-1 max-w-lg' : posts.length === 2 ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1 md:grid-cols-3'} mx-auto`}>
-          {posts.map((post, i) => (
-            <a
-              href={`/posts/${post.slug}`}
-              class={`group block ${i === 0 && posts.length === 3 ? 'md:col-span-1' : ''}`}
-            >
-              <!-- Article Image -->
-              <div class="overflow-hidden mb-4 rounded-sm">
+        <!-- 3 Articles Grid -->
+        <div class={`grid gap-8 ${
+          posts.length === 1
+            ? 'grid-cols-1 max-w-sm'
+            : posts.length === 2
+            ? 'grid-cols-1 md:grid-cols-2'
+            : 'grid-cols-1 md:grid-cols-3'
+        }`}>
+          {posts.map((post) => (
+            <a href={`/posts/${post.slug}`} class="group block">
+              <!-- Image -->
+              <div class="overflow-hidden rounded-sm mb-4 bg-gray-100">
                 <img
                   src={getImageSrc(post.entry.featuredImage)}
                   alt={post.entry.title}
-                  class="w-full aspect-[4/3] object-cover transition-transform duration-300 group-hover:scale-105"
+                  class="w-full h-56 object-cover object-top transition-transform duration-300 group-hover:scale-105"
                 />
               </div>
-              <!-- Article Text -->
-              <div>
-                <h3 class="text-base md:text-lg font-bold text-gray-900 group-hover:text-gray-600 transition leading-snug mb-2">
-                  {post.entry.title}
-                </h3>
-                <p class="text-sm text-gray-500 line-clamp-2 mb-3">{post.entry.description}</p>
-                <p class="text-xs text-gray-400">{formatDate(post.entry.publishedDate)}</p>
-              </div>
+              <!-- Text -->
+              {post.entry.categories && post.entry.categories.length > 0 && (
+                <p class="text-xs font-semibold tracking-widest uppercase text-gray-400 mb-2">
+                  {post.entry.categories[0]}
+                </p>
+              )}
+              <h3 class="text-base md:text-lg font-bold text-gray-900 group-hover:text-gray-600 transition leading-snug mb-2">
+                {post.entry.title}
+              </h3>
+              <p class="text-sm text-gray-500 line-clamp-2 mb-3">{post.entry.description}</p>
+              <p class="text-xs text-gray-400">{formatDate(post.entry.publishedDate)}</p>
             </a>
           ))}
         </div>
+
       </section>
     ))}
 
-    <!-- ══ ALL POSTS fallback (agar koi category nahi) ══ -->
-    {activeCategoryWithPosts.length === 0 && allPosts.length > 0 && (
+    <!-- ══ FALLBACK: agar koi category nahi ══ -->
+    {activeCategoryWithPosts.length === 0 && sortedPosts.length > 0 && (
       <section class="max-w-7xl mx-auto px-4 py-12">
         <div class="text-center mb-10">
           <h2 class="text-xs font-bold tracking-widest uppercase text-gray-900 mb-2">The Latest</h2>
           <div class="w-12 h-0.5 bg-black mx-auto"></div>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {allPosts.slice(0, 9).map((post) => (
+          {sortedPosts.slice(0, 9).map((post) => (
             <a href={`/posts/${post.slug}`} class="group block">
-              <div class="overflow-hidden mb-4 rounded-sm">
+              <div class="overflow-hidden mb-4 rounded-sm bg-gray-100">
                 <img
                   src={getImageSrc(post.entry.featuredImage)}
                   alt={post.entry.title}
-                  class="w-full aspect-[4/3] object-cover transition-transform duration-300 group-hover:scale-105"
+                  class="w-full h-56 object-cover object-top transition-transform duration-300 group-hover:scale-105"
                 />
               </div>
               <h3 class="text-lg font-bold text-gray-900 group-hover:text-gray-600 transition mb-2">{post.entry.title}</h3>
