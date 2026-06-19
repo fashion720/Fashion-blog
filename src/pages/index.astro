@@ -22,7 +22,10 @@ const activeCategoryWithPosts = categoryWithPosts.filter((c) => c.posts.length >
 
 // Latest posts for hero section (all featured first, then newest)
 const allPosts = await getAllPosts();
-const featuredPosts = allPosts.filter((p) => p.entry.isFeatured).slice(0, 3);
+const featuredPosts = allPosts
+  .filter((p) => p.entry.isFeatured)
+  .sort((a, b) => new Date(b.entry.publishedDate).getTime() - new Date(a.entry.publishedDate).getTime())
+  .slice(0, 3);
 const heroPost = featuredPosts[0] || allPosts[0];
 
 function getImageSrc(img?: string) {
@@ -51,7 +54,7 @@ function formatDate(dateStr: string) {
               <img
                 src={getImageSrc(heroPost.entry.featuredImage)}
                 alt={heroPost.entry.title}
-                class="w-full aspect-[4/3] object-cover transition-transform duration-500 group-hover:scale-105"
+                class="w-full aspect-[4/3] object-cover object-top transition-transform duration-500 group-hover:scale-105"
               />
             </div>
             <!-- Hero Text -->
