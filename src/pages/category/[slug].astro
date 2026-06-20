@@ -9,12 +9,37 @@ export async function getStaticPaths() {
   const categories = await getAllCategories();
   return categories.map((cat) => ({
     params: { slug: cat.slug },
-    props: { category: cat },
+    props: { category: cat, allCategories: categories },
   }));
 }
 
-const { category } = Astro.props;
+const { category, allCategories = [] } = Astro.props;
 const posts = await getPostsByCategory(category.slug);
+
+// 1. Identify if this category is a Parent, and fetch its direct children references
+const isParentCategory = !category.entry.parentCategory;
+const childCategories = allCategories.filter(
+  (cat) => cat.entry.parentCategory === category.slug
+);
+
+// 2. Setup Hero Post for parent view shuffling
+const heroPost = isParentCategory && posts.length > 0 ? posts[0] : null;
+
+// 3. Collect child posts mapping asynchronously while filtering out the top hero post to avoid repetition
+const childSections = isParentCategory
+  ? await Promise.all(
+      childCategories.map(async (child) => {
+        const childPosts = await getPostsByCategory(child.slug);
+        // Exclude the hero post if it belongs to this child category view too
+        const filteredChildPosts = heroPost 
+          ? childPosts.filter((p) => p.slug !== heroPost.slug)
+          : childPosts;
+        return { childCategory: child, posts: filteredChildPosts.slice(0, 3) };
+      })
+    )
+  : [];
+
+const activeChildSections = childSections.filter((sec) => sec.posts.length > 0);
 
 function resolveImage(img?: string) {
   if (!img) return undefined;
@@ -29,37 +54,117 @@ function resolveImage(img?: string) {
 >
   <Header currentPath={`/category/${category.slug}`} />
 
-  <main class="min-h-screen bg-white">
-    <!-- Category Header -->
-    <div class="border-b border-gray-200 py-12 text-center">
-      <p class="text-xs tracking-widest uppercase text-gray-400 mb-3">Category</p>
-      <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">{category.entry.name}</h1>
+  <main class="min-h-screen bg-[#faf9f6] text-neutral-900 font-sans antialiased">
+    
+    <div class="border-b border-neutral-200/60 py-16 text-center space-y-3">
+      <p class="text-xs tracking-widest uppercase text-[#bba15c] font-bold">Category Explore</p>
+      <h1 class="text-3xl md:text-5xl font-serif font-light tracking-wide text-neutral-950 uppercase">
+        {category.entry.name}
+      </h1>
       {category.entry.description && (
-        <p class="text-gray-500 max-w-xl mx-auto text-sm">{category.entry.description}</p>
+        <p class="text-neutral-500 max-w-xl mx-auto text-sm font-light leading-relaxed px-4">
+          {category.entry.description}
+        </p>
       )}
     </div>
 
-    <div class="max-w-7xl mx-auto px-4 py-12">
-      {posts.length > 0 ? (
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {posts.map((post) => (
-            <PostCard
-              title={post.entry.title}
-              slug={post.slug}
-              description={post.entry.description}
-              featuredImage={resolveImage(post.entry.featuredImage)}
-              publishedDate={post.entry.publishedDate}
-              categories={post.entry.categories}
-              tags={post.entry.tags}
-            />
-          ))}
-        </div>
-      ) : (
-        <div class="text-center py-24 text-gray-400">
-          <p>No posts in this category yet.</p>
-        </div>
-      )}
-    </div>
+    {isParentCategory ? (
+      <div class="pb-16">
+        
+        {heroPost && (
+          <section class="max-w-7xl mx-auto px-6 py-12 md:py-16 border-b border-neutral-200/60">
+            <a href={`/posts/${heroPost.slug}`} class="flex flex-col md:flex-row items-center gap-12 no-underline group">
+              <div class="w-full md:w-1/2 aspect-[3/4] md:aspect-[16/10] overflow-hidden bg-neutral-100">
+                <img
+                  src={heroPost.entry.featuredImage?.startsWith('/') ? heroPost.entry.featuredImage : `/images/posts/${heroPost.entry.featuredImage}`}
+                  alt={heroPost.entry.title}
+                  class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-101"
+                />
+              </div>
+              <div class="w-full md:w-1/2 space-y-4">
+                <span class="text-xs font-bold uppercase tracking-widest text-[#bba15c]">Latest Feature</span>
+                <h2 class="text-2xl md:text-4xl font-serif font-light tracking-tight text-neutral-950 leading-tight">
+                  {heroPost.entry.title}
+                </h2>
+                <p class="text-neutral-600 text-sm leading-relaxed font-light max-w-prose">
+                  {heroPost.entry.description}
+                </p>
+                <div class="pt-2 text-xs tracking-widest uppercase text-neutral-400">
+                  <span class="font-bold border-b border-neutral-900 text-neutral-900 pb-0.5 group-hover:text-[#bba15c] group-hover:border-[#bba15c] transition-colors">READ ARTICLE</span>
+                </div>
+              </div>
+            </a>
+          </section>
+        )}
+
+        {activeChildSections.length > 0 ? (
+          activeChildSections.map(({ childCategory, posts: childPosts }) => (
+            <section class="max-w-7xl mx-auto px-6 py-16 border-b border-neutral-200/60 dynamic-child-section">
+              <div class="text-center mb-12 space-y-2">
+                <h3 class="text-xl font-serif tracking-widest uppercase text-neutral-950 font-medium">
+                  {childCategory.entry.name}
+                </h3>
+                <div class="w-12 h-[1px] bg-[#bba15c] mx-auto"></div>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-12">
+                {childPosts.map((post) => (
+                  <PostCard
+                    title={post.entry.title}
+                    slug={post.slug}
+                    description={post.entry.description}
+                    featuredImage={post.entry.featuredImage}
+                    publishedDate={post.entry.publishedDate}
+                    categories={post.entry.categories}
+                  />
+                ))}
+              </div>
+            </section>
+          ))
+        ) : (
+          /* Fallback grid if it is parent but no child configurations exist yet */
+          <section class="max-w-7xl mx-auto px-6 py-16">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-12">
+              {posts.slice(1).map((post) => (
+                <PostCard
+                  title={post.entry.title}
+                  slug={post.slug}
+                  description={post.entry.description}
+                  featuredImage={post.entry.featuredImage}
+                  publishedDate={post.entry.publishedDate}
+                  categories={post.entry.categories}
+                />
+              ))}
+            </div>
+          </section>
+        )}
+
+      </div>
+    ) : (
+      /* ══════════════════════════════════════════════
+         CASE B: INDEPENDENT CHILD CATEGORY VIEW
+         ══════════════════════════════════════════════ */
+      <div class="max-w-7xl mx-auto px-6 py-16">
+        {posts.length > 0 ? (
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-12">
+            {posts.map((post) => (
+              <PostCard
+                title={post.entry.title}
+                slug={post.slug}
+                description={post.entry.description}
+                featuredImage={resolveImage(post.entry.featuredImage)}
+                publishedDate={post.entry.publishedDate}
+                categories={post.entry.categories}
+              />
+            ))}
+          </div>
+        ) : (
+          <div class="text-center py-24 text-neutral-400 font-light text-sm tracking-wide">
+            <p>No posts found inside this sub-category yet.</p>
+          </div>
+        )}
+      </div>
+    )}
   </main>
 
   <Footer />
