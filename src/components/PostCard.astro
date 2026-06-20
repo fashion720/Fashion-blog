@@ -39,7 +39,8 @@ const formattedDate = new Date(publishedDate).toLocaleDateString('en-US', {
 
 <article class="post-card group w-full bg-transparent">
   <a href={`/posts/${slug}`} class="block no-underline">
-    <div class="overflow-hidden aspect-[3/4] w-full block">
+    <!-- 🛠️ FIXED: Removed forced aspect-[3/4] grid to crush extra horizontal spacing -->
+    <div class="overflow-hidden w-full block">
       <img
         src={imgSrc}
         alt={title}
@@ -47,25 +48,30 @@ const formattedDate = new Date(publishedDate).toLocaleDateString('en-US', {
         height="800"
         loading="lazy"
         decoding="async"
-        class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-102 block"
+        class="w-full h-auto object-contain transition-transform duration-500 group-hover:scale-102 block"
       />
     </div>
 
+    <!-- Meta & Typography Content -->
     <div class="text-left pt-3 px-0">
+      <!-- Category Tag (Elegant muted link format directly below image) -->
       {categories.length > 0 && (
         <span class="block text-[11px] font-bold uppercase tracking-widest text-[#bba15c] mb-1">
           {categories[0].replace(/-/g, ' ')}
         </span>
       )}
 
+      <!-- Title (Clean Editorial Spacing) -->
       <h3 class="text-lg font-medium tracking-tight text-neutral-900 mb-1.5 group-hover:text-neutral-600 transition-colors duration-200 leading-tight">
         {title}
       </h3>
 
+      <!-- Description Excerpt Line -->
       <p class="text-[13px] font-normal text-neutral-500 leading-relaxed line-clamp-2 mb-2">
         {description}
       </p>
 
+      <!-- Date/Author footer wrapper -->
       <div class="text-[10px] uppercase tracking-widest text-neutral-400">
         <time datetime={publishedDate}>{formattedDate}</time>
       </div>
