@@ -37,54 +37,50 @@ const formattedDate = new Date(publishedDate).toLocaleDateString('en-US', {
 });
 ---
 
-<article class="post-card group">
-  <a href={`/posts/${slug}`} class="block">
-    <!-- Image -->
-    <div class="relative overflow-hidden aspect-[4/3] bg-gray-100 mb-4">
+<article class="post-card group w-full">
+  <a href={`/posts/${slug}`} class="block no-underline">
+    <!-- Image Component (Stripped from absolute overlays for a cleaner look) -->
+    <div class="overflow-hidden aspect-[3/4] bg-neutral-100 mb-3">
       <img
         src={imgSrc}
         alt={title}
-        width="800"
-        height="600"
+        width="600"
+        height="800"
         loading="lazy"
         decoding="async"
-        class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+        class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-102"
       />
-      {categories.length > 0 && (
-        <div class="absolute top-3 left-3">
-          <span class="bg-black text-white text-[10px] font-semibold px-3 py-1 tracking-wider uppercase">
-            {categories[0]}
-          </span>
-        </div>
-      )}
     </div>
 
-    <!-- Content -->
-    <div>
-      <!-- Meta -->
-      <div class="flex items-center gap-2 text-xs text-gray-400 mb-2 uppercase tracking-wider">
-        {author && <span>{author}</span>}
-        {author && <span>·</span>}
-        <time datetime={publishedDate}>{formattedDate}</time>
-      </div>
+    <!-- Meta & Typography Content -->
+    <div class="text-left px-1">
+      <!-- Category Tag (Elegant muted link format directly below image) -->
+      {categories.length > 0 && (
+        <span class="block text-[11px] font-bold uppercase tracking-widest text-[#bba15c] mb-1.5">
+          {categories[0].replace(/-/g, ' ')}
+        </span>
+      )}
 
-      <!-- Title -->
-      <h3 class="text-base font-bold text-gray-900 mb-2 group-hover:text-gray-600 transition leading-snug">
+      <!-- Title (Clean Editorial Spacing) -->
+      <h3 class="text-lg font-medium tracking-tight text-neutral-900 mb-1.5 group-hover:text-neutral-600 transition-colors duration-200 leading-tight">
         {title}
       </h3>
 
-      <!-- Description -->
-      <p class="text-sm text-gray-500 line-clamp-2 mb-3">
+      <!-- Description Excerpt Line -->
+      <p class="text-[13px] font-normal text-neutral-500 leading-relaxed line-clamp-2 mb-2">
         {description}
       </p>
+
+      <!-- Date/Author footer wrapper -->
+      <div class="text-[10px] uppercase tracking-widest text-neutral-400">
+        <time datetime={publishedDate}>{formattedDate}</time>
+      </div>
     </div>
   </a>
 </article>
 
 <style>
-  .post-card {
-    transition: transform 0.2s ease;
-  }
+  /* Clean Webkit line-clamping helper safely built for Astro output */
   .line-clamp-2 {
     display: -webkit-box;
     -webkit-line-clamp: 2;
