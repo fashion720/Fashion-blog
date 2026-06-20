@@ -21,7 +21,6 @@ const {
   tags = [],
 } = Astro.props;
 
-// Image path fix: agar already /images/ se shuru ho toh dobara mat lagao
 function resolveImage(img?: string) {
   if (!img) return '/images/placeholder.jpg';
   if (img.startsWith('/')) return img;
@@ -39,7 +38,6 @@ const formattedDate = new Date(publishedDate).toLocaleDateString('en-US', {
 
 <article class="post-card group w-full bg-transparent">
   <a href={`/posts/${slug}`} class="block no-underline">
-    <!-- 🛠️ FIXED: Removed forced aspect-[3/4] grid to crush extra horizontal spacing -->
     <div class="overflow-hidden w-full block">
       <img
         src={imgSrc}
@@ -52,26 +50,21 @@ const formattedDate = new Date(publishedDate).toLocaleDateString('en-US', {
       />
     </div>
 
-    <!-- Meta & Typography Content -->
     <div class="text-left pt-3 px-0">
-      <!-- Category Tag (Elegant muted link format directly below image) -->
       {categories.length > 0 && (
         <span class="block text-[11px] font-bold uppercase tracking-widest text-[#bba15c] mb-1">
           {categories[0].replace(/-/g, ' ')}
         </span>
       )}
 
-      <!-- Title (Clean Editorial Spacing) -->
       <h3 class="text-lg font-medium tracking-tight text-neutral-900 mb-1.5 group-hover:text-neutral-600 transition-colors duration-200 leading-tight">
         {title}
       </h3>
 
-      <!-- Description Excerpt Line -->
       <p class="text-[13px] font-normal text-neutral-500 leading-relaxed line-clamp-2 mb-2">
         {description}
       </p>
 
-      <!-- Date/Author footer wrapper -->
       <div class="text-[10px] uppercase tracking-widest text-neutral-400">
         <time datetime={publishedDate}>{formattedDate}</time>
       </div>
@@ -80,7 +73,6 @@ const formattedDate = new Date(publishedDate).toLocaleDateString('en-US', {
 </article>
 
 <style>
-  /* Clean Webkit line-clamping helper safely built for Astro output */
   .line-clamp-2 {
     display: -webkit-box;
     -webkit-line-clamp: 2;
