@@ -21,13 +21,33 @@ const categoryTree = parentCategories.map((parent) => ({
 
     <!-- Top Row: search | LOGO | about -->
     <div class="flex items-center justify-between py-5 border-b border-neutral-100">
-      <!-- Left Search Anchor -->
-      <div class="hidden md:flex items-center gap-4 w-40">
-        <a href="/search" class="p-1 text-neutral-600 hover:text-black transition duration-200" aria-label="Search">
+      
+      <!-- 🔍 Left Search System: Dynamic Inline Toggle -->
+      <div class="hidden md:flex items-center w-40 relative h-8 overflow-hidden">
+        <!-- Pure CSS Hack to switch states smoothly -->
+        <input type="checkbox" id="search-bar-toggle" class="peer hidden" />
+        
+        <!-- Icon Label Trigger (Visible by default) -->
+        <label for="search-bar-toggle" class="absolute left-0 cursor-pointer text-neutral-600 hover:text-black transition-all duration-200 peer-checked:opacity-0 peer-checked:pointer-events-none flex items-center h-full">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
-        </a>
+        </label>
+
+        <!-- Inline Expanding Search Input Field (Slides and fades on icon click) -->
+        <form action="/search" method="GET" class="w-full h-full absolute left-0 top-0 flex items-center gap-2 transform -translate-x-4 opacity-0 pointer-events-none peer-checked:translate-x-0 peer-checked:opacity-100 peer-checked:pointer-events-auto transition-all duration-300 ease-out">
+          <input 
+            type="text" 
+            name="q" 
+            placeholder="Search here..." 
+            class="w-full bg-neutral-50 border-b border-neutral-900 text-xs px-1 py-1 focus:outline-none placeholder-neutral-400 font-light"
+            required
+          />
+          <!-- Sleek close button to reset back to icon view -->
+          <label for="search-bar-toggle" class="cursor-pointer text-neutral-400 hover:text-black text-[11px] font-light px-1">
+            ✕
+          </label>
+        </form>
       </div>
 
       <!-- Centered Premium Logo -->
@@ -78,8 +98,6 @@ const categoryTree = parentCategories.map((parent) => ({
             <div class="invisible group-hover:visible opacity-0 group-hover:opacity-100 absolute left-1/2 -translate-x-1/2 top-full pt-3 transition-all duration-300 z-50">
               <div class="bg-white border border-neutral-200 shadow-2xl py-2 min-w-[210px] rounded-sm">
                 
-                {/* ❌ REMOVED: Parent Category Title text block has been cleaned up from here */}
-                
                 {parent.children.slice(0, 5).map((child) => (
                   <a
                     href={`/category/${child.slug}/`}
@@ -88,7 +106,6 @@ const categoryTree = parentCategories.map((parent) => ({
                   </a>
                 ))}
 
-                {/* ✅ DYNAMIC LOGIC: Show "View All" panel only if subcategories exceed 5 items */}
                 {parent.children.length > 5 && (
                   <div class="border-t border-neutral-100 mt-1 pt-1">
                     <a href={`/category/${parent.slug}/`} class="block px-5 py-2 text-[10px] font-bold uppercase tracking-widest text-[#bba15c] hover:bg-neutral-50 transition duration-150">
