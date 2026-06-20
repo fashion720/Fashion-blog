@@ -16,48 +16,48 @@ const categoryTree = parentCategories.map((parent) => ({
 }));
 ---
 
-<header class="bg-white border-b border-gray-200 sticky top-0 z-50">
-  <div class="max-w-7xl mx-auto px-4">
+<header class="bg-white border-b border-neutral-200 sticky top-0 z-50 antialiased font-sans">
+  <div class="max-w-7xl mx-auto px-6">
 
     <!-- Top Row: search | LOGO | about -->
-    <div class="flex items-center justify-between py-4 border-b border-gray-100">
-      <!-- Left -->
+    <div class="flex items-center justify-between py-5 border-b border-neutral-100">
+      <!-- Left Search Anchor -->
       <div class="hidden md:flex items-center gap-4 w-40">
-        <a href="/search" class="p-1 hover:opacity-60 transition" aria-label="Search">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        <a href="/search" class="p-1 text-neutral-600 hover:text-black transition duration-200" aria-label="Search">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
         </a>
       </div>
 
-      <!-- Logo - center -->
-      <a href="/" class="flex-1 text-center">
+      <!-- Centered Premium Logo -->
+      <a href="/" class="flex-1 text-center no-underline">
         {settings.logoImage ? (
           <img src={settings.logoImage} alt={settings.siteName} class="h-8 mx-auto" />
         ) : (
-          <span class="text-2xl font-bold tracking-[0.2em] uppercase text-gray-900 hover:text-gray-700 transition">
+          <span class="text-xl font-serif tracking-[0.25em] uppercase text-neutral-950 hover:opacity-80 transition duration-200">
             {settings.siteName}
           </span>
         )}
       </a>
 
-      <!-- Right -->
+      <!-- Right Nav Anchors -->
       <div class="hidden md:flex items-center justify-end gap-6 w-40">
-        <a href="/about" class="text-xs tracking-widest uppercase text-gray-500 hover:text-gray-900 transition">About</a>
-        <a href="/contact" class="text-xs tracking-widest uppercase text-gray-500 hover:text-gray-900 transition">Contact</a>
+        <a href="/about" class="text-[10px] tracking-widest uppercase font-semibold text-neutral-500 hover:text-neutral-950 transition duration-200">About</a>
+        <a href="/contact" class="text-[10px] tracking-widest uppercase font-semibold text-neutral-500 hover:text-neutral-950 transition duration-200">Contact</a>
       </div>
 
-      <!-- Mobile hamburger -->
-      <button id="mobile-menu-button" class="md:hidden p-2 hover:bg-gray-100 rounded transition" aria-label="Menu">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+      <!-- Mobile hamburger navigation button -->
+      <button id="mobile-menu-button" class="md:hidden p-2 text-neutral-700 hover:bg-neutral-50 transition" aria-label="Menu">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
         </svg>
       </button>
     </div>
 
-    <!-- Category Nav Row -->
-    <div class="hidden md:flex items-center justify-center gap-8 py-3">
-      <a href="/" class={`text-xs tracking-widest uppercase font-medium transition hover:text-gray-900 ${currentPath === '/' ? 'text-gray-900 border-b border-black' : 'text-gray-500'}`}>
+    <!-- Category Nav Links Row Layout -->
+    <div class="hidden md:flex items-center justify-center gap-8 py-3.5">
+      <a href="/" class={`text-[11px] tracking-widest uppercase font-bold transition duration-200 pb-0.5 ${currentPath === '/' ? 'text-neutral-950 border-b-2 border-neutral-950' : 'text-neutral-500 hover:text-neutral-950'}`}>
         Home
       </a>
 
@@ -65,31 +65,37 @@ const categoryTree = parentCategories.map((parent) => ({
         <div class="relative group">
           <a
             href={`/category/${parent.slug}/`}
-            class={`flex items-center gap-1 text-xs tracking-widest uppercase font-medium transition hover:text-gray-900 py-1 ${currentPath === `/category/${parent.slug}` ? 'text-gray-900 border-b border-black' : 'text-gray-500'}`}>
+            class={`flex items-center gap-1 text-[11px] tracking-widest uppercase font-bold transition duration-200 pb-0.5 ${currentPath === `/category/${parent.slug}` ? 'text-neutral-950 border-b-2 border-neutral-950' : 'text-neutral-500 hover:text-neutral-950'}`}>
             {parent.entry.name}
             {parent.children.length > 0 && (
-              <svg class="w-3 h-3 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              <svg class="w-3 h-3 text-neutral-400 group-hover:text-neutral-950 transition-transform duration-300 group-hover:rotate-180" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
               </svg>
             )}
           </a>
 
           {parent.children.length > 0 && (
-            <div class="invisible group-hover:visible opacity-0 group-hover:opacity-100 absolute left-1/2 -translate-x-1/2 top-full pt-2 transition-all duration-200 z-50">
-              <div class="bg-white border border-gray-200 shadow-xl py-3 min-w-[200px]">
-                <p class="px-4 pb-2 text-[10px] font-semibold uppercase tracking-widest text-gray-400">{parent.entry.name}</p>
-                {parent.children.map((child) => (
+            <div class="invisible group-hover:visible opacity-0 group-hover:opacity-100 absolute left-1/2 -translate-x-1/2 top-full pt-3 transition-all duration-300 z-50">
+              <div class="bg-white border border-neutral-200 shadow-2xl py-2 min-w-[210px] rounded-sm">
+                
+                {/* ❌ REMOVED: Parent Category Title text block has been cleaned up from here */}
+                
+                {parent.children.slice(0, 5).map((child) => (
                   <a
                     href={`/category/${child.slug}/`}
-                    class="block px-4 py-2 text-xs tracking-wider uppercase text-gray-600 hover:bg-gray-50 hover:text-black transition">
+                    class="block px-5 py-2.5 text-[11px] tracking-wider uppercase text-neutral-600 hover:bg-neutral-50 hover:text-neutral-950 font-medium transition duration-150">
                     {child.entry.name}
                   </a>
                 ))}
-                <div class="border-t border-gray-100 mt-2 pt-2">
-                  <a href={`/category/${parent.slug}/`} class="block px-4 py-2 text-xs font-semibold uppercase tracking-wider text-gray-900 hover:bg-gray-50 transition">
-                    View All →
-                  </a>
-                </div>
+
+                {/* ✅ DYNAMIC LOGIC: Show "View All" panel only if subcategories exceed 5 items */}
+                {parent.children.length > 5 && (
+                  <div class="border-t border-neutral-100 mt-1 pt-1">
+                    <a href={`/category/${parent.slug}/`} class="block px-5 py-2 text-[10px] font-bold uppercase tracking-widest text-[#bba15c] hover:bg-neutral-50 transition duration-150">
+                      View All →
+                    </a>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -99,29 +105,29 @@ const categoryTree = parentCategories.map((parent) => ({
 
   </div>
 
-  <!-- Mobile Menu -->
-  <div id="mobile-menu" class="hidden md:hidden border-t border-gray-100 bg-white">
-    <div class="max-w-7xl mx-auto px-4 py-4 space-y-1">
-      <a href="/" class="block py-2 text-sm uppercase tracking-wider text-gray-700 hover:text-gray-900 transition">Home</a>
+  <!-- Mobile Menu Panels Drawer -->
+  <div id="mobile-menu" class="hidden md:hidden border-t border-neutral-200 bg-white">
+    <div class="max-w-7xl mx-auto px-6 py-4 space-y-1">
+      <a href="/" class="block py-2 text-xs font-bold uppercase tracking-wider text-neutral-700 hover:text-neutral-950 transition">Home</a>
 
       {categoryTree.map((parent) => (
         <div class="mobile-category-group">
           <div class="flex items-center justify-between">
-            <a href={`/category/${parent.slug}/`} class="block py-2 text-sm uppercase tracking-wider text-gray-700 hover:text-gray-900 transition flex-1">
+            <a href={`/category/${parent.slug}/`} class="block py-2 text-xs font-bold uppercase tracking-wider text-neutral-700 hover:text-neutral-950 transition flex-1">
               {parent.entry.name}
             </a>
             {parent.children.length > 0 && (
-              <button class="mobile-category-toggle p-2 text-gray-400" aria-label="Expand">
-                <svg class="w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              <button class="mobile-category-toggle p-2 text-neutral-400" aria-label="Expand">
+                <svg class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
             )}
           </div>
           {parent.children.length > 0 && (
-            <div class="mobile-category-children hidden pl-4">
+            <div class="mobile-category-children hidden pl-4 border-l border-neutral-100 ml-1">
               {parent.children.map((child) => (
-                <a href={`/category/${child.slug}/`} class="block py-2 text-sm text-gray-500 hover:text-gray-900 transition">
+                <a href={`/category/${child.slug}/`} class="block py-2 text-xs text-neutral-500 hover:text-neutral-950 transition">
                   {child.entry.name}
                 </a>
               ))}
@@ -130,8 +136,10 @@ const categoryTree = parentCategories.map((parent) => ({
         </div>
       ))}
 
-      <a href="/about" class="block py-2 text-sm uppercase tracking-wider text-gray-700 hover:text-gray-900 transition">About</a>
-      <a href="/contact" class="block py-2 text-sm uppercase tracking-wider text-gray-700 hover:text-gray-900 transition">Contact</a>
+      <div class="border-t border-neutral-100 my-2 pt-2">
+        <a href="/about" class="block py-2 text-xs font-bold uppercase tracking-wider text-neutral-500 hover:text-neutral-950 transition">About</a>
+        <a href="/contact" class="block py-2 text-xs font-bold uppercase tracking-wider text-neutral-500 hover:text-neutral-950 transition">Contact</a>
+      </div>
     </div>
   </div>
 </header>
