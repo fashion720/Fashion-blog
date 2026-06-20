@@ -3,6 +3,7 @@ import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import AdSlot from '../components/AdSlot.astro';
+import PostCard from '../components/PostCard.astro';
 import {
   getAllPosts,
   getAllCategories,
@@ -25,7 +26,7 @@ const secondaryPosts = allPosts
   .filter((p) => p.slug !== heroPost?.slug && p.entry.featuredImage)
   .slice(0, 3);
 
-// Category sections
+// Category sections - Fetching posts directly mapping to clean arrays
 const categoryWithPosts = await Promise.all(
   parentCategories.map(async (cat) => {
     const posts = await getPostsByCategory(cat.slug);
@@ -33,57 +34,47 @@ const categoryWithPosts = await Promise.all(
   })
 );
 const activeCategoryWithPosts = categoryWithPosts.filter((c) => c.posts.length > 0);
-
-function img(src?: string) {
-  if (!src) return '/images/placeholder.jpg';
-  return src.startsWith('/') ? src : `/images/posts/${src}`;
-}
-
-function fmtDate(d: string) {
-  return new Date(d).toLocaleDateString('en-US', {
-    month: 'long', day: 'numeric', year: 'numeric',
-  });
-}
 ---
 
 <Layout title={`${settings.siteName} — ${settings.tagline}`}>
   <Header currentPath="/" />
 
-  <main style="background:var(--ivory); min-height:100vh;">
+  <main class="bg-[#faf9f6] min-height-screen font-sans antialiased text-neutral-900">
 
     <!-- ══════════════════════════════════════════════
-         HERO
-    ══════════════════════════════════════════════ -->
+         HERO SECTION (Editorial Magazine Split)
+         ══════════════════════════════════════════════ -->
     {heroPost && (
-      <section class="hero-section">
-        <div style="max-width:1280px; margin:0 auto; padding:3rem 1.5rem 3.5rem;">
-          <a href={`/posts/${heroPost.slug}`}
-             style="display:flex; flex-wrap:wrap; gap:3.5rem; align-items:center; text-decoration:none;">
-
-            <!-- Image -->
-            <div class="hero-image-wrap" style="flex:1; min-width:280px; max-width:580px; border-radius:2px;">
+      <section class="border-b border-neutral-200/60 py-12 md:py-16">
+        <div class="max-w-7xl mx-auto px-6">
+          <a href={`/posts/${heroPost.slug}`} class="flex flex-col md:flex-row items-center gap-12 no-underline group">
+            
+            <!-- Hero Image Wrap -->
+            <div class="w-full md:w-1/2 aspect-[3/4] md:aspect-[4/5] overflow-hidden bg-neutral-100">
               <img
-                src={img(heroPost.entry.featuredImage)}
+                src={heroPost.entry.featuredImage?.startsWith('/') ? heroPost.entry.featuredImage : `/images/posts/${heroPost.entry.featuredImage}`}
                 alt={heroPost.entry.title}
+                class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-101"
               />
             </div>
 
-            <!-- Text -->
-            <div style="flex:1; min-width:260px;">
+            <!-- Hero Text Block -->
+            <div class="w-full md:w-1/2 space-y-4">
               {heroPost.entry.categories?.[0] && (
-                <p class="hero-eyebrow" style="margin-bottom:1.25rem;">
-                  {heroPost.entry.categories[0]}
-                </p>
+                <span class="text-xs font-bold uppercase tracking-widest text-[#bba15c]">
+                  {heroPost.entry.categories[0].replace(/-/g, ' ')}
+                </span>
               )}
-              <h1 class="hero-title" style="margin-bottom:1.25rem;">
+              <h1 class="text-3xl md:text-5xl font-serif font-light tracking-tight text-neutral-950 leading-tight">
                 {heroPost.entry.title}
               </h1>
-              <p class="hero-desc" style="margin-bottom:2rem; max-width:42ch;">
+              <p class="text-neutral-600 text-sm md:text-base leading-relaxed font-light max-w-prose">
                 {heroPost.entry.description}
               </p>
-              <div style="display:flex; align-items:center; gap:1.5rem;">
-                <span class="hero-cta">Read More →</span>
-                <span class="card-date">{fmtDate(heroPost.entry.publishedDate)}</span>
+              <div class="pt-2 flex items-center gap-4 text-xs tracking-widest uppercase text-neutral-400">
+                <span class="font-bold border-b border-neutral-900 text-neutral-900 pb-0.5 group-hover:text-[#bba15c] group-hover:border-[#bba15c] transition-colors">READ MORE</span>
+                <span>•</span>
+                <time>{new Date(heroPost.entry.publishedDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</time>
               </div>
             </div>
 
@@ -92,47 +83,35 @@ function fmtDate(d: string) {
       </section>
     )}
 
-    <!-- Ad -->
-    <div style="max-width:1280px; margin:0 auto; padding:1.5rem;">
+    <!-- Ad Space -->
+    <div class="max-w-7xl mx-auto px-6 py-6">
       <AdSlot slot="header" format="horizontal" />
     </div>
 
     <!-- ══════════════════════════════════════════════
-         THE LATEST — Pinterest masonry strip
-    ══════════════════════════════════════════════ -->
+         THE LATEST STRIP (Horizontal symmetric row)
+         ══════════════════════════════════════════════ -->
     {secondaryPosts.length > 0 && (
-      <section style="border-bottom:1px solid rgba(138,133,130,0.15); padding:3rem 0;">
-        <div style="max-width:1280px; margin:0 auto; padding:0 1.5rem;">
-
-          <!-- Header -->
-          <div style="display:flex; align-items:center; gap:1rem; margin-bottom:2.25rem;">
-            <span class="section-title">The Latest</span>
-            <div class="section-rule"></div>
-            <a href="/posts" class="section-link">All Stories →</a>
+      <section class="border-b border-neutral-200/60 py-16">
+        <div class="max-w-7xl mx-auto px-6">
+          
+          <!-- Symmetric Centered Title Block -->
+          <div class="text-center mb-12 space-y-2">
+            <h2 class="text-2xl font-serif tracking-widest uppercase text-neutral-950 font-medium">The Latest</h2>
+            <div class="w-12 h-[1px] bg-[#bba15c] mx-auto"></div>
           </div>
 
-          <!-- Pinterest-style masonry grid -->
-          <div class="pinterest-grid">
-            {secondaryPosts.map((post, i) => (
-              <a href={`/posts/${post.slug}`}
-                 class={`card-3d post-card reveal reveal-delay-${i + 1} ${i === 0 ? 'card-featured' : 'card-small'}`}
-                 style="display:block; text-decoration:none;">
-                <div class="card-inner">
-                  <div class="card-img">
-                    <img src={img(post.entry.featuredImage)} alt={post.entry.title} />
-                  </div>
-                  <div style="padding:1.1rem 1.2rem 1.25rem;">
-                    {post.entry.categories?.[0] && (
-                      <p class="card-category" style="margin-bottom:0.5rem;">
-                        {post.entry.categories[0]}
-                      </p>
-                    )}
-                    <h3 class="card-title" style="margin-bottom:0.5rem;">{post.entry.title}</h3>
-                    <p class="card-desc" style="margin-bottom:0.75rem;">{post.entry.description}</p>
-                    <p class="card-date">{fmtDate(post.entry.publishedDate)}</p>
-                  </div>
-                </div>
-              </a>
+          <!-- 3-Column Standard Editorial Grid -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-12">
+            {secondaryPosts.map((post) => (
+              <PostCard
+                title={post.entry.title}
+                slug={post.slug}
+                description={post.entry.description}
+                featuredImage={post.entry.featuredImage}
+                publishedDate={post.entry.publishedDate}
+                categories={post.entry.categories}
+              />
             ))}
           </div>
 
@@ -141,115 +120,60 @@ function fmtDate(d: string) {
     )}
 
     <!-- ══════════════════════════════════════════════
-         CATEGORY SECTIONS
-    ══════════════════════════════════════════════ -->
-    {activeCategoryWithPosts.map(({ category, posts }, si) => (
-      <section style="border-bottom:1px solid rgba(138,133,130,0.15); padding:3.5rem 0;">
-        <div style="max-width:1280px; margin:0 auto; padding:0 1.5rem;">
+         DYNAMIC DYNAMIC CATEGORY SECTIONS
+         ══════════════════════════════════════════════ -->
+    {activeCategoryWithPosts.map(({ category, posts }) => (
+      <section class="border-b border-neutral-200/60 py-16">
+        <div class="max-w-7xl mx-auto px-6">
 
-          <!-- Section Header -->
-          <div style="display:flex; align-items:center; gap:1rem; margin-bottom:2.25rem;">
-            <span class="section-title">{category.entry.name}</span>
-            <div class="section-rule"></div>
-            <a href={`/category/${category.slug}/`} class="section-link">
-              More {category.entry.name} →
+          <!-- Centered Premium Header Block like Who What Wear -->
+          <div class="text-center mb-12 space-y-2">
+            <a href={`/category/${category.slug}/`} class="no-underline hover:opacity-80 transition">
+              <h2 class="text-2xl font-serif tracking-widest uppercase text-neutral-950 font-medium">
+                {category.entry.name}
+              </h2>
             </a>
+            <div class="w-12 h-[1px] bg-[#bba15c] mx-auto"></div>
           </div>
 
-          <!-- 3 posts: first big, next 2 small (Pinterest asymmetry) -->
-          {posts.length >= 3 && (
-            <div class="pinterest-grid">
-              {posts.slice(0, 3).map((post, i) => (
-                <a href={`/posts/${post.slug}`}
-                   class={`card-3d post-card reveal reveal-delay-${i + 1} ${i === 0 ? 'card-featured' : 'card-small'}`}
-                   style="display:block; text-decoration:none;">
-                  <div class="card-inner">
-                    <div class="card-img">
-                      <img src={img(post.entry.featuredImage)} alt={post.entry.title} />
-                    </div>
-                    <div style="padding:1.1rem 1.2rem 1.25rem;">
-                      {post.entry.categories?.[0] && (
-                        <p class="card-category" style="margin-bottom:0.5rem;">
-                          {post.entry.categories[0]}
-                        </p>
-                      )}
-                      <h3 class="card-title" style="margin-bottom:0.5rem;">{post.entry.title}</h3>
-                      <p class="card-desc" style="margin-bottom:0.75rem;">{post.entry.description}</p>
-                      <p class="card-date">{fmtDate(post.entry.publishedDate)}</p>
-                    </div>
-                  </div>
-                </a>
-              ))}
-            </div>
-          )}
-
-          {posts.length === 2 && (
-            <div class="grid-2col">
-              {posts.map((post, i) => (
-                <a href={`/posts/${post.slug}`}
-                   class={`card-3d post-card reveal reveal-delay-${i + 1}`}
-                   style="display:block; text-decoration:none;">
-                  <div class="card-inner">
-                    <div class="card-img" style="height:240px;">
-                      <img src={img(post.entry.featuredImage)} alt={post.entry.title} />
-                    </div>
-                    <div style="padding:1.1rem 1.2rem 1.25rem;">
-                      {post.entry.categories?.[0] && (
-                        <p class="card-category" style="margin-bottom:0.5rem;">
-                          {post.entry.categories[0]}
-                        </p>
-                      )}
-                      <h3 class="card-title" style="margin-bottom:0.5rem;">{post.entry.title}</h3>
-                      <p class="card-desc" style="margin-bottom:0.75rem;">{post.entry.description}</p>
-                      <p class="card-date">{fmtDate(post.entry.publishedDate)}</p>
-                    </div>
-                  </div>
-                </a>
-              ))}
-            </div>
-          )}
-
-          {posts.length === 1 && (
-            <div style="max-width:420px;">
-              <a href={`/posts/${posts[0].slug}`}
-                 class="card-3d post-card reveal"
-                 style="display:block; text-decoration:none;">
-                <div class="card-inner">
-                  <div class="card-img" style="height:260px;">
-                    <img src={img(posts[0].entry.featuredImage)} alt={posts[0].entry.title} />
-                  </div>
-                  <div style="padding:1.1rem 1.2rem 1.25rem;">
-                    <h3 class="card-title" style="margin-bottom:0.5rem;">{posts[0].entry.title}</h3>
-                    <p class="card-desc">{posts[0].entry.description}</p>
-                  </div>
-                </div>
-              </a>
-            </div>
-          )}
+          <!-- Clean Horizontal 3-Column Grid Layout (No chaos, pure elegance) -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-12">
+            {posts.map((post) => (
+              <PostCard
+                title={post.entry.title}
+                slug={post.slug}
+                description={post.entry.description}
+                featuredImage={post.entry.featuredImage}
+                publishedDate={post.entry.publishedDate}
+                categories={post.entry.categories}
+              />
+            ))}
+          </div>
 
         </div>
       </section>
     ))}
 
     <!-- ══════════════════════════════════════════════
-         NEWSLETTER — Dark luxury panel
-    ══════════════════════════════════════════════ -->
-    <section class="newsletter-section" style="padding:5rem 1.5rem;">
-      <div style="max-width:540px; margin:0 auto; text-align:center; position:relative; z-index:1;">
-        <p class="section-eyebrow" style="margin-bottom:1rem;">Newsletter</p>
-        <h2 class="newsletter-title" style="margin-bottom:1rem;">Stay in the Loop</h2>
-        <div class="gold-divider" style="margin:0 auto 1.5rem;"></div>
-        <p style="font-size:0.875rem; color:rgba(255,255,255,0.5); margin-bottom:2rem; line-height:1.75;">
-          Get the latest fashion trends and styling tips delivered to your inbox.
+         NEWSLETTER PANEL
+         ══════════════════════════════════════════════ -->
+    <section class="bg-neutral-950 text-white py-20 px-6">
+      <div class="max-w-xl mx-auto text-center space-y-6">
+        <span class="text-xs tracking-widest uppercase text-[#bba15c] font-bold">Newsletter</span>
+        <h2 class="text-3xl font-serif tracking-tight">Stay in the Loop</h2>
+        <p class="text-sm text-neutral-400 font-light leading-relaxed max-w-sm mx-auto">
+          Get the latest fashion trends and styling tips delivered straight to your inbox.
         </p>
-        <form style="display:flex; gap:0; max-width:420px; margin:0 auto;">
+        <form class="flex flex-col sm:flex-row gap-2 max-w-md mx-auto pt-2">
           <input
             type="email"
             placeholder="Your email address"
-            class="newsletter-input"
+            class="flex-1 bg-neutral-900 border border-neutral-800 text-sm px-4 py-3 text-white focus:outline-none focus:border-[#bba15c] transition"
             required
           />
-          <button type="submit" class="newsletter-btn">Subscribe</button>
+          <button type="submit" class="bg-white text-neutral-950 font-bold uppercase tracking-wider text-xs px-6 py-3 hover:bg-[#bba15c] hover:text-white transition duration-300">
+            Subscribe
+          </button>
         </form>
       </div>
     </section>
@@ -258,43 +182,3 @@ function fmtDate(d: string) {
 
   <Footer />
 </Layout>
-
-<!-- ══════════════════════════════════════════════
-     JAVASCRIPT: Scroll Reveal + 3D Tilt
-══════════════════════════════════════════════ -->
-<script>
-  // ── Scroll Reveal ──
-  const revealEls = document.querySelectorAll<HTMLElement>('.reveal');
-  const observer = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          (entry.target as HTMLElement).classList.add('visible');
-          observer.unobserve(entry.target);
-        }
-      });
-    },
-    { threshold: 0.12 }
-  );
-  revealEls.forEach((el) => observer.observe(el));
-
-  // ── 3D Tilt on mouse move ──
-  const cards = document.querySelectorAll<HTMLElement>('.card-3d');
-
-  cards.forEach((card) => {
-    card.addEventListener('mousemove', (e: MouseEvent) => {
-      const rect = card.getBoundingClientRect();
-      const cx = rect.left + rect.width / 2;
-      const cy = rect.top + rect.height / 2;
-      const dx = (e.clientX - cx) / (rect.width / 2);
-      const dy = (e.clientY - cy) / (rect.height / 2);
-      const tiltX = -(dy * 6);
-      const tiltY = dx * 6;
-      card.style.transform = `perspective(900px) rotateX(${tiltX}deg) rotateY(${tiltY}deg) translateY(-8px)`;
-    });
-
-    card.addEventListener('mouseleave', () => {
-      card.style.transform = '';
-    });
-  });
-</script>
