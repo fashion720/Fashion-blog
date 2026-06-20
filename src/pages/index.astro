@@ -48,11 +48,12 @@ const activeCategoryWithPosts = categoryWithPosts.filter((c) => c.posts.length >
           <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-16">
             {heroPosts.map((post) => (
               <a href={`/posts/${post.slug}`} class="block no-underline group space-y-4">
-                <div class="overflow-hidden aspect-[4/3] bg-neutral-100">
+                {/* 🛠️ FIXED: Removed 'bg-neutral-100' here to make image block background completely clean */}
+                <div class="overflow-hidden aspect-[4/3] w-full block">
                   <img
                     src={post.entry.featuredImage?.startsWith('/') ? post.entry.featuredImage : `/images/posts/${post.entry.featuredImage}`}
                     alt={post.entry.title}
-                    class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-101"
+                    class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-101 block"
                   />
                 </div>
                 <div class="space-y-2">
