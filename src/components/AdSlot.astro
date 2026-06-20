@@ -1,10 +1,9 @@
 ---
 /**
  * Ad Slot Component
- * Renders a fixed-size <ins> tag. The AdSense loader <script> is loaded ONCE
- * globally in Layout.astro — this component only pushes its own slot,
- * avoiding duplicate-script / Auto Ads conflicts.
+ * Renders a fixed-size <ins> tag dynamically via Keystatic config toggle.
  */
+import { getSiteSettings } from '../lib/keystatic-reader';
 
 interface Props {
   slot: 'header' | 'sidebar' | 'in-content' | 'footer' | 'sticky';
@@ -18,15 +17,20 @@ const {
   format = 'auto',
 } = Astro.props;
 
-const ADSENSE_CLIENT = import.meta.env.PUBLIC_ADSENSE_CLIENT;
-const ADSENSE_ENABLED = import.meta.env.PUBLIC_ADSENSE_ENABLED === 'true';
+// 🛠️ FETCH KEYSTATIC DYNAMIC SETTINGS
+const settings = await getSiteSettings();
+const IS_ADS_ENABLED = settings?.adsenseEnabled === true;
 
+// AdSense Client Publisher ID from Keystatic or fallback env
+const ADSENSE_CLIENT = settings?.adsenseClientId || import.meta.env.PUBLIC_ADSENSE_CLIENT;
+
+// Read Slots dynamically from Keystatic settings fields
 const adSlotIds: Record<string, string | undefined> = {
-  header: import.meta.env.PUBLIC_ADSENSE_SLOT_HEADER,
-  sidebar: import.meta.env.PUBLIC_ADSENSE_SLOT_SIDEBAR,
-  'in-content': import.meta.env.PUBLIC_ADSENSE_SLOT_CONTENT,
-  footer: import.meta.env.PUBLIC_ADSENSE_SLOT_FOOTER,
-  sticky: import.meta.env.PUBLIC_ADSENSE_SLOT_STICKY,
+  header: settings?.adSlotHeader,
+  sidebar: settings?.adSlotSidebar,
+  'in-content': settings?.adSlotContent,
+  footer: settings?.adSlotFooter,
+  sticky: settings?.adSlotSidebar, // Default mapping fallback
 };
 
 const slotId = adSlotIds[slot];
@@ -40,11 +44,12 @@ const sizeClasses: Record<string, string> = {
 };
 ---
 
-<div
-  class={`ad-container ad-slot-${slot} ${sizeClasses[format]} ${className}`}
-  data-ad-slot={slot}
->
-  {ADSENSE_ENABLED && ADSENSE_CLIENT && slotId ? (
+{/* ⚡ CRUCIAL: If ads are turned off globally in Keystatic, render absolutely NOTHING */}
+{IS_ADS_ENABLED && slotId && ADSENSE_CLIENT ? (
+  <div
+    class={`ad-container ad-slot-${slot} ${sizeClasses[format]} ${className}`}
+    data-ad-slot={slot}
+  >
     <ins
       class="adsbygoogle"
       style="display:block;width:100%;height:100%;"
@@ -53,15 +58,11 @@ const sizeClasses: Record<string, string> = {
       data-ad-format={format}
       data-full-width-responsive="true"
     ></ins>
-  ) : (
-    <div class="ad-placeholder">
-      <span class="ad-label">Advertisement</span>
-    </div>
-  )}
-</div>
+  </div>
+) : null}
 
-{/* Push THIS slot only. The adsbygoogle loader <script src=...> is in Layout.astro */}
-{ADSENSE_ENABLED && ADSENSE_CLIENT && slotId && (
+{/* Push THIS slot initialization string execution only if enabled */}
+{IS_ADS_ENABLED && slotId && ADSENSE_CLIENT && (
   <script is:inline>
     (window.adsbygoogle = window.adsbygoogle || []).push({});
   </script>
@@ -83,23 +84,6 @@ const sizeClasses: Record<string, string> = {
   .ad-slot-sticky {
     position: sticky;
     top: 5rem;
-  }
-
-  .ad-placeholder {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
-  }
-
-  .ad-label {
-    text-transform: uppercase;
-    font-size: 0.75rem;
-    color: #9ca3af;
-    letter-spacing: 0.05em;
-    font-weight: 600;
   }
 
   @media (max-width: 768px) {
