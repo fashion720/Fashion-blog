@@ -10,31 +10,33 @@ const searchIndex = allPosts.map((post) => ({
   title: post.entry.title,
   description: post.entry.description,
   slug: post.slug,
-  image: post.entry.featuredImage ? `/images/posts/${post.entry.featuredImage}` : '/images/og/default.jpg',
+  image: post.entry.featuredImage ? (post.entry.featuredImage.startsWith('/') ? post.entry.featuredImage : `/images/posts/${post.entry.featuredImage}`) : '/images/placeholder.jpg',
+  publishedDate: post.entry.publishedDate,
+  categories: post.entry.categories || [],
 }));
 ---
 
-<Layout title="Search - Fashion Blog" description="Search outfit ideas, style guides, and fashion inspiration.">
+<Layout title="Search Results - Fashion Editorial" description="Search outfit ideas, style guides, and fashion inspiration.">
   <Header currentPath="/search" />
 
-  <main class="min-h-screen container mx-auto px-4 py-12 max-w-3xl">
-    <h1 class="text-4xl font-extrabold mb-6">Search</h1>
-
-    <div class="relative mb-10">
-      <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-      </svg>
-      <input
-        id="search-input"
-        type="text"
-        placeholder="Search outfit ideas, style tips..."
-        class="w-full pl-12 pr-4 py-4 text-lg border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black"
-        autofocus
-      />
+  <main class="min-h-screen bg-[#faf9f6] text-neutral-900 font-sans antialiased">
+    
+    <!-- Minimalist Dynamic Title Header -->
+    <div class="border-b border-neutral-200/60 py-16 text-center space-y-3">
+      <p class="text-xs tracking-widest uppercase text-[#bba15c] font-bold">Search Archive</p>
+      <h1 id="search-title-text" class="text-2xl md:text-4xl font-serif font-light tracking-wide text-neutral-950 uppercase px-4">
+        Search Results
+      </h1>
     </div>
 
-    <div id="search-results" class="flex flex-col gap-4">
-      <p id="search-placeholder" class="text-gray-500 text-center py-8">Start typing to search posts.</p>
+    <!-- Clean Results Container (Uses the exact max-7xl width as homepage) -->
+    <div class="max-w-7xl mx-auto px-6 py-16">
+      <div id="search-results-grid" class="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-12 transition-opacity duration-200">
+        <!-- Results or placeholder injections via pure vanilla js mapping -->
+        <div class="col-span-full text-center py-12 text-neutral-400 font-light text-sm tracking-wide">
+          Processing your query...
+        </div>
+      </div>
     </div>
   </main>
 
@@ -42,48 +44,91 @@ const searchIndex = allPosts.map((post) => ({
 </Layout>
 
 <script define:vars={{ searchIndex }}>
-  const input = document.getElementById('search-input');
-  const resultsContainer = document.getElementById('search-results');
+  const resultsContainer = document.getElementById('search-results-grid');
+  const titleText = document.getElementById('search-title-text');
 
-  function renderResults(query) {
+  function runSearch() {
+    // 1. Extract query standard key values from URL parameter '?q='
+    const urlParams = new URLSearchParams(window.location.search);
+    const query = urlParams.get('q') || '';
+
     if (!query.trim()) {
-      resultsContainer.innerHTML = '<p class="text-gray-500 text-center py-8">Start typing to search posts.</p>';
+      titleText.innerText = "Search Results";
+      resultsContainer.innerHTML = `
+        <div class="col-span-full text-center py-24 text-neutral-400 font-light text-sm tracking-wide">
+          <p>No search term provided. Use the header icon to start exploring.</p>
+        </div>
+      `;
       return;
     }
 
-    const q = query.toLowerCase();
+    // Update editorial page header with searched query text dynamically
+    titleText.innerText = `Results for: ${query}`;
+
+    const q = query.toLowerCase().trim();
     const matches = searchIndex.filter((post) =>
       post.title.toLowerCase().includes(q) ||
       post.description.toLowerCase().includes(q)
     );
 
     if (matches.length === 0) {
-      resultsContainer.innerHTML = `<p class="text-gray-500 text-center py-8">No results for "${query}". Try a different search.</p>`;
+      resultsContainer.innerHTML = `
+        <div class="col-span-full text-center py-24 text-neutral-400 font-light text-sm tracking-wide">
+          <p>No results found matching "${query}". Try exploring another trend.</p>
+        </div>
+      `;
       return;
     }
 
+    // 2. Render matched elements into the identical luxury magazine grid using custom mapping
     resultsContainer.innerHTML = matches
-      .map((post) => `
-        <a href="/posts/${post.slug}/" class="flex gap-4 p-4 rounded-xl border border-gray-200 hover:shadow-md transition">
-          <img src="${post.image}" alt="${post.title}" width="96" height="96" loading="lazy" class="w-24 h-24 object-cover rounded-lg flex-shrink-0" />
-          <div>
-            <h3 class="font-bold text-lg mb-1">${post.title}</h3>
-            <p class="text-gray-600 text-sm line-clamp-2">${post.description}</p>
-          </div>
-        </a>
-      `)
+      .map((post) => {
+        const formattedDate = new Date(post.publishedDate).toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        });
+        
+        const categoryLabel = post.categories.length > 0 
+          ? post.categories[0].replace(/-/g, ' ') 
+          : '';
+
+        return `
+          <article class="post-card group w-full bg-transparent">
+            <a href="/posts/${post.slug}" class="block no-underline">
+              <div class="overflow-hidden aspect-[3/4] w-full block">
+                <img
+                  src="${post.image}"
+                  alt="${post.title}"
+                  loading="lazy"
+                  class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-102 block"
+                />
+              </div>
+              <div class="text-left pt-3 px-0">
+                ${categoryLabel ? `<span class="block text-[11px] font-bold uppercase tracking-widest text-[#bba15c] mb-1">${categoryLabel}</span>` : ''}
+                <h3 class="text-lg font-medium tracking-tight text-neutral-900 mb-1.5 group-hover:text-neutral-600 transition-colors duration-200 leading-tight">
+                  ${post.title}
+                </h3>
+                <p class="text-[13px] font-normal text-neutral-500 leading-relaxed line-clamp-2 mb-2">
+                  ${post.description}
+                </p>
+                <div class="text-[10px] uppercase tracking-widest text-neutral-400">
+                  <time>${formattedDate}</time>
+                </div>
+              </div>
+            </a>
+          </article>
+        `;
+      })
       .join('');
   }
 
-  let debounceTimer;
-  input?.addEventListener('input', (e) => {
-    clearTimeout(debounceTimer);
-    const query = e.target.value;
-    debounceTimer = setTimeout(() => renderResults(query), 150);
-  });
+  // Trigger auto evaluation on page mount
+  runSearch();
 </script>
 
-<style>
+<style is:global>
+  /* Ensuring line clamps inside string literal template additions behave safely */
   .line-clamp-2 {
     display: -webkit-box;
     -webkit-line-clamp: 2;
