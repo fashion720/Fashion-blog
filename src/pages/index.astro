@@ -17,20 +17,21 @@ const parentCategories = allCategories.filter((cat) => !cat.entry.parentCategory
 
 const allPosts = await getAllPosts();
 
-// Hero = latest isFeatured post
-const featuredPosts = allPosts.filter((p) => p.entry.isFeatured);
-const heroPost = featuredPosts[0] ?? allPosts[0];
+// ✅ STRATEGY CHANGE: Fetch top 2 posts for the new split premium hero grid
+const heroPosts = allPosts.slice(0, 2);
+const heroSlugs = heroPosts.map(p => p.slug);
 
-// Secondary posts (exclude hero, prefer posts with images, show next 3)
+// ✅ OFFSET LOGIC: Exclude the top 2 hero posts from 'The Latest' list (Shows 3rd, 4th, 5th)
 const secondaryPosts = allPosts
-  .filter((p) => p.slug !== heroPost?.slug && p.entry.featuredImage)
+  .filter((p) => !heroSlugs.includes(p.slug) && p.entry.featuredImage)
   .slice(0, 3);
 
-// Category sections - Fetching posts directly mapping to clean arrays
+// ✅ CATEGORY FILTER LOGIC: Map categories while filtering out top hero posts globally to ensure zero repetition
 const categoryWithPosts = await Promise.all(
   parentCategories.map(async (cat) => {
     const posts = await getPostsByCategory(cat.slug);
-    return { category: cat, posts: posts.slice(0, 3) };
+    const filteredPosts = posts.filter((p) => !heroSlugs.includes(p.slug));
+    return { category: cat, posts: filteredPosts.slice(0, 3) };
   })
 );
 const activeCategoryWithPosts = categoryWithPosts.filter((c) => c.posts.length > 0);
@@ -41,67 +42,52 @@ const activeCategoryWithPosts = categoryWithPosts.filter((c) => c.posts.length >
 
   <main class="bg-[#faf9f6] min-height-screen font-sans antialiased text-neutral-900">
 
-    <!-- ══════════════════════════════════════════════
-         HERO SECTION (Editorial Magazine Split)
-         ══════════════════════════════════════════════ -->
-    {heroPost && (
+    {heroPosts.length > 0 && (
       <section class="border-b border-neutral-200/60 py-12 md:py-16">
         <div class="max-w-7xl mx-auto px-6">
-          <a href={`/posts/${heroPost.slug}`} class="flex flex-col md:flex-row items-center gap-12 no-underline group">
-            
-            <!-- Hero Image Wrap -->
-            <div class="w-full md:w-1/2 aspect-[3/4] md:aspect-[4/5] overflow-hidden bg-neutral-100">
-              <img
-                src={heroPost.entry.featuredImage?.startsWith('/') ? heroPost.entry.featuredImage : `/images/posts/${heroPost.entry.featuredImage}`}
-                alt={heroPost.entry.title}
-                class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-101"
-              />
-            </div>
-
-            <!-- Hero Text Block -->
-            <div class="w-full md:w-1/2 space-y-4">
-              {heroPost.entry.categories?.[0] && (
-                <span class="text-xs font-bold uppercase tracking-widest text-[#bba15c]">
-                  {heroPost.entry.categories[0].replace(/-/g, ' ')}
-                </span>
-              )}
-              <h1 class="text-3xl md:text-5xl font-serif font-light tracking-tight text-neutral-950 leading-tight">
-                {heroPost.entry.title}
-              </h1>
-              <p class="text-neutral-600 text-sm md:text-base leading-relaxed font-light max-w-prose">
-                {heroPost.entry.description}
-              </p>
-              <div class="pt-2 flex items-center gap-4 text-xs tracking-widest uppercase text-neutral-400">
-                <span class="font-bold border-b border-neutral-900 text-neutral-900 pb-0.5 group-hover:text-[#bba15c] group-hover:border-[#bba15c] transition-colors">READ MORE</span>
-                <span>•</span>
-                <time>{new Date(heroPost.entry.publishedDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</time>
-              </div>
-            </div>
-
-          </a>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-16">
+            {heroPosts.map((post) => (
+              <a href={`/posts/${post.slug}`} class="block no-underline group space-y-4">
+                <div class="overflow-hidden aspect-[4/3] bg-neutral-100">
+                  <img
+                    src={post.entry.featuredImage?.startsWith('/') ? post.entry.featuredImage : `/images/posts/${post.entry.featuredImage}`}
+                    alt={post.entry.title}
+                    class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-101"
+                  />
+                </div>
+                <div class="space-y-2">
+                  {post.entry.categories?.[0] && (
+                    <span class="block text-xs font-bold uppercase tracking-widest text-[#bba15c]">
+                      {post.entry.categories[0].replace(/-/g, ' ')}
+                    </span>
+                  )}
+                  <h2 class="text-2xl md:text-3xl font-serif font-light tracking-tight text-neutral-950 leading-tight group-hover:text-neutral-600 transition-colors duration-200">
+                    {post.entry.title}
+                  </h2>
+                  <p class="text-neutral-500 text-[13px] leading-relaxed font-light line-clamp-2">
+                    {post.entry.description}
+                  </p>
+                </div>
+              </a>
+            ))}
+          </div>
         </div>
       </section>
     )}
 
-    <!-- Ad Space -->
-    <div class="max-w-7xl mx-auto px-6 py-6">
+    <div class="max-w-7xl mx-auto px-6 py-4">
       <AdSlot slot="header" format="horizontal" />
     </div>
 
-    <!-- ══════════════════════════════════════════════
-         THE LATEST STRIP (Horizontal symmetric row)
-         ══════════════════════════════════════════════ -->
     {secondaryPosts.length > 0 && (
       <section class="border-b border-neutral-200/60 py-16">
         <div class="max-w-7xl mx-auto px-6">
           
-          <!-- Symmetric Centered Title Block -->
           <div class="text-center mb-12 space-y-2">
             <h2 class="text-2xl font-serif tracking-widest uppercase text-neutral-950 font-medium">The Latest</h2>
             <div class="w-12 h-[1px] bg-[#bba15c] mx-auto"></div>
           </div>
 
-          <!-- 3-Column Standard Editorial Grid -->
           <div class="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-12">
             {secondaryPosts.map((post) => (
               <PostCard
@@ -119,14 +105,10 @@ const activeCategoryWithPosts = categoryWithPosts.filter((c) => c.posts.length >
       </section>
     )}
 
-    <!-- ══════════════════════════════════════════════
-         DYNAMIC DYNAMIC CATEGORY SECTIONS
-         ══════════════════════════════════════════════ -->
     {activeCategoryWithPosts.map(({ category, posts }) => (
       <section class="border-b border-neutral-200/60 py-16">
         <div class="max-w-7xl mx-auto px-6">
 
-          <!-- Centered Premium Header Block like Who What Wear -->
           <div class="text-center mb-12 space-y-2">
             <a href={`/category/${category.slug}/`} class="no-underline hover:opacity-80 transition">
               <h2 class="text-2xl font-serif tracking-widest uppercase text-neutral-950 font-medium">
@@ -136,7 +118,6 @@ const activeCategoryWithPosts = categoryWithPosts.filter((c) => c.posts.length >
             <div class="w-12 h-[1px] bg-[#bba15c] mx-auto"></div>
           </div>
 
-          <!-- Clean Horizontal 3-Column Grid Layout (No chaos, pure elegance) -->
           <div class="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-12">
             {posts.map((post) => (
               <PostCard
@@ -154,9 +135,6 @@ const activeCategoryWithPosts = categoryWithPosts.filter((c) => c.posts.length >
       </section>
     ))}
 
-    <!-- ══════════════════════════════════════════════
-         NEWSLETTER PANEL
-         ══════════════════════════════════════════════ -->
     <section class="bg-neutral-950 text-white py-20 px-6">
       <div class="max-w-xl mx-auto text-center space-y-6">
         <span class="text-xs tracking-widest uppercase text-[#bba15c] font-bold">Newsletter</span>
