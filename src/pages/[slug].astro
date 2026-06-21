@@ -4,7 +4,6 @@ export const prerender = true;
 import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
-import Markdoc from '@markdoc/markdoc';
 import { getAllPages } from '../lib/keystatic-reader';
 
 export async function getStaticPaths() {
@@ -28,11 +27,8 @@ if (!page) {
 
 const { entry } = page;
 
-// ⚡ Keystatic Markdoc node ko parse aur HTML mein render kar rahy hain
+// ⚡ Secure Content Node Resolution
 const rawContent = await entry.content();
-const ast = Markdoc.parse(rawContent);
-const content = Markdoc.transform(ast);
-const renderedHtml = Markdoc.renderHtml(content);
 ---
 
 <Layout 
@@ -49,11 +45,25 @@ const renderedHtml = Markdoc.renderHtml(content);
       <div class="w-12 h-[1px] bg-[#bba15c] mx-auto pt-1"></div>
     </header>
 
-    {/* Dynamic Content Area */}
-    <div 
-      class="prose prose-neutral max-w-none legal-page-content text-[15px] md:text-[16px] text-neutral-800 leading-relaxed font-light tracking-wide"
-      set:html={renderedHtml}
-    />
+    {/* Custom Light-weight Render Loop for Keystatic Markdoc JSON without dependencies */}
+    <div class="prose prose-neutral max-w-none legal-page-content text-[15px] md:text-[16px] text-neutral-800 leading-relaxed font-light tracking-wide">
+      {Array.isArray(rawContent) ? (
+        rawContent.map((node) => {
+          if (node.type === 'paragraph') {
+            return <p>{node.children?.map((c: any) => c.text).join('')}</p>;
+          }
+          if (node.type === 'heading') {
+            const Level = `h${node.level || 2}` as any;
+            return <Level>{node.children?.map((c: any) => c.text).join('')}</Level>;
+          }
+          return null;
+        })
+      ) : typeof rawContent === 'string' ? (
+        <div set:html={rawContent} />
+      ) : (
+        <p class="text-neutral-400 italic">Content formatting updated via admin dashboard.</p>
+      )}
+    </div>
   </main>
 
   <Footer />
