@@ -4,7 +4,7 @@ export const prerender = true;
 import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
-import { KeystaticRenderer } from '@keystatic/astro/renderer';
+import { KeystaticRenderer } from '@keystatic/core/renderer';
 import { getAllPages } from '../lib/keystatic-reader';
 
 export async function getStaticPaths() {
