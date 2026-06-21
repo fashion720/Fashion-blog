@@ -19,55 +19,42 @@ const categoryTree = parentCategories.map((parent) => ({
 <header class="bg-white border-b border-neutral-200 sticky top-0 z-50 antialiased font-sans">
   <div class="max-w-7xl mx-auto px-6">
 
-    <!-- Top Row: search | LOGO | about -->
-    <div class="flex items-center justify-between py-5 border-b border-neutral-100">
+    <!-- Top Row: Empty Left Space | CENTERED LOGO | Right Search System -->
+    <div class="flex items-center justify-between py-5 border-b border-neutral-100 relative">
       
-      <!-- 🔍 Left Search System: Dynamic Inline Toggle -->
-      <div class="hidden md:flex items-center w-40 relative h-8 overflow-hidden">
-        <!-- Pure CSS Hack to switch states smoothly -->
-        <input type="checkbox" id="search-bar-toggle" class="peer hidden" />
-        
-        <!-- Icon Label Trigger (Visible by default) -->
-        <label for="search-bar-toggle" class="absolute left-0 cursor-pointer text-neutral-600 hover:text-black transition-all duration-200 peer-checked:opacity-0 peer-checked:pointer-events-none flex items-center h-full">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-        </label>
-
-        <!-- Inline Expanding Search Input Field (Slides and fades on icon click) -->
-        <form action="/search" method="GET" class="w-full h-full absolute left-0 top-0 flex items-center gap-2 transform -translate-x-4 opacity-0 pointer-events-none peer-checked:translate-x-0 peer-checked:opacity-100 peer-checked:pointer-events-auto transition-all duration-300 ease-out">
-          <input 
-            type="text" 
-            name="q" 
-            placeholder="Search here..." 
-            class="w-full bg-neutral-50 border-b border-neutral-900 text-xs px-1 py-1 focus:outline-none placeholder-neutral-400 font-light"
-            required
-          />
-          <!-- Sleek close button to reset back to icon view -->
-          <label for="search-bar-toggle" class="cursor-pointer text-neutral-400 hover:text-black text-[11px] font-light px-1">
-            ✕
-          </label>
-        </form>
-      </div>
+      {/* Left Block Placeholder (Maintains perfect logo centering on Desktop) */}
+      <div class="hidden md:block w-52"></div>
 
       <!-- Centered Premium Logo -->
-      <a href="/" class="flex-1 text-center no-underline">
+      <a href="/" class="flex-1 text-center no-underline z-10">
         {settings.logoImage ? (
           <img src={settings.logoImage} alt={settings.siteName} class="h-8 mx-auto" />
         ) : (
-          <span class="text-xl font-serif tracking-[0.25em] uppercase text-neutral-950 hover:opacity-80 transition duration-200">
+          <span class="text-xl sm:text-2xl font-serif tracking-[0.25em] uppercase text-neutral-950 hover:opacity-80 transition duration-200">
             {settings.siteName}
           </span>
         )}
       </a>
 
-      <!-- Right Nav Anchors -->
-      <div class="hidden md:flex items-center justify-end gap-6 w-40">
-        <a href="/about" class="text-[10px] tracking-widest uppercase font-semibold text-neutral-500 hover:text-neutral-950 transition duration-200">About</a>
-        <a href="/contact" class="text-[10px] tracking-widest uppercase font-semibold text-neutral-500 hover:text-neutral-950 transition duration-200">Contact</a>
+      <!-- 🔍 Right Search System: Premium Clean Inline Form -->
+      <div class="hidden md:flex items-center justify-end w-52">
+        <form action="/search" method="GET" class="relative flex items-center border-b border-neutral-300 focus-within:border-neutral-900 transition duration-300 w-44 py-0.5">
+          <input 
+            type="text" 
+            name="q" 
+            placeholder="Search trend..." 
+            class="w-full bg-transparent text-[11px] font-light tracking-wide focus:outline-none placeholder-neutral-400 text-neutral-800 pr-6"
+            required
+          />
+          <button type="submit" class="absolute right-0 text-neutral-400 hover:text-neutral-950 transition duration-200 p-0.5" aria-label="Search">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </button>
+        </form>
       </div>
 
-      <!-- Mobile hamburger navigation button -->
+      <!-- Mobile Hamburger Button (Keeps mobile clean) -->
       <button id="mobile-menu-button" class="md:hidden p-2 text-neutral-700 hover:bg-neutral-50 transition" aria-label="Menu">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
@@ -124,7 +111,24 @@ const categoryTree = parentCategories.map((parent) => ({
 
   <!-- Mobile Menu Panels Drawer -->
   <div id="mobile-menu" class="hidden md:hidden border-t border-neutral-200 bg-white">
-    <div class="max-w-7xl mx-auto px-6 py-4 space-y-1">
+    <div class="max-w-7xl mx-auto px-6 py-4 space-y-3">
+      
+      {/* Mobile Search Box Embedded */}
+      <form action="/search" method="GET" class="relative flex items-center border border-neutral-200 rounded-sm bg-neutral-50 px-3 py-2 my-2">
+        <input 
+          type="text" 
+          name="q" 
+          placeholder="Search fashion trends..." 
+          class="w-full bg-transparent text-xs font-light focus:outline-none placeholder-neutral-400"
+          required
+        />
+        <button type="submit" class="text-neutral-500" aria-label="Search">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </button>
+      </form>
+
       <a href="/" class="block py-2 text-xs font-bold uppercase tracking-wider text-neutral-700 hover:text-neutral-950 transition">Home</a>
 
       {categoryTree.map((parent) => (
@@ -152,11 +156,6 @@ const categoryTree = parentCategories.map((parent) => ({
           )}
         </div>
       ))}
-
-      <div class="border-t border-neutral-100 my-2 pt-2">
-        <a href="/about" class="block py-2 text-xs font-bold uppercase tracking-wider text-neutral-500 hover:text-neutral-950 transition">About</a>
-        <a href="/contact" class="block py-2 text-xs font-bold uppercase tracking-wider text-neutral-500 hover:text-neutral-950 transition">Contact</a>
-      </div>
     </div>
   </div>
 </header>
