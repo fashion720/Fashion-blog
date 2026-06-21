@@ -28,6 +28,29 @@ export async function getPostBySlug(slug: string) {
   return { slug, entry: post };
 }
 
+// ─── PAGES (STATIC & LEGAL) ──────────────────────────────────────────────────
+// ⚡ FIX: Added the missing function that was crashing Footer and [slug].astro
+
+export async function getAllPages() {
+  try {
+    const pages = await reader.collections.pages.all();
+    return pages || [];
+  } catch (error) {
+    console.error("Error fetching pages from Keystatic:", error);
+    return [];
+  }
+}
+
+export async function getPageBySlug(slug: string) {
+  try {
+    const page = await reader.collections.pages.read(slug);
+    if (!page) return null;
+    return { slug, entry: page };
+  } catch {
+    return null;
+  }
+}
+
 // ─── CATEGORIES ──────────────────────────────────────────────────────────────
 
 export async function getAllCategories() {
@@ -96,7 +119,6 @@ export async function getAuthorBySlug(slug: string) {
 }
 
 // ─── SITE SETTINGS ───────────────────────────────────────────────────────────
-// Keystatic admin panel => "Site Settings" se yeh sab manage hoga
 
 export async function getSiteSettings() {
   try {
@@ -107,6 +129,10 @@ export async function getSiteSettings() {
       siteName:             s.siteName             || 'FASHION EDITORIAL',
       tagline:              s.tagline              || 'CURATED STYLE & FASHION INSIGHTS',
       logoImage:            s.logoImage            ? `/images/brand/${s.logoImage}` : '',
+      
+      // ⚡ Added mapping for the new dynamic footer description field
+      footerDescription:    s.footerDescription    || '', 
+      
       adsenseEnabled:       s.adsenseEnabled       ?? false,
       adsenseClientId:      s.adsenseClientId      || '',
       adSlotHeader:         s.adSlotHeader         || '',
@@ -121,7 +147,6 @@ export async function getSiteSettings() {
       twitterUrl:           s.twitterUrl           || 'https://twitter.com',
     };
   } catch {
-    // Settings file abhi exist nahi karti — safe defaults return karo
     return defaultSettings();
   }
 }
@@ -131,11 +156,12 @@ function defaultSettings() {
     siteName:             'FASHION EDITORIAL',
     tagline:              'CURATED STYLE & FASHION INSIGHTS',
     logoImage:            '',
+    footerDescription:    'Premium editorial content exploring contemporary fashion, timeless style, and cultural trends. Curated for the discerning reader.',
     adsenseEnabled:       false,
     adsenseClientId:      '',
     adSlotHeader:         '',
     adSlotContent:        '',
-    adSlotSidebar:        '',
+    adSlotSidebar:         '',
     adSlotFooter:         '',
     ga4Id:                '',
     pinterestTag:         '',
