@@ -12,7 +12,7 @@ export default config({
   singletons: {
     siteSettings: singleton({
       label: 'Site Settings',
-      path: 'src/content/siteSettings', // ⚡ FIX: Path corrected to match your reader function
+      path: 'src/content/siteSettings',
       schema: {
         siteName: fields.text({ label: 'Site Name', defaultValue: 'FASHION EDITORIAL' }),
         tagline: fields.text({ label: 'Tagline', defaultValue: 'CURATED STYLE & FASHION INSIGHTS' }),
@@ -24,10 +24,24 @@ export default config({
           multiline: true 
         }),
         
+        // Custom Navigation Toggle Fields (To match your second site.yaml configurations seamlessly)
+        showHomeLink: fields.checkbox({ label: 'Show Home Link', defaultValue: true }),
+        showAllArticlesLink: fields.checkbox({ label: 'Show All Articles Link', defaultValue: true }),
+        showCategoriesLink: fields.checkbox({ label: 'Show Categories Link', defaultValue: true }),
+        showAboutUsPage: fields.checkbox({ label: 'Show About Us Page', defaultValue: true }),
+        showContactUsPage: fields.checkbox({ label: 'Show Contact Us Page', defaultValue: true }),
+        showPrivacyPolicyPage: fields.checkbox({ label: 'Show Privacy Policy Page', defaultValue: true }),
+        showDisclaimerPage: fields.checkbox({ label: 'Show Disclaimer Page', defaultValue: true }),
+        showRSSFeed: fields.checkbox({ label: 'Show RSS Feed', defaultValue: true }),
+
         instagramUrl: fields.text({ label: 'Instagram URL', defaultValue: 'https://instagram.com' }),
         pinterestUrl: fields.text({ label: 'Pinterest URL', defaultValue: 'https://pinterest.com' }),
         twitterUrl: fields.text({ label: 'Twitter / X URL', defaultValue: 'https://twitter.com' }),
         
+        showInstagram: fields.checkbox({ label: 'Show Instagram Icon', defaultValue: true }),
+        showTwitter: fields.checkbox({ label: 'Show Twitter Icon', defaultValue: true }),
+        showPinterest: fields.checkbox({ label: 'Show Pinterest Icon', defaultValue: true }),
+
         adsenseEnabled: fields.checkbox({ label: 'AdSense Enabled', defaultValue: false }),
         adsenseClientId: fields.text({ label: 'AdSense Publisher ID', defaultValue: '' }),
         adSlotHeader: fields.text({ label: 'Ad Slot - Header', defaultValue: '' }),
@@ -62,7 +76,6 @@ export default config({
       },
     }),
 
-    // 📋 LEGAL & STATIC PAGES: Keystatic ke standard input ke mutabik cleanly mapped
     pages: collection({
       label: 'Legal & Static Pages',
       slugField: 'title',
@@ -71,7 +84,7 @@ export default config({
       schema: {
         title: fields.slug({ name: { label: 'Page Title (e.g. Privacy Policy)' } }),
         description: fields.text({ label: 'SEO Description', validation: { length: { min: 30, max: 160 } } }),
-        content: fields.markdoc({ label: 'Page Content' }), // ⚡ FIX: Keystatic reader readable markdoc
+        content: fields.markdoc({ label: 'Page Content' }),
       },
     }),
 
@@ -98,7 +111,12 @@ export default config({
       schema: {
         name: fields.slug({ name: { label: 'Category Name' } }),
         description: fields.text({ label: 'Description', multiline: true }),
-        parentCategory: fields.relationship({ label: 'Parent Category', collection: 'categories', validation: { isRequired: false } }),
+        // ⚡ OPTIMIZED RELATIONSHIP: Safe binding to avoid blank sync loops in cloud state
+        parentCategory: fields.relationship({ 
+          label: 'Parent Category (Leave empty if this IS a Parent Category)', 
+          collection: 'categories', 
+          validation: { isRequired: false } 
+        }),
         color: fields.text({ label: 'Color (hex)', defaultValue: '#000000' }),
       },
     }),
