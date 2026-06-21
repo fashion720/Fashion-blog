@@ -4,11 +4,16 @@ export const prerender = true;
 import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
-import { marked } from 'marked';
+import { KeystaticRenderer } from '@keystatic/astro/renderer';
 import { getAllPages } from '../lib/keystatic-reader';
 
 export async function getStaticPaths() {
   const pages = await getAllPages();
+  
+  if (!pages || pages.length === 0) {
+    return [];
+  }
+  
   return pages.map((page) => ({
     params: { slug: page.slug },
     props: { page },
@@ -16,36 +21,39 @@ export async function getStaticPaths() {
 }
 
 const { page } = Astro.props;
-const { entry } = page;
 
-const rawContent = await entry.content() as string;
-const renderedContent = marked(rawContent ?? '');
+if (!page) {
+  return Astro.redirect('/404');
+}
+
+const { entry } = page;
+const content = await entry.content();
 ---
 
 <Layout 
-  title={`${entry.title} - Fashion Editorial`} 
-  description={entry.description}
+  title={`${entry?.title || 'Page'} - Fashion Editorial`} 
+  description={entry?.description || ''}
 >
   <Header currentPath={`/${page.slug}`} />
 
-  {/* PREMIUM EDITORIAL CANVAS FOR STATIC PAGES */}
   <main class="max-w-4xl mx-auto px-6 py-16 md:py-24 bg-[#faf9f6] min-h-[60vh] antialiased">
     <header class="mb-12 text-center space-y-4">
       <h1 class="text-3xl md:text-5xl font-serif font-light tracking-tight text-neutral-950 capitalize">
-        {entry.title.replace(/-/g, ' ')}
+        {entry?.title.replace(/-/g, ' ')}
       </h1>
       <div class="w-12 h-[1px] bg-[#bba15c] mx-auto pt-1"></div>
     </header>
 
-    {/* PAGE CONTENT LAYER */}
-    <div class="prose prose-neutral max-w-none legal-page-content text-[15px] md:text-[16px] text-neutral-800 leading-relaxed font-light tracking-wide" set:html={renderedContent} />
+    <div class="prose prose-neutral max-w-none legal-page-content text-[15px] md:text-[16px] text-neutral-800 leading-relaxed font-light tracking-wide">
+      {/* Keystatic native markdoc content layout rendering handler */}
+      <KeystaticRenderer node={content} />
+    </div>
   </main>
 
   <Footer />
 </Layout>
 
 <style is:global>
-  /* PREMIUM STATIC PAGES TYPOGRAPHY TUNING */
   .legal-page-content p {
     margin-bottom: 1.5rem !important;
     line-height: 1.85 !important;
@@ -65,7 +73,7 @@ const renderedContent = marked(rawContent ?? '');
   }
   .legal-page-content a {
     color: #bba15c !important;
-    text-decoration: underline !important;
+    text-decoration-line: underline !important;
     text-underline-offset: 4px;
   }
 </style>
