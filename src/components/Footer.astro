@@ -51,22 +51,29 @@ const siteName = settings?.siteName || "FASHION EDITORIAL";
         </ul>
       </div>
 
-      <!-- 📋 Information Column: Fully Dynamic Automatic Links Loop -->
+      <!-- 📋 Information Column: Dynamic Loop with Slug Fallback -->
       <div>
         <h4 class="text-xs font-bold tracking-widest text-neutral-400 uppercase mb-6 border-b border-neutral-900 pb-4">
           INFORMATION
         </h4>
         <ul class="space-y-4 text-xs md:text-sm">
           {allPages && allPages.length > 0 ? (
-            allPages.map((page) => (
-              <li>
-                <a href={`/${page.slug}/`} class="text-neutral-300 hover:text-white transition-colors duration-300 font-light no-underline block capitalize">
-                  {page.entry.title.replace(/-/g, ' ')}
-                </a>
-              </li>
-            ))
+            allPages.map((page) => {
+              // ⚡ Title fallbacks handle kar rahy hain agar entry load hony mai delay ho
+              const displayTitle = page.entry?.title 
+                ? page.entry.title 
+                : page.slug.replace(/-/g, ' ');
+
+              return (
+                <li>
+                  <a href={`/${page.slug}/`} class="text-neutral-300 hover:text-white transition-colors duration-300 font-light no-underline block capitalize">
+                    {displayTitle}
+                  </a>
+                </li>
+              );
+            })
           ) : (
-            /* Fallback link agar admin panel mein koi page na bana ho fallback handling */
+            /* Fallback link agar panel se sync queue delayed ho */
             <li>
               <span class="text-neutral-500 font-light text-xs italic">No pages published yet.</span>
             </li>
