@@ -8,8 +8,14 @@ interface Props {
 const { currentPath = '/' } = Astro.props;
 
 const settings = await getSiteSettings();
-const allCategories = await getAllCategories();
-const parentCategories = allCategories.filter((cat) => !cat.entry.parentCategory);
+const allCategories = await getAllCategories() || [];
+
+// ⚡ SAFE & ROBUST FILTER: Handles empty strings, null, and undefined gracefully from Keystatic Cloud
+const parentCategories = allCategories.filter((cat) => {
+  const p = cat.entry.parentCategory;
+  return !p || p === '' || p === null || p === undefined;
+});
+
 const categoryTree = parentCategories.map((parent) => ({
   ...parent,
   children: allCategories.filter((cat) => cat.entry.parentCategory === parent.slug),
@@ -19,36 +25,30 @@ const categoryTree = parentCategories.map((parent) => ({
 <header class="bg-white border-b border-neutral-200 sticky top-0 z-50 antialiased font-sans">
   <div class="max-w-7xl mx-auto px-6">
 
-    <!-- Top Row: Empty Left Space | CENTERED LOGO | Right Expanding Search System -->
     <div class="flex items-center justify-between py-5 border-b border-neutral-100 relative">
       
       {/* Left Block Placeholder (Maintains perfect logo centering on Desktop) */}
       <div class="hidden md:block w-52"></div>
 
-      <!-- Centered Premium Logo -->
       <a href="/" class="flex-1 text-center no-underline z-10">
         {settings.logoImage ? (
           <img src={settings.logoImage} alt={settings.siteName} class="h-8 mx-auto" />
         ) : (
           <span class="text-xl sm:text-2xl font-serif tracking-[0.25em] uppercase text-neutral-950 hover:opacity-80 transition duration-200">
-            {settings.siteName}
+            {settings.siteName || "FASHION EDITORIAL"}
           </span>
         )}
       </a>
 
-      <!-- 🔍 Right Search System: Hidden Input with Expanding CSS Toggle -->
       <div class="hidden md:flex items-center justify-end w-52 h-8 relative">
-        <!-- Pure CSS Hack using a hidden checkbox to switch search states -->
         <input type="checkbox" id="header-search-toggle" class="peer hidden" />
         
-        <!-- Icon Trigger (Visible by default, vanishes when checkbox is checked) -->
         <label for="header-search-toggle" class="cursor-pointer text-neutral-600 hover:text-black transition-all duration-300 peer-checked:opacity-0 peer-checked:pointer-events-none p-1.5 z-10">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
         </label>
 
-        <!-- Inline Expanding Search Container (Slides out and fades in smoothly on click) -->
         <form action="/search" method="GET" class="absolute right-0 top-0 h-full flex items-center border-b border-neutral-950 bg-white transform translate-x-4 opacity-0 pointer-events-none peer-checked:translate-x-0 peer-checked:opacity-100 peer-checked:pointer-events-auto transition-all duration-300 ease-out w-48 py-0.5 z-20">
           <input 
             type="text" 
@@ -57,22 +57,17 @@ const categoryTree = parentCategories.map((parent) => ({
             class="w-full bg-transparent text-[11px] font-light tracking-wide focus:outline-none placeholder-neutral-400 text-neutral-800 pr-1 pl-1"
             required
           />
-          
-          <!-- Functional Search Button Inside the Input Field -->
           <button type="submit" class="text-neutral-500 hover:text-black transition p-1" aria-label="Search">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
           </button>
-
-          <!-- Sleek close button to wrap everything back into just an icon -->
           <label for="header-search-toggle" class="cursor-pointer text-neutral-400 hover:text-black text-[10px] font-light pl-1.5 border-l border-neutral-200">
             ✕
           </label>
         </form>
       </div>
 
-      <!-- Mobile Hamburger Button -->
       <button id="mobile-menu-button" class="md:hidden p-2 text-neutral-700 hover:bg-neutral-50 transition" aria-label="Menu">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
@@ -80,8 +75,7 @@ const categoryTree = parentCategories.map((parent) => ({
       </button>
     </div>
 
-    <!-- Category Nav Links Row Layout -->
-    <div class="hidden md:flex items-center justify-center gap-8 py-3.5">
+    <div class="hidden md:flex items-center justify-center flex-wrap gap-x-8 gap-y-2 py-3.5">
       <a href="/" class={`text-[11px] tracking-widest uppercase font-bold transition duration-200 pb-0.5 ${currentPath === '/' ? 'text-neutral-950 border-b-2 border-neutral-950' : 'text-neutral-500 hover:text-neutral-950'}`}>
         Home
       </a>
@@ -99,25 +93,17 @@ const categoryTree = parentCategories.map((parent) => ({
             )}
           </a>
 
+          {/* Dynamic Cascading Dropdown (Removed the 5-slice limit constraint) */}
           {parent.children.length > 0 && (
-            <div class="invisible group-hover:visible opacity-0 group-hover:opacity-100 absolute left-1/2 -translate-x-1/2 top-full pt-3 transition-all duration-300 z-50">
+            <div class="invisible group-hover:visible opacity-0 group-hover:opacity-100 absolute left-1/2 -translate-x-1/2 top-full pt-3 transition-all duration-300 z-[100]">
               <div class="bg-white border border-neutral-200 shadow-2xl py-2 min-w-[210px] rounded-sm">
-                
-                {parent.children.slice(0, 5).map((child) => (
+                {parent.children.map((child) => (
                   <a
                     href={`/category/${child.slug}/`}
                     class="block px-5 py-2.5 text-[11px] tracking-wider uppercase text-neutral-600 hover:bg-neutral-50 hover:text-neutral-950 font-medium transition duration-150">
                     {child.entry.name}
                   </a>
                 ))}
-
-                {parent.children.length > 5 && (
-                  <div class="border-t border-neutral-100 mt-1 pt-1">
-                    <a href={`/category/${parent.slug}/`} class="block px-5 py-2 text-[10px] font-bold uppercase tracking-widest text-[#bba15c] hover:bg-neutral-50 transition duration-150">
-                      View All →
-                    </a>
-                  </div>
-                )}
               </div>
             </div>
           )}
@@ -127,11 +113,9 @@ const categoryTree = parentCategories.map((parent) => ({
 
   </div>
 
-  <!-- Mobile Menu Panels Drawer -->
   <div id="mobile-menu" class="hidden md:hidden border-t border-neutral-200 bg-white">
     <div class="max-w-7xl mx-auto px-6 py-4 space-y-3">
       
-      {/* Mobile Search Box Embedded */}
       <form action="/search" method="GET" class="relative flex items-center border border-neutral-200 rounded-sm bg-neutral-50 px-3 py-2 my-2">
         <input 
           type="text" 
