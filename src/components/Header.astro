@@ -16,7 +16,14 @@ const parentCategories = allCategories.filter((cat) => {
   return !p || p === '' || p === null || p === undefined;
 });
 
-const categoryTree = parentCategories.map((parent) => ({
+// 🧭 CUSTOM SORTING: Trends slug ko list mein sabsay pehle (Home ke right side par) force karne ke liye
+const sortedParentCategories = [...parentCategories].sort((a, b) => {
+  if (a.slug === 'trends') return -1;
+  if (b.slug === 'trends') return 1;
+  return 0;
+});
+
+const categoryTree = sortedParentCategories.map((parent) => ({
   ...parent,
   children: allCategories.filter((cat) => cat.entry.parentCategory === parent.slug),
 }));
@@ -76,12 +83,12 @@ const categoryTree = parentCategories.map((parent) => ({
     </div>
 
     <div class="hidden md:flex items-center justify-center flex-wrap gap-x-8 gap-y-2 py-3.5">
-      <a href="/" class={`text-[11px] tracking-widest uppercase font-bold transition duration-200 pb-0.5 ${currentPath === '/' ? 'text-neutral-950 border-b-2 border-neutral-950' : 'text-neutral-500 hover:text-neutral-950'}`}>
+      <a href="/" class={`text-[11px] tracking-widest uppercase font-bold transition duration-200 pb-0.5 shrink-0 ${currentPath === '/' ? 'text-neutral-950 border-b-2 border-neutral-950' : 'text-neutral-500 hover:text-neutral-950'}`}>
         Home
       </a>
 
       {categoryTree.map((parent) => (
-        <div class="relative group">
+        <div class="relative group shrink-0">
           <a
             href={`/category/${parent.slug}/`}
             class={`flex items-center gap-1 text-[11px] tracking-widest uppercase font-bold transition duration-200 pb-0.5 ${currentPath === `/category/${parent.slug}` ? 'text-neutral-950 border-b-2 border-neutral-950' : 'text-neutral-500 hover:text-neutral-950'}`}>
@@ -93,7 +100,7 @@ const categoryTree = parentCategories.map((parent) => ({
             )}
           </a>
 
-          {/* Dynamic Cascading Dropdown (Removed the 5-slice limit constraint) */}
+          {/* Dynamic Cascading Dropdown */}
           {parent.children.length > 0 && (
             <div class="invisible group-hover:visible opacity-0 group-hover:opacity-100 absolute left-1/2 -translate-x-1/2 top-full pt-3 transition-all duration-300 z-[100]">
               <div class="bg-white border border-neutral-200 shadow-2xl py-2 min-w-[210px] rounded-sm">
@@ -131,10 +138,10 @@ const categoryTree = parentCategories.map((parent) => ({
         </button>
       </form>
 
-      <a href="/" class="block py-2 text-xs font-bold uppercase tracking-wider text-neutral-700 hover:text-neutral-950 transition">Home</a>
+      <a href="/" class="block py-2 text-xs font-bold uppercase tracking-wider text-neutral-700 hover:text-neutral-950 transition border-b border-neutral-50 pb-1">Home</a>
 
       {categoryTree.map((parent) => (
-        <div class="mobile-category-group">
+        <div class="mobile-category-group border-b border-neutral-50 pb-1">
           <div class="flex items-center justify-between">
             <a href={`/category/${parent.slug}/`} class="block py-2 text-xs font-bold uppercase tracking-wider text-neutral-700 hover:text-neutral-950 transition flex-1">
               {parent.entry.name}
@@ -148,9 +155,9 @@ const categoryTree = parentCategories.map((parent) => ({
             )}
           </div>
           {parent.children.length > 0 && (
-            <div class="mobile-category-children hidden pl-4 border-l border-neutral-100 ml-1">
+            <div class="mobile-category-children hidden pl-4 border-l border-neutral-100 ml-1 space-y-1">
               {parent.children.map((child) => (
-                <a href={`/category/${child.slug}/`} class="block py-2 text-xs text-neutral-500 hover:text-neutral-950 transition">
+                <a href={`/category/${child.slug}/`} class="block py-1.5 text-xs text-neutral-500 hover:text-neutral-950 transition">
                   {child.entry.name}
                 </a>
               ))}
