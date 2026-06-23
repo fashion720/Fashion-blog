@@ -4,7 +4,7 @@ export const prerender = true;
 import Layout from '../../layouts/Layout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
-import AdSlot from '../components/AdSlot.astro';
+import AdSlot from '../../components/AdSlot.astro'; // ⚡ FIXED PATH: Changed from '../' to '../../'
 import SocialShare from '../../components/SocialShare.astro';
 import ReadingProgress from '../../components/ReadingProgress.astro';
 import PopularPosts from '../../components/PopularPosts.astro';
@@ -167,7 +167,6 @@ const formattedDate = entry.publishedDate
     const images = contentDiv.querySelectorAll('img');
 
     images.forEach((img) => {
-      // Automatic global extension blocker configs
       img.setAttribute('data-pin-nopin', 'true');
 
       const wrapper = document.createElement('div');
