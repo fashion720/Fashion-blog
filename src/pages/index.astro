@@ -4,6 +4,7 @@ import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import AdSlot from '../components/AdSlot.astro';
 import PostCard from '../components/PostCard.astro';
+import CompactPostRow from '../components/CompactPostRow.astro';
 import {
   getAllPosts,
   getAllCategories,
@@ -20,7 +21,7 @@ const allPosts = await getAllPosts();
 // 💸 MONETIZATION CONFIGURATION (SWITCH TO 'true' ONCE MONETIZED APPROVED)
 const isMonetized = false; 
 
-// 👑 SECTION 1: MASTER HERO (1 Single Flagship Banner Post)
+// 👑 SECTION 1: MASTER HERO (45% Image / 55% Text Editorial Split)
 const flagshipPost = allPosts[0];
 const flagshipSlug = flagshipPost ? [flagshipPost.slug] : [];
 
@@ -49,44 +50,49 @@ const activeCategoryWithPosts = categoryWithPosts.filter((c) => c.posts.length >
 
   <main class="bg-[#faf9f6] min-h-screen font-sans antialiased text-neutral-900 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-    {/* 👑 SECTION 1: FULL-WIDTH MASTER HERO */}
+    {/* 👑 SECTION 1: OPTIMIZED 45/55 EDITORIAL SPLIT HERO */}
     {flagshipPost && (
-      <section class="py-8 md:py-12 border-b border-neutral-200/60">
-        <a href={`/posts/${flagshipPost.slug}`} class="block no-underline group space-y-6">
-          <div class="overflow-hidden w-full aspect-[16/9] md:aspect-[21/9] bg-neutral-100 rounded-sm relative">
-            {flagshipPost.entry.featuredImage ? (
+      <section class="py-10 md:py-16 border-b border-neutral-200/60">
+        <div class="grid grid-cols-1 lg:grid-cols-[45fr_55fr] gap-x-12 gap-y-8 items-center">
+          
+          {/* 45% Portrait Layout Wrapper (Ideal for 4:5 and 2x2 Collage Matrix) */}
+          <div class="overflow-hidden w-full aspect-[4/5] bg-neutral-100 rounded-sm relative containment-layout group">
+            <a href={`/posts/${flagshipPost.slug}`} class="block w-full h-full pointer-events-auto">
               <img
                 src={flagshipPost.entry.featuredImage?.startsWith('/') ? flagshipPost.entry.featuredImage : `/images/posts/${flagshipPost.entry.featuredImage}`}
                 alt={flagshipPost.entry.title}
                 data-pin-nopin="true"
+                data-pin-nohover="true"
                 loading="eager"
                 fetchpriority="high"
-                class="w-full h-full object-cover transition-transform duration-[1000s] ease-out group-hover:scale-102 block"
+                class="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105 block pointer-events-none select-none z-10"
               />
-            ) : (
-              <div class="w-full h-full flex items-center justify-center text-neutral-300 bg-neutral-50/20 font-serif tracking-widest text-xs uppercase">
-                Image Placeholder
-              </div>
-            )}
+            </a>
           </div>
 
-          <div class="max-w-3xl mx-auto text-center space-y-3 pt-2">
+          {/* 55% Text Block (Luxury Breathing Space Allocation) */}
+          <div class="space-y-4 lg:pl-4 text-left">
             {flagshipPost.entry.categories?.[0] && (
-              <span class="block text-[11px] font-bold uppercase tracking-[0.25em] text-[#bba15c]">
+              <span class="block text-[11px] font-bold uppercase tracking-[0.3em] text-[#bba15c]">
                 {flagshipPost.entry.categories[0].replace(/-/g, ' ')}
               </span>
             )}
-            <h1 class="text-3xl sm:text-4xl md:text-5xl font-serif font-light tracking-tight text-neutral-950 leading-[1.15] group-hover:text-neutral-700 transition-colors duration-300">
-              {flagshipPost.entry.title}
-            </h1>
-            <p class="text-neutral-500 text-sm md:text-base leading-relaxed font-light max-w-2xl mx-auto line-clamp-2">
+            <a href={`/posts/${flagshipPost.slug}`} class="block no-underline group">
+              <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-5.5xl font-serif font-light tracking-tight text-neutral-950 leading-[1.15] group-hover:text-neutral-700 transition-colors duration-300 max-w-2xl line-clamp-2">
+                {flagshipPost.entry.title}
+              </h1>
+            </a>
+            <p class="text-neutral-500 text-sm md:text-base leading-relaxed font-light max-w-xl line-clamp-3">
               {flagshipPost.entry.description}
             </p>
-            <div class="pt-2">
-              <span class="inline-block text-xs uppercase tracking-widest font-medium border-b border-neutral-950 pb-0.5 group-hover:text-[#bba15c] group-hover:border-[#bba15c] transition-colors duration-300">Read Story →</span>
+            <div class="pt-4">
+              <a href={`/posts/${flagshipPost.slug}`} class="inline-block text-xs uppercase tracking-widest font-medium border-b border-neutral-950 pb-0.5 hover:text-[#bba15c] hover:border-[#bba15c] transition-colors duration-300 no-underline">
+                Read Story →
+              </a>
             </div>
           </div>
-        </a>
+
+        </div>
       </section>
     )}
 
@@ -94,7 +100,7 @@ const activeCategoryWithPosts = categoryWithPosts.filter((c) => c.posts.length >
     {latestPosts.length > 0 && (
       <section class="py-12 md:py-16 border-b border-neutral-200/60">
         <div class="text-center mb-10 md:mb-14 space-y-2">
-          <h2 class="text-xs font-serif tracking-[0.3em] uppercase text-neutral-950 font-medium">The Latest</h2>
+          <h2 class="text-xs font-serif tracking-[0.3em] uppercase text-neutral-950 font-medium">Latest Stories</h2>
           <div class="w-12 h-[1px] bg-[#bba15c] mx-auto"></div>
         </div>
 
@@ -113,30 +119,15 @@ const activeCategoryWithPosts = categoryWithPosts.filter((c) => c.posts.length >
         </div>
 
         {/* 📱 Mobile Optimized Side-by-Side Splits (Anti-Fatigue Stack) */}
-        <div class="block md:hidden space-y-6">
+        <div class="block md:hidden space-y-5">
           {latestPosts.map((post) => (
-            <a href={`/posts/${post.slug}`} class="flex gap-4 items-center no-underline group border-b border-neutral-100 pb-5 last:border-0 last:pb-0">
-              <div class="w-28 h-28 shrink-0 overflow-hidden bg-neutral-100 rounded-sm relative">
-                <img
-                  src={post.entry.featuredImage?.startsWith('/') ? post.entry.featuredImage : `/images/posts/${post.entry.featuredImage}`}
-                  alt={post.entry.title}
-                  data-pin-nopin="true"
-                  loading="lazy"
-                  class="w-full h-full object-cover"
-                />
-              </div>
-              <div class="space-y-1 min-w-0">
-                {post.entry.categories?.[0] && (
-                  <span class="block text-[9px] font-bold uppercase tracking-wider text-[#bba15c]">
-                    {post.entry.categories[0].replace(/-/g, ' ')}
-                  </span>
-                )}
-                <h3 class="text-sm font-medium text-neutral-950 line-clamp-2 leading-snug group-hover:text-neutral-600">
-                  {post.entry.title}
-                </h3>
-                <p class="text-neutral-400 text-[11px] font-light line-clamp-1">{post.entry.description}</p>
-              </div>
-            </a>
+            <CompactPostRow
+              title={post.entry.title}
+              slug={post.slug}
+              description={post.entry.description}
+              featuredImage={post.entry.featuredImage}
+              categories={post.entry.categories}
+            />
           ))}
         </div>
       </section>
@@ -170,46 +161,77 @@ const activeCategoryWithPosts = categoryWithPosts.filter((c) => c.posts.length >
           </div>
 
           {isEven ? (
-            /* 🎭 SECTION TYPE A: 2 Large Featured Columns (Alternating Blueprint) */
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-10 max-w-5xl mx-auto">
-              {displayPosts.map((post) => (
-                <a href={`/posts/${post.slug}`} class="block no-underline group space-y-4">
-                  <div class="overflow-hidden w-full aspect-[4/5] bg-neutral-100 rounded-sm relative">
-                    <img
-                      src={post.entry.featuredImage?.startsWith('/') ? post.entry.featuredImage : `/images/posts/${post.entry.featuredImage}`}
-                      alt={post.entry.title}
-                      data-pin-nopin="true"
-                      loading="lazy"
-                      class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-102"
-                    />
-                  </div>
-                  <div class="space-y-1.5 text-left">
-                    <span class="block text-[10px] font-bold uppercase tracking-widest text-[#bba15c]">
-                      {category.entry.name}
-                    </span>
-                    <h3 class="text-lg md:text-xl font-serif font-light text-neutral-950 leading-tight group-hover:text-neutral-600 transition-colors">
-                      {post.entry.title}
-                    </h3>
-                    <p class="text-neutral-500 text-xs leading-relaxed line-clamp-2 font-light">
-                      {post.entry.description}
-                    </p>
-                  </div>
-                </a>
-              ))}
+            /* 🎭 SECTION TYPE A: 2 Large Featured Columns (Alternating Blueprint) wrapped in balanced constraint dimensions */
+            <div>
+              <div class="hidden md:grid grid-cols-2 gap-10 max-w-5xl 2xl:max-w-6xl mx-auto">
+                {displayPosts.map((post) => (
+                  <a href={`/posts/${post.slug}`} class="block no-underline group space-y-4">
+                    <div class="overflow-hidden w-full aspect-[4/5] bg-neutral-100 rounded-sm relative containment-layout">
+                      <img
+                        src={post.entry.featuredImage?.startsWith('/') ? post.entry.featuredImage : `/images/posts/${post.entry.featuredImage}`}
+                        alt={post.entry.title}
+                        data-pin-nopin="true"
+                        data-pin-nohover="true"
+                        loading="lazy"
+                        class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-102"
+                      />
+                    </div>
+                    <div class="space-y-1.5 text-left">
+                      <span class="block text-[10px] font-bold uppercase tracking-widest text-[#bba15c]">
+                        {category.entry.name}
+                      </span>
+                      <h3 class="text-xl font-serif font-light text-neutral-950 leading-tight group-hover:text-neutral-600 transition-colors">
+                        {post.entry.title}
+                      </h3>
+                      <p class="text-neutral-500 text-xs leading-relaxed line-clamp-2 font-light">
+                        {post.entry.description}
+                      </p>
+                    </div>
+                  </a>
+                ))}
+              </div>
+
+              {/* Mobile Mirror Sync View */}
+              <div class="block md:hidden space-y-5">
+                {displayPosts.map((post) => (
+                  <CompactPostRow
+                    title={post.entry.title}
+                    slug={post.slug}
+                    description={post.entry.description}
+                    featuredImage={post.entry.featuredImage}
+                    categories={post.entry.categories}
+                  />
+                ))}
+              </div>
             </div>
           ) : (
             /* 🎭 SECTION TYPE B: 4-Column Breakpoint Secure Responsive Grid */
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {displayPosts.map((post) => (
-                <PostCard
-                  title={post.entry.title}
-                  slug={post.slug}
-                  description={post.entry.description}
-                  featuredImage={post.entry.featuredImage}
-                  publishedDate={post.entry.publishedDate}
-                  categories={post.entry.categories}
-                />
-              ))}
+            <div>
+              <div class="hidden md:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {displayPosts.map((post) => (
+                  <PostCard
+                    title={post.entry.title}
+                    slug={post.slug}
+                    description={post.entry.description}
+                    featuredImage={post.entry.featuredImage}
+                    publishedDate={post.entry.publishedDate}
+                    categories={post.entry.categories}
+                  />
+                ))}
+              </div>
+
+              {/* Mobile Mirror Sync View */}
+              <div class="block md:hidden space-y-5">
+                {displayPosts.map((post) => (
+                  <CompactPostRow
+                    title={post.entry.title}
+                    slug={post.slug}
+                    description={post.entry.description}
+                    featuredImage={post.entry.featuredImage}
+                    categories={post.entry.categories}
+                  />
+                ))}
+              </div>
             </div>
           )}
         </section>
@@ -250,3 +272,9 @@ const activeCategoryWithPosts = categoryWithPosts.filter((c) => c.posts.length >
 
   <Footer />
 </Layout>
+
+<style is:global>
+  .containment-layout {
+    contain: paint !important;
+  }
+</style>
