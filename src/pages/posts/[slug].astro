@@ -53,15 +53,11 @@ const formattedDate = entry.publishedDate
   <ReadingProgress />
   <Header currentPath={`/posts/${post.slug}`} />
 
-  {/* 🛠️ OPTIMIZED FRAME WRAPPER: Limits canvas stretch to lock content bounds */}
   <main class="max-w-6xl mx-auto px-4 md:px-8 py-10 bg-[#faf9f6]">
-    {/* ⚡ GRID SPACING TIGHTENED: Changed gap-x-16 to gap-x-8/10 to bring text closer to sidebar */}
     <div class="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-x-10 gap-y-12 items-start">
       
-      {/* LEFT COLUMN: Main Article Body */}
       <article class="w-full min-w-0 overflow-hidden">
         
-        {/* Editorial Header */}
         <header class="mb-8 space-y-3">
           {entry.categories && entry.categories.length > 0 && (
             <div class="flex flex-wrap gap-x-3 gap-y-1 items-center">
@@ -86,9 +82,8 @@ const formattedDate = entry.publishedDate
           <div class="w-full h-[1px] bg-neutral-200/50 pt-2"></div>
         </header>
 
-        {/* 🛠️ BROAD IMAGING FRAME: Image scales matching perfectly with typography margins */}
         {entry.featuredImage && (
-          <div class="w-full mb-8 overflow-hidden bg-neutral-100 rounded-[2px]">
+          <div class="w-full mb-8 overflow-hidden bg-neutral-100 rounded-[2px] relative group img-pin-wrapper">
             <img
               src={featuredImage}
               alt={entry.title}
@@ -96,16 +91,22 @@ const formattedDate = entry.publishedDate
               loading="eager"
               decoding="async"
             />
+            <a 
+              href={`https://pinterest.com/pin/create/button/?url=${encodeURIComponent(postUrl)}&media=${encodeURIComponent(new URL(featuredImage, Astro.site).toString())}&description=${encodeURIComponent(entry.title)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="absolute top-4 left-4 bg-red-600 text-white flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-full shadow-md text-[11px] font-bold tracking-wide uppercase hover:bg-red-700 z-30 transition no-underline"
+            >
+              <svg class="w-3.5 h-3.5 fill-white" viewBox="0 0 24 24"><path d="M12 0C5.373 0 0 5.372 0 12c0 5.084 3.163 9.426 7.627 11.174-.105-.949-.2-2.405.042-3.441.218-.937 1.407-5.965 1.407-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.992 3.993-.283 1.194.599 2.169 1.775 2.169 2.13 0 3.769-2.247 3.769-5.491 0-2.871-2.063-4.878-5.01-4.878-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738a.36.36 0 0 1 .083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.359-.631-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.179 23.774 10.551 24 12 24c6.627 0 12-5.373 12-12 0-6.628-5.373-12-12-12z"/></svg>
+              Save
+            </a>
           </div>
         )}
 
-        {/* 🛠️ LUXURY PROSE ELEMENT: Completely unlocked width with absolute text bounds handling */}
         <div class="prose prose-neutral max-w-none fashion-prose-content" set:html={renderedContent} />
 
-        {/* In-Content Ads Slot Area */}
         <AdSlot slot="in-content" format="horizontal" className="my-10" />
 
-        {/* Share Section Wrapper */}
         <div class="border-t border-b border-neutral-200/50 py-4 my-8 flex items-center justify-between">
           <span class="text-[11px] uppercase tracking-widest text-neutral-400 font-bold">Share This Article</span>
           <SocialShare
@@ -116,7 +117,6 @@ const formattedDate = entry.publishedDate
           />
         </div>
 
-        {/* Editorial Author Bio Card */}
         {author && (
           <div class="mt-10 p-5 bg-white border border-neutral-200/30 rounded-[2px] flex flex-col sm:flex-row items-center sm:items-start gap-4 text-center sm:text-left">
             {author.avatar && (
@@ -138,7 +138,6 @@ const formattedDate = entry.publishedDate
         )}
       </article>
 
-      {/* 🛠️ RIGHT COLUMN: Premium Sidebar with Strict Width Sync */}
       <aside class="w-full lg:w-[320px] flex flex-col gap-8 lg:sticky lg:top-24">
         <AdSlot slot="sidebar" format="rectangle" className="m-0" />
         
@@ -159,10 +158,50 @@ const formattedDate = entry.publishedDate
   <Footer />
 </Layout>
 
+<script define:vars={{ postUrl, postTitle: entry.title }}>
+  document.addEventListener('DOMContentLoaded', () => {
+    const contentDiv = document.querySelector('.fashion-prose-content');
+    if (!contentDiv) return;
+
+    // Content ke andar aane wali saari images ko pakro
+    const images = contentDiv.querySelectorAll('img');
+
+    images.forEach((img) => {
+      // Dynamic wrapper create karo relative block ke sath
+      const wrapper = document.createElement('div');
+      wrapper.className = 'relative my-8 overflow-hidden inline-block w-full img-pin-wrapper';
+      
+      // Image ko wrapper ke andar transfer karo
+      img.parentNode.insertBefore(wrapper, img);
+      wrapper.appendChild(img);
+      
+      // Image classes override karke block layouts clear karo
+      img.style.margin = '0';
+      img.style.width = '100%';
+
+      // Dynamic source configuration
+      const imgSrc = img.getAttribute('src');
+      const absoluteImgSrc = imgSrc?.startsWith('http') ? imgSrc : window.location.origin + imgSrc;
+
+      // Premium Pinterest Save Intent Link inject karo (Always Visible)
+      const pinBtn = document.createElement('a');
+      pinBtn.href = `https://pinterest.com/pin/create/button/?url=${encodeURIComponent(postUrl)}&media=${encodeURIComponent(absoluteImgSrc)}&description=${encodeURIComponent(postTitle)}`;
+      pinBtn.target = '_blank';
+      pinBtn.rel = 'noopener noreferrer';
+      pinBtn.className = 'absolute top-4 left-4 bg-red-600 hover:bg-red-700 text-white flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-full shadow-md text-[11px] font-bold tracking-wide uppercase transition z-30 no-underline pointer-events-auto opacity-100';
+      pinBtn.innerHTML = `
+        <svg class="w-3.5 h-3.5 fill-white" viewBox="0 0 24 24"><path d="M12 0C5.373 0 0 5.372 0 12c0 5.084 3.163 9.426 7.627 11.174-.105-.949-.2-2.405.042-3.441.218-.937 1.407-5.965 1.407-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.992 3.993-.283 1.194.599 2.169 1.775 2.169 2.13 0 3.769-2.247 3.769-5.491 0-2.871-2.063-4.878-5.01-4.878-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738a.36.36 0 0 1 .083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.359-.631-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.179 23.774 10.551 24 12 24c6.627 0 12-5.373 12-12 0-6.628-5.373-12-12-12z"/></svg>
+        Save
+      `;
+      
+      wrapper.appendChild(pinBtn);
+    });
+  });
+</script>
+
 <style is:global>
   /* ⚡ PREMIUM EDITORIAL TYPOGRAPHY TUNING */
   .fashion-prose-content {
-    /* Unlocks typography characters per line limit globally */
     max-width: 100% !important;
   }
   .fashion-prose-content p {
@@ -186,18 +225,11 @@ const formattedDate = entry.publishedDate
   }
   .fashion-prose-content h2 {
     font-size: 1.65rem !important;
-    border-b: 1px solid #f3f4f6;
+    border-bottom: 1px solid #f3f4f6;
     padding-bottom: 0.4rem;
   }
   .fashion-prose-content h3 {
     font-size: 1.35rem !important;
-  }
-  .fashion-prose-content img {
-    border-radius: 2px !important;
-    margin: 2rem auto !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    height: auto !important;
   }
   .fashion-prose-content a {
     color: #bba15c !important;
@@ -205,7 +237,6 @@ const formattedDate = entry.publishedDate
     text-underline-offset: 4px;
     font-weight: 400 !important;
   }
-  /* Fixes list styling from resetting too harshly */
   .fashion-prose-content ul, .fashion-prose-content ol {
     margin-bottom: 1.5rem !important;
     padding-left: 1.25rem !important;
@@ -216,5 +247,11 @@ const formattedDate = entry.publishedDate
     margin-bottom: 0.5rem !important;
     font-size: 16px !important;
     line-height: 1.7 !important;
+  }
+  
+  /* 📌 STRUCTURAL FIX: Ensures dynamic wrapper anchors pin elements safely */
+  .img-pin-wrapper a {
+    text-decoration: none !important;
+    transition: background-color 0.2s ease-in-out !important;
   }
 </style>
