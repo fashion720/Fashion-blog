@@ -83,13 +83,13 @@ const formattedDate = entry.publishedDate
         </header>
 
         {entry.featuredImage && (
-          <div class="w-full mb-8 overflow-hidden bg-neutral-100 rounded-[2px] relative img-pin-wrapper">
+          <div class="w-full mb-8 overflow-hidden bg-neutral-100 rounded-[2px] relative img-pin-wrapper isolation-layout">
             <img
               src={featuredImage}
               alt={entry.title}
               data-pin-nopin="true"
               data-pin-nohover="true"
-              class="w-full h-auto object-contain block max-h-[70vh] md:max-h-[75vh]"
+              class="w-full h-auto object-contain block max-h-[70vh] md:max-h-[75vh] pointer-events-none select-none"
               loading="eager"
               decoding="async"
             />
@@ -97,7 +97,7 @@ const formattedDate = entry.publishedDate
               href={`https://pinterest.com/pin/create/button/?url=${encodeURIComponent(postUrl)}&media=${encodeURIComponent(new URL(featuredImage, Astro.site).toString())}&description=${encodeURIComponent(entry.title)}`}
               target="_blank"
               rel="noopener noreferrer"
-              class="absolute top-4 left-4 bg-red-600 text-white flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-full shadow-md text-[11px] font-bold tracking-wide uppercase hover:bg-red-700 z-30 transition no-underline opacity-100 block pointer-events-auto"
+              class="absolute top-4 left-4 bg-red-600 text-white flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-full shadow-md text-[11px] font-bold tracking-wide uppercase hover:bg-red-700 z-50 transition no-underline opacity-100 block pointer-events-auto"
             >
               <svg class="w-3.5 h-3.5 fill-white" viewBox="0 0 24 24"><path d="M12 0C5.373 0 0 5.372 0 12c0 5.084 3.163 9.426 7.627 11.174-.105-.949-.2-2.405.042-3.441.218-.937 1.407-5.965 1.407-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.992 3.993-.283 1.194.599 2.169 1.775 2.169 2.13 0 3.769-2.247 3.769-5.491 0-2.871-2.063-4.878-5.01-4.878-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738a.36.36 0 0 1 .083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.359-.631-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.179 23.774 10.551 24 12 24c6.627 0 12-5.373 12-12 0-6.628-5.373-12-12-12z"/></svg>
               Save
@@ -168,12 +168,15 @@ const formattedDate = entry.publishedDate
     const images = contentDiv.querySelectorAll('img');
 
     images.forEach((img) => {
-      // Force block dynamic overlay interceptors
+      // Force programmatic flags directly into node
       img.setAttribute('data-pin-nopin', 'true');
       img.setAttribute('data-pin-nohover', 'true');
+      
+      // ⚡ POINTER BLOCKER: Disables standard mouse trace so external plugins can't attach elements
+      img.classList.add('pointer-events-none', 'select-none');
 
       const wrapper = document.createElement('div');
-      wrapper.className = 'relative my-8 overflow-hidden inline-block w-full img-pin-wrapper';
+      wrapper.className = 'relative my-8 overflow-hidden inline-block w-full img-pin-wrapper isolation-layout';
       
       img.parentNode.insertBefore(wrapper, img);
       wrapper.appendChild(img);
@@ -188,8 +191,8 @@ const formattedDate = entry.publishedDate
       pinBtn.href = `https://pinterest.com/pin/create/button/?url=${encodeURIComponent(postUrl)}&media=${encodeURIComponent(absoluteImgSrc)}&description=${encodeURIComponent(postTitle)}`;
       pinBtn.target = '_blank';
       pinBtn.rel = 'noopener noreferrer';
-      // ⚡ Added explicit custom classes to secure position layers and force layout isolation
-      pinBtn.className = 'absolute top-4 left-4 bg-red-600 hover:bg-red-700 text-white flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-full shadow-md text-[11px] font-bold tracking-wide uppercase transition z-30 no-underline pointer-events-auto opacity-100 block custom-pin-trigger';
+      // ⚡ pointer-events-auto explicitly brings back mouse click mechanics ONLY to our red shape button
+      pinBtn.className = 'absolute top-4 left-4 bg-red-600 hover:bg-red-700 text-white flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-full shadow-md text-[11px] font-bold tracking-wide uppercase transition z-50 no-underline pointer-events-auto opacity-100 block';
       pinBtn.innerHTML = `
         <svg class="w-3.5 h-3.5 fill-white" viewBox="0 0 24 24"><path d="M12 0C5.373 0 0 5.372 0 12c0 5.084 3.163 9.426 7.627 11.174-.105-.949-.2-2.405.042-3.441.218-.937 1.407-5.965 1.407-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.992 3.993-.283 1.194.599 2.169 1.775 2.169 2.13 0 3.769-2.247 3.769-5.491 0-2.871-2.063-4.878-5.01-4.878-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738a.36.36 0 0 1 .083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.359-.631-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.179 23.774 10.551 24 12 24c6.627 0 12-5.373 12-12 0-6.628-5.373-12-12-12z"/></svg>
         Save
@@ -254,13 +257,19 @@ const formattedDate = entry.publishedDate
     text-decoration: none !important;
   }
 
-  /* ⚡ HARD OVERRIDE FOR CLOSING EXTENSION INTERCEPTIONS */
-  .img-pin-wrapper span, 
-  .img-pin-wrapper .PIN_1719145846170_button,
-  [data-pin-log="button_hover"] {
+  /* ⚡ RADICAL CSS MASKS FOR FORCED INJECTION REMOVAL */
+  .isolation-layout span,
+  .isolation-layout [class*="PIN_"],
+  .isolation-layout [id*="PIN_"],
+  [data-pin-log="button_hover"],
+  [class*="PinIt"],
+  .PIN_1719145846170_button {
     display: none !important;
     visibility: hidden !important;
     opacity: 0 !important;
     pointer-events: none !important;
+    content: "" !important;
+    width: 0 !important;
+    height: 0 !important;
   }
 </style>
