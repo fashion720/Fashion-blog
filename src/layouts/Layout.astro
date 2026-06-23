@@ -27,7 +27,6 @@ const {
   showBackToTop = true,
 } = Astro.props;
 
-// Settings Keystatic admin panel se aati hain (Site Settings section)
 const settings = await getSiteSettings();
 
 const canonicalURL  = new URL(Astro.url.pathname, Astro.site);
@@ -75,6 +74,9 @@ const siteName      = settings.siteName || 'Fashion Blog';
     <!-- Pinterest -->
     <meta name="pinterest-rich-pin" content="true" />
 
+    <!-- Pinterest Save Button Widget Script -->
+    <script async defer src="//assets.pinterest.com/js/pinit.js"></script>
+
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 
@@ -90,12 +92,7 @@ const siteName      = settings.siteName || 'Fashion Blog';
       rel="stylesheet"
     />
 
-    <!-- ═══════════════════════════════════════════════════
-         ANALYTICS & ADS — Keystatic admin panel se control karo
-         Site Settings => Analytics / Ads section
-         ═══════════════════════════════════════════════════ -->
-
-    <!-- Google AdSense (tab load hota hai jab admin panel mein ON karo) -->
+    <!-- Google AdSense -->
     {settings.adsenseEnabled && settings.adsenseClientId && (
       <script
         async
@@ -151,5 +148,32 @@ const siteName      = settings.siteName || 'Fashion Blog';
   <body class="bg-white text-gray-900">
     <slot />
     {showBackToTop && <BackToTop />}
+
+    <!-- Pinterest Hover Save Button — har image par automatically -->
+    <script is:inline>
+      document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('article img').forEach(function(img) {
+          const wrapper = document.createElement('div');
+          wrapper.style.cssText = 'position:relative;display:inline-block;width:100%;';
+          img.parentNode.insertBefore(wrapper, img);
+          wrapper.appendChild(img);
+
+          const btn = document.createElement('a');
+          btn.href = 'https://pinterest.com/pin/create/button/?url='
+            + encodeURIComponent(window.location.href)
+            + '&media=' + encodeURIComponent(img.src)
+            + '&description=' + encodeURIComponent(img.alt || document.title);
+          btn.target = '_blank';
+          btn.rel = 'noopener';
+          btn.innerHTML = '<img src="//assets.pinterest.com/images/pidgets/pinit_fg_en_rect_red_28.png" alt="Save to Pinterest" />';
+          btn.style.cssText = 'position:absolute;top:10px;left:10px;opacity:0;transition:opacity 0.2s;z-index:10;';
+
+          wrapper.addEventListener('mouseenter', () => btn.style.opacity = '1');
+          wrapper.addEventListener('mouseleave', () => btn.style.opacity = '0');
+          wrapper.appendChild(btn);
+        });
+      });
+    </script>
+
   </body>
 </html>
