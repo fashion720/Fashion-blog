@@ -3,6 +3,7 @@ import Layout from '../../layouts/Layout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import PostCard from '../../components/PostCard.astro';
+import CompactPostRow from '../../components/CompactPostRow.astro';
 import { getAllCategories, getPostsByCategory } from '../../lib/keystatic-reader';
 
 export async function getStaticPaths() {
@@ -16,24 +17,23 @@ export async function getStaticPaths() {
 const { category, allCategories = [] } = Astro.props;
 const posts = await getPostsByCategory(category.slug);
 
-// 1. Identify if this category is a Parent, and fetch its direct children references
+// 1. Identify Parent/Child relationships cleanly
 const isParentCategory = !category.entry.parentCategory;
 const childCategories = allCategories.filter(
   (cat) => cat.entry.parentCategory === category.slug
 );
 
-// 2. Setup Hero Post for parent view shuffling
+// 👑 VISUAL RHYTHM SEGMENT 1: 45/55 EDITORIAL SPLIT HERO (Latest post inside this scope)
 const heroPost = isParentCategory && posts.length > 0 ? posts[0] : null;
+const heroSlug = heroPost ? [heroPost.slug] : [];
 
-// 3. Collect child posts mapping asynchronously while filtering out the top hero post to avoid repetition
+// 2. Collect child posts mapping while executing zero-duplicate global filtration
 const childSections = isParentCategory
   ? await Promise.all(
       childCategories.map(async (child) => {
         const childPosts = await getPostsByCategory(child.slug);
-        const filteredChildPosts = heroPost 
-          ? childPosts.filter((p) => p.slug !== heroPost.slug)
-          : childPosts;
-        return { childCategory: child, posts: filteredChildPosts.slice(0, 3) };
+        const filteredChildPosts = childPosts.filter((p) => !heroSlug.includes(p.slug));
+        return { childCategory: child, posts: filteredChildPosts };
       })
     )
   : [];
@@ -48,94 +48,173 @@ function resolveImage(img?: string) {
 ---
 
 <Layout
-  title={`${category.entry.name} - Fashion Editorial`}
-  description={category.entry.description || `Posts about ${category.entry.name}`}
+  title={`${category.entry.name} — Fashion Editorial`}
+  description={category.entry.description || `Explore contemporary styles inside ${category.entry.name}`}
 >
   <Header currentPath={`/category/${category.slug}`} />
 
-  <main class="min-h-screen bg-[#faf9f6] text-neutral-900 font-sans antialiased">
+  <main class="min-h-screen bg-[#faf9f6] text-neutral-900 font-sans antialiased max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     
-    <div class="border-b border-neutral-200/60 py-16 text-center space-y-3">
-      <p class="text-xs tracking-widest uppercase text-[#bba15c] font-bold">Category Explore</p>
-      <h1 class="text-3xl md:text-5xl font-serif font-light tracking-wide text-neutral-950 uppercase">
+    {/* 📋 ARCHIVE TYPE INTROHEADER HEADER */}
+    <header class="text-center py-12 md:py-16 border-b border-neutral-200/40">
+      <span class="text-[10px] tracking-[0.3em] uppercase text-neutral-400 block mb-2">Category Explore</span>
+      <h1 class="text-3xl md:text-5xl font-serif tracking-[0.15em] uppercase text-neutral-950 font-light">
         {category.entry.name}
       </h1>
       {category.entry.description && (
-        <p class="text-neutral-500 max-w-xl mx-auto text-sm font-light leading-relaxed px-4">
+        <p class="text-neutral-500 max-w-xl mx-auto text-xs md:text-sm font-light leading-relaxed pt-2">
           {category.entry.description}
         </p>
       )}
-    </div>
+      <div class="w-16 h-[1px] bg-[#bba15c] mx-auto mt-4"></div>
+    </header>
 
     {isParentCategory ? (
       <div class="pb-16">
         
+        {/* 👑 VISUAL RHYTHM SEGMENT 1: OPTIMIZED 45/55 EDITORIAL SPLIT HERO */}
         {heroPost && (
-          <section class="max-w-7xl mx-auto px-6 py-12 md:py-16 border-b border-neutral-200/60">
-            {/* 🛠️ OPTION 1 DYNAMIC LAYOUT: Controlled stacking to overlay elements beautifully on mobile */}
-            <a href={`/posts/${heroPost.slug}`} class="relative flex flex-col md:flex-row items-center gap-0 md:gap-12 no-underline group block overflow-hidden rounded-sm">
+          <section class="py-10 md:py-16 border-b border-neutral-200/60">
+            <div class="grid grid-cols-1 lg:grid-cols-[45fr_55fr] gap-x-12 gap-y-8 items-center">
               
-              {/* Image Container Panel */}
-              <div class="w-full md:w-1/2 overflow-hidden bg-neutral-100">
-                <img
-                  src={heroPost.entry.featuredImage?.startsWith('/') ? heroPost.entry.featuredImage : `/images/posts/${heroPost.entry.featuredImage}`}
-                  alt={heroPost.entry.title}
-                  class="w-full h-auto max-h-[65vh] md:max-h-none object-cover transition-transform duration-700 group-hover:scale-101 block"
-                />
+              {/* Left Side: 45% Space Block (Ideal for 4:5 and 2x2 Collages) */}
+              <div class="overflow-hidden w-full aspect-[4/5] bg-neutral-100 rounded-sm relative containment-layout group">
+                <a href={`/posts/${heroPost.slug}`} class="block w-full h-full pointer-events-auto">
+                  <img
+                    src={heroPost.entry.featuredImage?.startsWith('/') ? heroPost.entry.featuredImage : `/images/posts/${heroPost.entry.featuredImage}`}
+                    alt={heroPost.entry.title}
+                    data-pin-nopin="true"
+                    data-pin-nohover="true"
+                    loading="eager"
+                    fetchpriority="high"
+                    class="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105 block pointer-events-none select-none z-10"
+                  />
+                </a>
               </div>
 
-              {/* ⚡ Dynamic Text Box: Absolute Overlay on Mobile, Flat Relative on Desktop */}
-              <div class="absolute md:relative bottom-0 left-0 w-full md:w-1/2 p-6 md:p-0 bg-gradient-to-t from-black/90 via-black/70 to-transparent md:bg-none text-white md:text-neutral-900 space-y-3 md:space-y-4">
-                <span class="text-[10px] md:text-xs font-bold uppercase tracking-widest text-[#bba15c] block">
+              {/* Right Side: 55% Content Frame (Luxury Breathing Text) */}
+              <div class="space-y-4 text-left">
+                <span class="block text-[10px] font-bold uppercase tracking-[0.3em] text-[#bba15c]">
                   Latest Feature
                 </span>
-                
-                <h2 class="text-xl md:text-4xl font-serif font-light tracking-tight text-white md:text-neutral-950 leading-tight">
-                  {heroPost.entry.title}
-                </h2>
-                
-                <p class="text-neutral-300 md:text-neutral-600 text-xs md:text-sm leading-relaxed font-light max-w-prose line-clamp-2 md:line-clamp-none">
+                <a href={`/posts/${heroPost.slug}`} class="block no-underline group">
+                  <h2 class="text-2xl sm:text-3xl md:text-4xl font-serif font-light tracking-tight text-neutral-950 leading-tight group-hover:text-neutral-700 transition-colors duration-300 line-clamp-2">
+                    {heroPost.entry.title}
+                  </h2>
+                </a>
+                <p class="text-neutral-500 text-sm md:text-base leading-relaxed font-light max-w-xl line-clamp-3">
                   {heroPost.entry.description}
                 </p>
-                
-                <div class="pt-1 md:pt-2 text-[10px] md:text-xs tracking-widest uppercase text-neutral-400 md:text-neutral-400">
-                  <span class="font-bold border-b border-white md:border-neutral-900 text-white md:text-neutral-900 pb-0.5 group-hover:text-[#bba15c] group-hover:border-[#bba15c] transition-colors">
-                    READ ARTICLE
-                  </span>
+                <div class="pt-4">
+                  <a href={`/posts/${heroPost.slug}`} class="inline-block text-xs uppercase tracking-widest font-medium border-b border-neutral-950 pb-0.5 hover:text-[#bba15c] hover:border-[#bba15c] transition-colors duration-300 no-underline">
+                    Read Article →
+                  </a>
                 </div>
               </div>
 
-            </a>
+            </div>
           </section>
         )}
 
+        {/* 🎨 CHILD CATEGORIES LOOP WITH THEME INTERCHANGES */}
         {activeChildSections.length > 0 ? (
-          activeChildSections.map(({ childCategory, posts: childPosts }) => (
-            <section class="max-w-7xl mx-auto px-6 py-16 border-b border-neutral-200/60 dynamic-child-section">
-              <div class="text-center mb-12 space-y-2">
-                <h3 class="text-xl font-serif tracking-widest uppercase text-neutral-950 font-medium">
-                  {childCategory.entry.name}
-                </h3>
-                <div class="w-12 h-[1px] bg-[#bba15c] mx-auto"></div>
-              </div>
+          activeChildSections.map(({ childCategory, posts: childPosts }, index) => {
+            // Index Switches: Pehli child category 2-Columns grid banegi, baki 3-Columns matrices
+            const isFirstChild = index === 0;
+            const displayPosts = isFirstChild ? childPosts.slice(0, 2) : childPosts.slice(0, 3);
 
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-12">
-                {childPosts.map((post) => (
-                  <PostCard
-                    title={post.entry.title}
-                    slug={post.slug}
-                    description={post.entry.description}
-                    featuredImage={post.entry.featuredImage}
-                    publishedDate={post.entry.publishedDate}
-                    categories={post.entry.categories}
-                  />
-                ))}
-              </div>
-            </section>
-          ))
+            if (displayPosts.length === 0) return null;
+
+            return (
+              <section class="py-12 md:py-16 border-b border-neutral-200/60 last:border-0 dynamic-child-section">
+                <div class="text-center mb-10 md:mb-14 space-y-2">
+                  <h3 class="text-xs font-serif tracking-[0.3em] uppercase text-neutral-950 font-medium">
+                    {childCategory.entry.name}
+                  </h3>
+                  <div class="w-12 h-[1px] bg-[#bba15c] mx-auto"></div>
+                </div>
+
+                {isFirstChild ? (
+                  /* 🎭 RHYTHM STYLE A: 2 Large Cards Editorial Grid Layout */
+                  <div>
+                    <div class="hidden md:grid grid-cols-2 gap-10 max-w-5xl 2xl:max-w-6xl mx-auto">
+                      {displayPosts.map((post) => (
+                        <a href={`/posts/${post.slug}`} class="block no-underline group space-y-4">
+                          <div class="overflow-hidden w-full aspect-[4/5] bg-neutral-100 rounded-sm relative containment-layout">
+                            <img
+                              src={post.entry.featuredImage?.startsWith('/') ? post.entry.featuredImage : `/images/posts/${post.entry.featuredImage}`}
+                              alt={post.entry.title}
+                              data-pin-nopin="true"
+                              data-pin-nohover="true"
+                              loading="lazy"
+                              class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-102"
+                            />
+                          </div>
+                          <div class="space-y-1.5 text-left">
+                            <span class="block text-[10px] font-bold uppercase tracking-widest text-[#bba15c]">
+                              {childCategory.entry.name}
+                            </span>
+                            <h4 class="text-xl font-serif font-light text-neutral-950 leading-tight group-hover:text-neutral-600 transition-colors">
+                              {post.entry.title}
+                            </h4>
+                            <p class="text-neutral-500 text-xs leading-relaxed line-clamp-2 font-light">
+                              {post.entry.description}
+                            </p>
+                          </div>
+                        </a>
+                      ))}
+                    </div>
+
+                    {/* Mobile Anti-Fatigue Split Rows Container */}
+                    <div class="block md:hidden space-y-5">
+                      {displayPosts.map((post) => (
+                        <CompactPostRow
+                          title={post.entry.title}
+                          slug={post.slug}
+                          description={post.entry.description}
+                          featuredImage={post.entry.featuredImage}
+                          categories={post.entry.categories}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  /* 🎭 RHYTHM STYLE B: Uniform 3-Column Grid Block Matrix */
+                  <div>
+                    <div class="hidden md:grid grid-cols-3 gap-8">
+                      {displayPosts.map((post) => (
+                        <PostCard
+                          title={post.entry.title}
+                          slug={post.slug}
+                          description={post.entry.description}
+                          featuredImage={post.entry.featuredImage}
+                          publishedDate={post.entry.publishedDate}
+                          categories={post.entry.categories}
+                        />
+                      ))}
+                    </div>
+
+                    {/* Mobile Anti-Fatigue Split Rows Container */}
+                    <div class="block md:hidden space-y-5">
+                      {displayPosts.map((post) => (
+                        <CompactPostRow
+                          title={post.entry.title}
+                          slug={post.slug}
+                          description={post.entry.description}
+                          featuredImage={post.entry.featuredImage}
+                          categories={post.entry.categories}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </section>
+            );
+          })
         ) : (
-          <section class="max-w-7xl mx-auto px-6 py-16">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-12">
+          /* FALLBACK SEGMENT: Executed if Parent Category exists but has zero Child Category trees configured */
+          <section class="py-12 md:py-16">
+            <div class="hidden md:grid grid-cols-3 gap-8">
               {posts.slice(1).map((post) => (
                 <PostCard
                   title={post.entry.title}
@@ -147,28 +226,55 @@ function resolveImage(img?: string) {
                 />
               ))}
             </div>
+
+            <div class="block md:hidden space-y-5">
+              {posts.slice(1).map((post) => (
+                <CompactPostRow
+                  title={post.entry.title}
+                  slug={post.slug}
+                  description={post.entry.description}
+                  featuredImage={post.entry.featuredImage}
+                  categories={post.entry.categories}
+                />
+              ))}
+            </div>
           </section>
         )}
 
       </div>
     ) : (
-      <div class="max-w-7xl mx-auto px-6 py-16">
+      /* 📂 CHILD CATEGORY ARCHIVE DIRECTORY VIEW (Executed if user lands directly on a sub-category leaf) */
+      <div class="py-12 md:py-16">
         {posts.length > 0 ? (
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-12">
-            {posts.map((post) => (
-              <PostCard
-                title={post.entry.title}
-                slug={post.slug}
-                description={post.entry.description}
-                featuredImage={resolveImage(post.entry.featuredImage)}
-                publishedDate={post.entry.publishedDate}
-                categories={post.entry.categories}
-              />
-            ))}
+          <div>
+            <div class="hidden md:grid grid-cols-3 gap-8">
+              {posts.map((post) => (
+                <PostCard
+                  title={post.entry.title}
+                  slug={post.slug}
+                  description={post.entry.description}
+                  featuredImage={resolveImage(post.entry.featuredImage)}
+                  publishedDate={post.entry.publishedDate}
+                  categories={post.entry.categories}
+                />
+              ))}
+            </div>
+
+            <div class="block md:hidden space-y-5">
+              {posts.map((post) => (
+                <CompactPostRow
+                  title={post.entry.title}
+                  slug={post.slug}
+                  description={post.entry.description}
+                  featuredImage={post.entry.featuredImage}
+                  categories={post.entry.categories}
+                />
+              ))}
+            </div>
           </div>
         ) : (
           <div class="text-center py-24 text-neutral-400 font-light text-sm tracking-wide">
-            <p>No posts found inside this sub-category yet.</p>
+            <p>No posts published inside this collection stream yet.</p>
           </div>
         )}
       </div>
@@ -177,3 +283,9 @@ function resolveImage(img?: string) {
 
   <Footer />
 </Layout>
+
+<style is:global>
+  .containment-layout {
+    contain: paint !important;
+  }
+</style>
