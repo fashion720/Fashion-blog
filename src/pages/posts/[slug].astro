@@ -4,7 +4,7 @@ export const prerender = true;
 import Layout from '../../layouts/Layout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
-import AdSlot from '../../components/AdSlot.astro'; // ✅ FIXED: Path corrected to prevent build failure
+import AdSlot from '../../components/AdSlot.astro';
 import SocialShare from '../../components/SocialShare.astro';
 import ReadingProgress from '../../components/ReadingProgress.astro';
 import PopularPosts from '../../components/PopularPosts.astro';
@@ -83,7 +83,8 @@ const formattedDate = entry.publishedDate
         </header>
 
         {entry.featuredImage && (
-          <div class="w-full mb-8 overflow-hidden bg-neutral-100 rounded-[2px] relative img-pin-wrapper isolation-layout">
+          /* ⚡ FIXED: Added strict isolated-wrapper structure to guarantee bounds alignment */
+          <div class="w-full mb-8 overflow-hidden bg-neutral-100 rounded-[2px] relative block img-pin-wrapper isolation-layout" style="contain: paint;">
             <img
               src={featuredImage}
               alt={entry.title}
@@ -173,7 +174,9 @@ const formattedDate = entry.publishedDate
       img.classList.add('pointer-events-none', 'select-none');
 
       const wrapper = document.createElement('div');
-      wrapper.className = 'relative my-8 overflow-hidden inline-block w-full img-pin-wrapper isolation-layout';
+      /* ⚡ FIXED: Injected strict block context via styling directly onto dynamically mounted blocks */
+      wrapper.className = 'relative my-8 overflow-hidden block w-full img-pin-wrapper isolation-layout';
+      wrapper.style.contain = 'paint';
       
       img.parentNode.insertBefore(wrapper, img);
       wrapper.appendChild(img);
@@ -252,18 +255,22 @@ const formattedDate = entry.publishedDate
     text-decoration: none !important;
   }
 
-  /* Pinterest extension ke injected elements block */
+  /* ⚡ RADICAL CSS CONSTRAINTS: Forces total paint scoping on targeted slots */
+  .isolation-layout {
+    contain: paint !important;
+  }
+
   .isolation-layout span,
   .isolation-layout [class*="PIN_"],
   .isolation-layout [id*="PIN_"],
   [data-pin-log="button_hover"],
   [class*="PinIt"],
-  .PIN_1719145846170_button {
+  .PIN_1719145846170_button,
+  div[style*="position: absolute"][style*="z-index: 8675309"] {
     display: none !important;
     visibility: hidden !important;
     opacity: 0 !important;
     pointer-events: none !important;
-    content: "" !important;
     width: 0 !important;
     height: 0 !important;
   }
