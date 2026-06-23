@@ -17,21 +17,28 @@ const parentCategories = allCategories.filter((cat) => !cat.entry.parentCategory
 
 const allPosts = await getAllPosts();
 
-// ✅ STRATEGY CHANGE: Fetch top 2 posts for the split premium hero grid
-const heroPosts = allPosts.slice(0, 2);
-const heroSlugs = heroPosts.map(p => p.slug);
+// 💸 MONETIZATION CONFIGURATION (SWITCH TO 'true' ONCE MONETIZED APPROVED)
+const isMonetized = false; 
 
-// ✅ OFFSET LOGIC: Exclude the top 2 hero posts from 'The Latest' list (Shows 3rd, 4th, 5th)
-const secondaryPosts = allPosts
-  .filter((p) => !heroSlugs.includes(p.slug) && p.entry.featuredImage)
+// 👑 SECTION 1: MASTER HERO (1 Single Flagship Banner Post)
+const flagshipPost = allPosts[0];
+const flagshipSlug = flagshipPost ? [flagshipPost.slug] : [];
+
+// 💎 SECTION 2: THE LATEST (Excluding flagship post - next 3 posts)
+const latestPosts = allPosts
+  .filter((p) => !flagshipSlug.includes(p.slug) && p.entry.featuredImage)
   .slice(0, 3);
+const latestSlugs = latestPosts.map(p => p.slug);
 
-// ✅ CATEGORY FILTER LOGIC: Map categories while filtering out top hero posts globally to ensure zero repetition
+// Combined global filter to maintain layout hierarchy mapping without content duplicates
+const globallyExcludedSlugs = [...flagshipSlug, ...latestSlugs];
+
+// 🎨 CATEGORY ALTERNATING RHYTHM BLUEPRINT
 const categoryWithPosts = await Promise.all(
   parentCategories.map(async (cat) => {
     const posts = await getPostsByCategory(cat.slug);
-    const filteredPosts = posts.filter((p) => !heroSlugs.includes(p.slug));
-    return { category: cat, posts: filteredPosts.slice(0, 3) };
+    const filteredPosts = posts.filter((p) => !globallyExcludedSlugs.includes(p.slug));
+    return { category: cat, posts: filteredPosts };
   })
 );
 const activeCategoryWithPosts = categoryWithPosts.filter((c) => c.posts.length > 0);
@@ -40,125 +47,199 @@ const activeCategoryWithPosts = categoryWithPosts.filter((c) => c.posts.length >
 <Layout title={`${settings.siteName} — ${settings.tagline}`}>
   <Header currentPath="/" />
 
-  <main class="bg-[#faf9f6] min-height-screen font-sans antialiased text-neutral-900">
+  <main class="bg-[#faf9f6] min-h-screen font-sans antialiased text-neutral-900 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-    {heroPosts.length > 0 && (
-      <section class="border-b border-neutral-200/60 py-12 md:py-14">
-        <div class="max-w-7xl mx-auto px-6">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-12 items-start max-w-5xl mx-auto">
-            {heroPosts.map((post) => (
-              <a href={`/posts/${post.slug}`} class="block no-underline group space-y-4">
-                
-                <div class="overflow-hidden w-full h-[320px] md:h-[390px] bg-[#faf9f6] flex items-center justify-center rounded-sm block relative">
-                  {post.entry.featuredImage ? (
-                    <img
-                      src={post.entry.featuredImage?.startsWith('/') ? post.entry.featuredImage : `/images/posts/${post.entry.featuredImage}`}
-                      alt={post.entry.title}
-                      data-pin-nopin="true"
-                      class="max-w-full max-h-full object-contain transition-transform duration-700 group-hover:scale-101 block"
-                    />
-                  ) : (
-                    <div class="w-full h-full flex items-center justify-center text-neutral-300 bg-neutral-50/20 font-serif tracking-widest text-[10px] uppercase">
-                      Image Placeholder
-                    </div>
-                  )}
-                </div>
-
-                <div class="space-y-2 text-left w-full px-0">
-                  {post.entry.categories?.[0] && (
-                    <span class="block text-xs font-bold uppercase tracking-widest text-[#bba15c]">
-                      {post.entry.categories[0].replace(/-/g, ' ')}
-                    </span>
-                  )}
-                  <h2 class="text-xl md:text-2xl font-serif font-light tracking-tight text-neutral-950 leading-tight group-hover:text-neutral-600 transition-colors duration-200">
-                    {post.entry.title}
-                  </h2>
-                  <p class="text-neutral-500 text-[13px] leading-relaxed font-light line-clamp-2">
-                    {post.entry.description}
-                  </p>
-                </div>
-              </a>
-            ))}
-          </div>
-        </div>
-      </section>
-    )}
-
-    <div class="max-w-7xl mx-auto px-6 py-4">
-      <AdSlot slot="header" format="horizontal" />
-    </div>
-
-    {secondaryPosts.length > 0 && (
-      <section class="border-b border-neutral-200/60 py-16">
-        <div class="max-w-7xl mx-auto px-6">
-          
-          <div class="text-center mb-12 space-y-2">
-            <h2 class="text-2xl font-serif tracking-widest uppercase text-neutral-950 font-medium">The Latest</h2>
-            <div class="w-12 h-[1px] bg-[#bba15c] mx-auto"></div>
-          </div>
-
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-12">
-            {secondaryPosts.map((post) => (
-              <PostCard
-                title={post.entry.title}
-                slug={post.slug}
-                description={post.entry.description}
-                featuredImage={post.entry.featuredImage}
-                publishedDate={post.entry.publishedDate}
-                categories={post.entry.categories}
+    {/* 👑 SECTION 1: FULL-WIDTH MASTER HERO */}
+    {flagshipPost && (
+      <section class="py-8 md:py-12 border-b border-neutral-200/60">
+        <a href={`/posts/${flagshipPost.slug}`} class="block no-underline group space-y-6">
+          <div class="overflow-hidden w-full aspect-[16/9] md:aspect-[21/9] bg-neutral-100 rounded-sm relative">
+            {flagshipPost.entry.featuredImage ? (
+              <img
+                src={flagshipPost.entry.featuredImage?.startsWith('/') ? flagshipPost.entry.featuredImage : `/images/posts/${flagshipPost.entry.featuredImage}`}
+                alt={flagshipPost.entry.title}
+                data-pin-nopin="true"
+                loading="eager"
+                fetchpriority="high"
+                class="w-full h-full object-cover transition-transform duration-[1000s] ease-out group-hover:scale-102 block"
               />
-            ))}
+            ) : (
+              <div class="w-full h-full flex items-center justify-center text-neutral-300 bg-neutral-50/20 font-serif tracking-widest text-xs uppercase">
+                Image Placeholder
+              </div>
+            )}
           </div>
 
+          <div class="max-w-3xl mx-auto text-center space-y-3 pt-2">
+            {flagshipPost.entry.categories?.[0] && (
+              <span class="block text-[11px] font-bold uppercase tracking-[0.25em] text-[#bba15c]">
+                {flagshipPost.entry.categories[0].replace(/-/g, ' ')}
+              </span>
+            )}
+            <h1 class="text-3xl sm:text-4xl md:text-5xl font-serif font-light tracking-tight text-neutral-950 leading-[1.15] group-hover:text-neutral-700 transition-colors duration-300">
+              {flagshipPost.entry.title}
+            </h1>
+            <p class="text-neutral-500 text-sm md:text-base leading-relaxed font-light max-w-2xl mx-auto line-clamp-2">
+              {flagshipPost.entry.description}
+            </p>
+            <div class="pt-2">
+              <span class="inline-block text-xs uppercase tracking-widest font-medium border-b border-neutral-950 pb-0.5 group-hover:text-[#bba15c] group-hover:border-[#bba15c] transition-colors duration-300">Read Story →</span>
+            </div>
+          </div>
+        </a>
+      </section>
+    )}
+
+    {/* 💎 SECTION 2: THE LATEST (Uniform Matrix Grid & Mobile Alternative Rows) */}
+    {latestPosts.length > 0 && (
+      <section class="py-12 md:py-16 border-b border-neutral-200/60">
+        <div class="text-center mb-10 md:mb-14 space-y-2">
+          <h2 class="text-xs font-serif tracking-[0.3em] uppercase text-neutral-950 font-medium">The Latest</h2>
+          <div class="w-12 h-[1px] bg-[#bba15c] mx-auto"></div>
+        </div>
+
+        {/* Desktop View Grid Grid Stack */}
+        <div class="hidden md:grid grid-cols-3 gap-8">
+          {latestPosts.map((post) => (
+            <PostCard
+              title={post.entry.title}
+              slug={post.slug}
+              description={post.entry.description}
+              featuredImage={post.entry.featuredImage}
+              publishedDate={post.entry.publishedDate}
+              categories={post.entry.categories}
+            />
+          ))}
+        </div>
+
+        {/* 📱 Mobile Optimized Side-by-Side Splits (Anti-Fatigue Stack) */}
+        <div class="block md:hidden space-y-6">
+          {latestPosts.map((post) => (
+            <a href={`/posts/${post.slug}`} class="flex gap-4 items-center no-underline group border-b border-neutral-100 pb-5 last:border-0 last:pb-0">
+              <div class="w-28 h-28 shrink-0 overflow-hidden bg-neutral-100 rounded-sm relative">
+                <img
+                  src={post.entry.featuredImage?.startsWith('/') ? post.entry.featuredImage : `/images/posts/${post.entry.featuredImage}`}
+                  alt={post.entry.title}
+                  data-pin-nopin="true"
+                  loading="lazy"
+                  class="w-full h-full object-cover"
+                />
+              </div>
+              <div class="space-y-1 min-w-0">
+                {post.entry.categories?.[0] && (
+                  <span class="block text-[9px] font-bold uppercase tracking-wider text-[#bba15c]">
+                    {post.entry.categories[0].replace(/-/g, ' ')}
+                  </span>
+                )}
+                <h3 class="text-sm font-medium text-neutral-950 line-clamp-2 leading-snug group-hover:text-neutral-600">
+                  {post.entry.title}
+                </h3>
+                <p class="text-neutral-400 text-[11px] font-light line-clamp-1">{post.entry.description}</p>
+              </div>
+            </a>
+          ))}
         </div>
       </section>
     )}
 
-    {activeCategoryWithPosts.map(({ category, posts }) => (
-      <section class="border-b border-neutral-200/60 py-16">
-        <div class="max-w-7xl mx-auto px-6">
+    {/* 💸 MONETIZATION PANEL 1 (Only visible if isMonetized is true) */}
+    {isMonetized && (
+      <div class="my-10 p-6 bg-neutral-50/80 border border-neutral-200/40 rounded-sm text-center relative max-w-5xl mx-auto">
+        <span class="absolute -top-2.5 left-4 bg-[#faf9f6] px-2 text-[9px] font-bold uppercase tracking-widest text-neutral-400">Sponsored</span>
+        <AdSlot slot="header" format="horizontal" />
+      </div>
+    )}
 
-          <div class="text-center mb-12 space-y-2">
+    {/* 🎨 DYNAMIC ALTERNATING RHYTHM SECTIONS */}
+    {activeCategoryWithPosts.map(({ category, posts }, idx) => {
+      // Index mapping allows switching grids layout styles cleanly
+      const isEven = idx % 2 === 0;
+      const displayPosts = isEven ? posts.slice(0, 2) : posts.slice(0, 4);
+
+      if (displayPosts.length === 0) return null;
+
+      return (
+        <section class="py-12 md:py-16 border-b border-neutral-200/60 last:border-0">
+          <div class="text-center mb-10 md:mb-14 space-y-2">
             <a href={`/category/${category.slug}/`} class="no-underline hover:opacity-80 transition">
-              <h2 class="text-2xl font-serif tracking-widest uppercase text-neutral-950 font-medium">
+              <h2 class="text-xs font-serif tracking-[0.3em] uppercase text-neutral-950 font-medium">
                 {category.entry.name}
               </h2>
             </a>
             <div class="w-12 h-[1px] bg-[#bba15c] mx-auto"></div>
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-12">
-            {posts.map((post) => (
-              <PostCard
-                title={post.entry.title}
-                slug={post.slug}
-                description={post.entry.description}
-                featuredImage={post.entry.featuredImage}
-                publishedDate={post.entry.publishedDate}
-                categories={post.entry.categories}
-              />
-            ))}
-          </div>
+          {isEven ? (
+            /* 🎭 SECTION TYPE A: 2 Large Featured Columns (Alternating Blueprint) */
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-10 max-w-5xl mx-auto">
+              {displayPosts.map((post) => (
+                <a href={`/posts/${post.slug}`} class="block no-underline group space-y-4">
+                  <div class="overflow-hidden w-full aspect-[4/5] bg-neutral-100 rounded-sm relative">
+                    <img
+                      src={post.entry.featuredImage?.startsWith('/') ? post.entry.featuredImage : `/images/posts/${post.entry.featuredImage}`}
+                      alt={post.entry.title}
+                      data-pin-nopin="true"
+                      loading="lazy"
+                      class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-102"
+                    />
+                  </div>
+                  <div class="space-y-1.5 text-left">
+                    <span class="block text-[10px] font-bold uppercase tracking-widest text-[#bba15c]">
+                      {category.entry.name}
+                    </span>
+                    <h3 class="text-lg md:text-xl font-serif font-light text-neutral-950 leading-tight group-hover:text-neutral-600 transition-colors">
+                      {post.entry.title}
+                    </h3>
+                    <p class="text-neutral-500 text-xs leading-relaxed line-clamp-2 font-light">
+                      {post.entry.description}
+                    </p>
+                  </div>
+                </a>
+              ))}
+            </div>
+          ) : (
+            /* 🎭 SECTION TYPE B: 4-Column Breakpoint Secure Responsive Grid */
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {displayPosts.map((post) => (
+                <PostCard
+                  title={post.entry.title}
+                  slug={post.slug}
+                  description={post.entry.description}
+                  featuredImage={post.entry.featuredImage}
+                  publishedDate={post.entry.publishedDate}
+                  categories={post.entry.categories}
+                />
+              ))}
+            </div>
+          )}
+        </section>
+      );
+    })}
 
-        </div>
-      </section>
-    ))}
+    {/* 💸 MONETIZATION PANEL 2 (Only visible if isMonetized is true) */}
+    {isMonetized && (
+      <div class="my-14 p-6 bg-neutral-50/80 border border-neutral-200/40 rounded-sm text-center relative max-w-5xl mx-auto">
+        <span class="absolute -top-2.5 left-4 bg-[#faf9f6] px-2 text-[9px] font-bold uppercase tracking-widest text-neutral-400">Sponsored</span>
+        <AdSlot slot="footer" format="horizontal" />
+      </div>
+    )}
 
-    <section class="bg-neutral-950 text-white py-20 px-6">
-      <div class="max-w-xl mx-auto text-center space-y-6">
-        <span class="text-xs tracking-widest uppercase text-[#bba15c] font-bold">Newsletter</span>
-        <h2 class="text-3xl font-serif tracking-tight">Stay in the Loop</h2>
-        <p class="text-sm text-neutral-400 font-light leading-relaxed max-w-sm mx-auto">
-          Get the latest fashion trends and styling tips delivered straight to your inbox.
+    {/* ✉️ LUXURY NEWSLETTER BLOCK */}
+    <section class="bg-neutral-950 text-white py-16 md:py-24 px-6 -mx-4 sm:-mx-6 lg:-mx-8">
+      <div class="max-w-xl mx-auto text-center space-y-5">
+        <span class="text-[10px] tracking-[0.3em] uppercase text-[#bba15c] font-bold">Newsletter</span>
+        <h2 class="text-3xl md:text-4xl font-serif font-light tracking-tight">Stay in the Loop</h2>
+        <p class="text-xs md:text-sm text-neutral-400 font-light leading-relaxed max-w-xs mx-auto">
+          Get the latest fashion edits and timeless style updates directly into your inbox.
         </p>
-        <form class="flex flex-col sm:flex-row gap-2 max-w-md mx-auto pt-2">
+        <form class="flex flex-col sm:flex-row gap-2 max-w-md mx-auto pt-4">
           <input
             type="email"
             placeholder="Your email address"
-            class="flex-1 bg-neutral-900 border border-neutral-800 text-sm px-4 py-3 text-white focus:outline-none focus:border-[#bba15c] transition"
+            class="flex-1 bg-neutral-900 border border-neutral-800 text-xs px-4 py-3 text-white focus:outline-none focus:border-[#bba15c] transition-colors duration-200"
             required
           />
-          <button type="submit" class="bg-white text-neutral-950 font-bold uppercase tracking-wider text-xs px-6 py-3 hover:bg-[#bba15c] hover:text-white transition duration-300">
+          <button type="submit" class="bg-white text-neutral-950 font-bold uppercase tracking-widest text-[10px] px-6 py-3 hover:bg-[#bba15c] hover:text-white transition duration-300 rounded-none">
             Subscribe
           </button>
         </form>
