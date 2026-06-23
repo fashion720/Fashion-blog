@@ -4,7 +4,7 @@ export const prerender = true;
 import Layout from '../../layouts/Layout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
-import AdSlot from '../../components/AdSlot.astro';
+import AdSlot from '../components/AdSlot.astro';
 import SocialShare from '../../components/SocialShare.astro';
 import ReadingProgress from '../../components/ReadingProgress.astro';
 import PopularPosts from '../../components/PopularPosts.astro';
@@ -83,10 +83,11 @@ const formattedDate = entry.publishedDate
         </header>
 
         {entry.featuredImage && (
-          <div class="w-full mb-8 overflow-hidden bg-neutral-100 rounded-[2px] relative group img-pin-wrapper">
+          <div class="w-full mb-8 overflow-hidden bg-neutral-100 rounded-[2px] relative img-pin-wrapper">
             <img
               src={featuredImage}
               alt={entry.title}
+              data-pin-nopin="true"
               class="w-full h-auto object-contain block max-h-[70vh] md:max-h-[75vh]"
               loading="eager"
               decoding="async"
@@ -163,27 +164,24 @@ const formattedDate = entry.publishedDate
     const contentDiv = document.querySelector('.fashion-prose-content');
     if (!contentDiv) return;
 
-    // Content ke andar aane wali saari images ko pakro
     const images = contentDiv.querySelectorAll('img');
 
     images.forEach((img) => {
-      // Dynamic wrapper create karo relative block ke sath
+      // Automatic global extension blocker configs
+      img.setAttribute('data-pin-nopin', 'true');
+
       const wrapper = document.createElement('div');
       wrapper.className = 'relative my-8 overflow-hidden inline-block w-full img-pin-wrapper';
       
-      // Image ko wrapper ke andar transfer karo
       img.parentNode.insertBefore(wrapper, img);
       wrapper.appendChild(img);
       
-      // Image classes override karke block layouts clear karo
       img.style.margin = '0';
       img.style.width = '100%';
 
-      // Dynamic source configuration
       const imgSrc = img.getAttribute('src');
       const absoluteImgSrc = imgSrc?.startsWith('http') ? imgSrc : window.location.origin + imgSrc;
 
-      // Premium Pinterest Save Intent Link inject karo (Always Visible)
       const pinBtn = document.createElement('a');
       pinBtn.href = `https://pinterest.com/pin/create/button/?url=${encodeURIComponent(postUrl)}&media=${encodeURIComponent(absoluteImgSrc)}&description=${encodeURIComponent(postTitle)}`;
       pinBtn.target = '_blank';
@@ -249,9 +247,7 @@ const formattedDate = entry.publishedDate
     line-height: 1.7 !important;
   }
   
-  /* 📌 STRUCTURAL FIX: Ensures dynamic wrapper anchors pin elements safely */
   .img-pin-wrapper a {
     text-decoration: none !important;
-    transition: background-color 0.2s ease-in-out !important;
   }
 </style>
