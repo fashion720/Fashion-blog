@@ -1,0 +1,53 @@
+---
+interface Props {
+  title: string;
+  slug: string;
+  description: string;
+  featuredImage?: string;
+  categories?: string[];
+}
+
+const { title, slug, description, featuredImage, categories = [] } = Astro.props;
+
+function resolveImage(img?: string) {
+  if (!img) return '/images/placeholder.jpg';
+  if (img.startsWith('/')) return img;
+  return `/images/posts/${img}`;
+}
+
+const imgSrc = resolveImage(featuredImage);
+---
+
+<a href={`/posts/${slug}`} class="flex gap-4 items-center no-underline group border-b border-neutral-200/40 pb-5 last:border-0 last:pb-0 w-full">
+  {/* 🔒 Strict Anti-Pinterest event isolation grid */}
+  <div class="w-24 h-24 shrink-0 overflow-hidden bg-neutral-100 rounded-sm relative containment-layout">
+    <img
+      src={imgSrc}
+      alt={title}
+      data-pin-nopin="true"
+      data-pin-nohover="true"
+      loading="lazy"
+      class="w-full h-full object-cover pointer-events-none select-none z-10"
+    />
+  </div>
+  
+  <div class="space-y-1 min-w-0 flex-1 text-left">
+    {categories.length > 0 && (
+      <span class="block text-[9px] font-bold uppercase tracking-widest text-[#bba15c]">
+        {categories[0].replace(/-/g, ' ')}
+      </span>
+    )}
+    <h3 class="text-sm font-serif font-light text-neutral-950 line-clamp-2 leading-snug group-hover:text-neutral-600 transition-colors duration-200">
+      {title}
+    </h3>
+    <p class="text-neutral-400 text-[11px] font-light line-clamp-1 leading-normal">
+      {description}
+    </p>
+  </div>
+</a>
+
+<style is:global>
+  .containment-layout {
+    contain: paint !important;
+  }
+</style>
