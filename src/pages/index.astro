@@ -21,10 +21,23 @@ const allPosts = await getAllPosts();
 // 💸 MONETIZATION CONFIGURATION
 const isMonetized = false; 
 
-// 👑 FALLBACK UTILITY: Extracts the first available image if explicit featuredImage field is omitted
-function getPostImage(post: any) {
-  if (post.entry.sections && post.entry.sections[0]?.image) return post.entry.sections[0].image;
-  if (post.entry.images && post.entry.images[0]) return post.entry.images[0];
+// 👑 PURE TEXT IMAGE EXTRACTOR: MDX text se automatic pehli image ka src nikalega (Nayi + Purani sab k liye)
+async function getPostImage(post: any) {
+  const rawContent = await post.entry.content() as string;
+  if (!rawContent) return '/images/placeholder.jpg';
+
+  // Fallback 1: Agar sections matrix bana ho
+  if (post.entry.sections && post.entry.sections[0]?.image) {
+    const img = post.entry.sections[0].image;
+    return img.startsWith('/') ? img : `/images/posts/${img}`;
+  }
+
+  // Fallback 2: Pure Markdown image syntax check karo -> ![alt](url)
+  const match = rawContent.match(/!\[.*?\]\((.*?)\)/);
+  if (match && match[1]) {
+    return match[1]; // Direct content path return karega bina break kiye
+  }
+
   return '/images/placeholder.jpg';
 }
 
@@ -46,6 +59,7 @@ async function getPostDescription(post: any, length = 140) {
 const flagshipPost = allPosts[0];
 const flagshipSlug = flagshipPost ? [flagshipPost.slug] : [];
 const flagshipDesc = flagshipPost ? await getPostDescription(flagshipPost, 160) : '';
+const flagshipImg = flagshipPost ? await getPostImage(flagshipPost) : '/images/placeholder.jpg';
 
 // 💎 SECTION 2: THE LATEST EDITORIALS (Excluding flagship post)
 const latestPosts = allPosts
@@ -53,11 +67,12 @@ const latestPosts = allPosts
   .slice(0, 3);
 const latestSlugs = latestPosts.map(p => p.slug);
 
-// Resolve dynamic asynchronous descriptions array map for latest editorial stack
-const latestPostsWithDesc = await Promise.all(
+// Resolve dynamic asynchronous descriptions AND images array maps for latest editorial stack
+const latestPostsResolved = await Promise.all(
   latestPosts.map(async (post) => {
     const desc = await getPostDescription(post, 120);
-    return { ...post, dynamicDesc: desc };
+    const img = await getPostImage(post);
+    return { ...post, dynamicDesc: desc, dynamicImg: img };
   })
 );
 
@@ -74,7 +89,8 @@ const categoryWithPosts = await Promise.all(
     const resolvedCategoryPosts = await Promise.all(
       filteredPosts.map(async (p) => {
         const desc = await getPostDescription(p, 120);
-        return { ...p, dynamicDesc: desc };
+        const img = await getPostImage(p);
+        return { ...p, dynamicDesc: desc, dynamicImg: img };
       })
     );
 
@@ -97,7 +113,7 @@ const activeCategoryWithPosts = categoryWithPosts.filter((c) => c.posts.length >
           <div class="overflow-hidden w-full aspect-[4/5] bg-white p-3 border border-neutral-200/20 shadow-sm/5 rounded-sm relative containment-layout group">
             <a href={`/posts/${flagshipPost.slug}`} class="block w-full h-full pointer-events-auto">
               <img
-                src={getPostImage(flagshipPost)?.startsWith('/') ? getPostImage(flagshipPost) : `/images/posts/${getPostImage(flagshipPost)}`}
+                src={flagshipImg}
                 alt={flagshipPost.entry.title}
                 data-pin-nopin="true"
                 data-pin-nohover="true"
@@ -134,7 +150,7 @@ const activeCategoryWithPosts = categoryWithPosts.filter((c) => c.posts.length >
     )}
 
     {/* 💎 SECTION 2: LATEST EDITORIALS MATRICES BLOCK */}
-    {latestPostsWithDesc.length > 0 && (
+    {latestPostsResolved.length > 0 && (
       <section class="py-14 md:py-20 border-b border-neutral-200/40">
         <div class="text-center mb-12 md:mb-16 space-y-3">
           <h2 class="text-[11px] font-sans tracking-[0.35em] uppercase text-neutral-950 font-bold">Latest Editorials</h2>
@@ -142,12 +158,12 @@ const activeCategoryWithPosts = categoryWithPosts.filter((c) => c.posts.length >
         </div>
 
         <div class="hidden md:grid grid-cols-3 gap-8">
-          {latestPostsWithDesc.map((post) => (
+          {latestPostsResolved.map((post) => (
             <PostCard
               title={post.entry.title}
               slug={post.slug}
               description={post.dynamicDesc}
-              featuredImage={getPostImage(post)}
+              featuredImage={post.dynamicImg}
               publishedDate={post.entry.publishedDate}
               categories={post.entry.categories}
             />
@@ -155,12 +171,12 @@ const activeCategoryWithPosts = categoryWithPosts.filter((c) => c.posts.length >
         </div>
 
         <div class="block md:hidden space-y-5">
-          {latestPostsWithDesc.map((post) => (
+          {latestPostsResolved.map((post) => (
             <CompactPostRow
               title={post.entry.title}
               slug={post.slug}
               description={post.dynamicDesc}
-              featuredImage={getPostImage(post)}
+              featuredImage={post.dynamicImg}
               categories={post.entry.categories}
             />
           ))}
@@ -201,7 +217,7 @@ const activeCategoryWithPosts = categoryWithPosts.filter((c) => c.posts.length >
                   <a href={`/posts/${post.slug}`} class="block no-underline group bg-white p-4 border border-neutral-200/30 shadow-sm/5 transition-all duration-300 hover:shadow-sm rounded-sm space-y-4">
                     <div class="overflow-hidden w-full aspect-[4/5] bg-neutral-100 rounded-[1px] relative containment-layout">
                       <img
-                        src={getPostImage(post)?.startsWith('/') ? getPostImage(post) : `/images/posts/${getPostImage(post)}`}
+                        src={post.dynamicImg}
                         alt={post.entry.title}
                         data-pin-nopin="true"
                         data-pin-nohover="true"
@@ -230,7 +246,7 @@ const activeCategoryWithPosts = categoryWithPosts.filter((c) => c.posts.length >
                     title={post.entry.title}
                     slug={post.slug}
                     description={post.dynamicDesc}
-                    featuredImage={getPostImage(post)}
+                    featuredImage={post.dynamicImg}
                     categories={post.entry.categories}
                   />
                 ))}
@@ -245,7 +261,7 @@ const activeCategoryWithPosts = categoryWithPosts.filter((c) => c.posts.length >
                     title={post.entry.title}
                     slug={post.slug}
                     description={post.dynamicDesc}
-                    featuredImage={getPostImage(post)}
+                    featuredImage={post.dynamicImg}
                     publishedDate={post.entry.publishedDate}
                     categories={post.entry.categories}
                   />
@@ -258,7 +274,7 @@ const activeCategoryWithPosts = categoryWithPosts.filter((c) => c.posts.length >
                     title={post.entry.title}
                     slug={post.slug}
                     description={post.dynamicDesc}
-                    featuredImage={getPostImage(post)}
+                    featuredImage={post.dynamicImg}
                     categories={post.entry.categories}
                   />
                 ))}
