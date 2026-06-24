@@ -23,6 +23,14 @@ const childCategories = allCategories.filter(
   (cat) => cat.entry.parentCategory === category.slug
 );
 
+// 👑 SYSTEM UTILITY: Fallback to first image from structures if standalone field doesn't exist
+function getPostImage(post: any) {
+  if (post.entry.featuredImage) return post.entry.featuredImage;
+  if (post.entry.sections && post.entry.sections[0]?.image) return post.entry.sections[0].image;
+  if (post.entry.images && post.entry.images[0]) return post.entry.images[0];
+  return '/images/placeholder.jpg';
+}
+
 // 👑 VISUAL RHYTHM SEGMENT 1: 45/55 EDITORIAL SPLIT HERO (Latest post inside this scope)
 const heroPost = isParentCategory && posts.length > 0 ? posts[0] : null;
 const heroSlug = heroPost ? [heroPost.slug] : [];
@@ -39,12 +47,6 @@ const childSections = isParentCategory
   : [];
 
 const activeChildSections = childSections.filter((sec) => sec.posts.length > 0);
-
-function resolveImage(img?: string) {
-  if (!img) return undefined;
-  if (img.startsWith('/')) return img;
-  return `/images/posts/${img}`;
-}
 ---
 
 <Layout
@@ -53,10 +55,10 @@ function resolveImage(img?: string) {
 >
   <Header currentPath={`/category/${category.slug}`} />
 
-  <main class="min-h-screen bg-[#faf9f6] text-neutral-900 font-sans antialiased max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+  <main class="min-h-screen bg-[#F8F6F2] text-neutral-900 font-sans antialiased max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
     
-    {/* 📋 ARCHIVE TYPE INTROHEADER HEADER */}
-    <header class="text-center py-12 md:py-16 border-b border-neutral-200/40">
+    {/* 📋 ARCHIVE TYPE INTROHEADER HEADER (Polished Spacing Constraints) */}
+    <header class="text-center py-10 md:py-14 border-b border-neutral-200/40">
       <span class="text-[10px] tracking-[0.3em] uppercase text-neutral-400 block mb-2">Category Explore</span>
       <h1 class="text-3xl md:text-5xl font-serif tracking-[0.15em] uppercase text-neutral-950 font-light">
         {category.entry.name}
@@ -74,26 +76,26 @@ function resolveImage(img?: string) {
         
         {/* 👑 VISUAL RHYTHM SEGMENT 1: OPTIMIZED 45/55 EDITORIAL SPLIT HERO */}
         {heroPost && (
-          <section class="py-10 md:py-16 border-b border-neutral-200/60">
-            <div class="grid grid-cols-1 lg:grid-cols-[45fr_55fr] gap-x-12 gap-y-8 items-center">
+          <section class="py-12 md:py-16 border-b border-neutral-200/40">
+            <div class="grid grid-cols-1 lg:grid-cols-[45fr_55fr] gap-x-12 lg:gap-x-20 gap-y-10 items-center">
               
               {/* Left Side: 45% Space Block (Ideal for 4:5 and 2x2 Collages) */}
-              <div class="overflow-hidden w-full aspect-[4/5] bg-neutral-100 rounded-sm relative containment-layout group">
+              <div class="overflow-hidden w-full aspect-[4/5] bg-white p-3 border border-neutral-200/20 shadow-sm/5 rounded-sm relative containment-layout group">
                 <a href={`/posts/${heroPost.slug}`} class="block w-full h-full pointer-events-auto">
                   <img
-                    src={heroPost.entry.featuredImage?.startsWith('/') ? heroPost.entry.featuredImage : `/images/posts/${heroPost.entry.featuredImage}`}
+                    src={getPostImage(heroPost)?.startsWith('/') ? getPostImage(heroPost) : `/images/posts/${getPostImage(heroPost)}`}
                     alt={heroPost.entry.title}
                     data-pin-nopin="true"
                     data-pin-nohover="true"
                     loading="eager"
                     fetchpriority="high"
-                    class="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105 block pointer-events-none select-none z-10"
+                    class="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-103 block pointer-events-none select-none z-10"
                   />
                 </a>
               </div>
 
               {/* Right Side: 55% Content Frame (Luxury Breathing Text) */}
-              <div class="space-y-4 text-left">
+              <div class="space-y-4 text-left lg:pl-2">
                 <span class="block text-[10px] font-bold uppercase tracking-[0.3em] text-[#bba15c]">
                   Latest Feature
                 </span>
@@ -102,12 +104,12 @@ function resolveImage(img?: string) {
                     {heroPost.entry.title}
                   </h2>
                 </a>
-                <p class="text-neutral-500 text-sm md:text-base leading-relaxed font-light max-w-xl line-clamp-3">
+                <p class="text-neutral-500 text-sm md:text-[15px] leading-relaxed font-light max-w-xl line-clamp-3">
                   {heroPost.entry.description}
                 </p>
-                <div class="pt-4">
-                  <a href={`/posts/${heroPost.slug}`} class="inline-block text-xs uppercase tracking-widest font-medium border-b border-neutral-950 pb-0.5 hover:text-[#bba15c] hover:border-[#bba15c] transition-colors duration-300 no-underline">
-                    Read Article →
+                <div class="pt-3">
+                  <a href={`/posts/${heroPost.slug}`} class="inline-block text-xs uppercase tracking-[0.2em] font-medium border-b border-neutral-950/20 pb-1 text-neutral-950 hover:text-[#bba15c] hover:border-[#bba15c] transition-all duration-300 no-underline group">
+                    Read Article <span class="inline-block transition-transform duration-300 group-hover:translate-x-1">→</span>
                   </a>
                 </div>
               </div>
@@ -119,30 +121,29 @@ function resolveImage(img?: string) {
         {/* 🎨 CHILD CATEGORIES LOOP WITH THEME INTERCHANGES */}
         {activeChildSections.length > 0 ? (
           activeChildSections.map(({ childCategory, posts: childPosts }, index) => {
-            // Index Switches: Pehli child category 2-Columns grid banegi, baki 3-Columns matrices
             const isFirstChild = index === 0;
-            const displayPosts = isFirstChild ? childPosts.slice(0, 2) : childPosts.slice(0, 3);
+            const displayPosts = isFirstChild ? childPosts.slice(0, 2) : childPosts.slice(0, 4);
 
             if (displayPosts.length === 0) return null;
 
             return (
-              <section class="py-12 md:py-16 border-b border-neutral-200/60 last:border-0 dynamic-child-section">
-                <div class="text-center mb-10 md:mb-14 space-y-2">
-                  <h3 class="text-xs font-serif tracking-[0.3em] uppercase text-neutral-950 font-medium">
+              <section class="py-14 md:py-18 border-b border-neutral-200/40 last:border-0 dynamic-child-section">
+                <div class="text-center mb-12 md:mb-16 space-y-3">
+                  <h3 class="text-[11px] font-sans tracking-[0.35em] uppercase text-neutral-950 font-bold">
                     {childCategory.entry.name}
                   </h3>
                   <div class="w-12 h-[1px] bg-[#bba15c] mx-auto"></div>
                 </div>
 
                 {isFirstChild ? (
-                  /* 🎭 RHYTHM STYLE A: 2 Large Cards Editorial Grid Layout */
+                  /* 🎭 RHYTHM STYLE A: 2 Large Cards Editorial Grid Layout (Strict Matrix Balance Bounds) */
                   <div>
                     <div class="hidden md:grid grid-cols-2 gap-10 max-w-5xl 2xl:max-w-6xl mx-auto">
                       {displayPosts.map((post) => (
-                        <a href={`/posts/${post.slug}`} class="block no-underline group space-y-4">
-                          <div class="overflow-hidden w-full aspect-[4/5] bg-neutral-100 rounded-sm relative containment-layout">
+                        <a href={`/posts/${post.slug}`} class="block no-underline group bg-white p-4 border border-neutral-200/30 shadow-sm/5 transition-all duration-300 hover:shadow-sm rounded-sm space-y-4">
+                          <div class="overflow-hidden w-full aspect-[4/5] bg-neutral-100 rounded-[1px] relative containment-layout">
                             <img
-                              src={post.entry.featuredImage?.startsWith('/') ? post.entry.featuredImage : `/images/posts/${post.entry.featuredImage}`}
+                              src={getPostImage(post)?.startsWith('/') ? getPostImage(post) : `/images/posts/${getPostImage(post)}`}
                               alt={post.entry.title}
                               data-pin-nopin="true"
                               data-pin-nohover="true"
@@ -150,11 +151,11 @@ function resolveImage(img?: string) {
                               class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-102"
                             />
                           </div>
-                          <div class="space-y-1.5 text-left">
-                            <span class="block text-[10px] font-bold uppercase tracking-widest text-[#bba15c]">
+                          <div class="space-y-1.5 text-left pt-1">
+                            <span class="block text-[9px] font-bold uppercase tracking-[0.2em] text-[#bba15c]">
                               {childCategory.entry.name}
                             </span>
-                            <h4 class="text-xl font-serif font-light text-neutral-950 leading-tight group-hover:text-neutral-600 transition-colors">
+                            <h4 class="text-lg md:text-xl font-serif font-light text-neutral-950 leading-tight group-hover:text-neutral-700 transition-colors">
                               {post.entry.title}
                             </h4>
                             <p class="text-neutral-500 text-xs leading-relaxed line-clamp-2 font-light">
@@ -165,43 +166,43 @@ function resolveImage(img?: string) {
                       ))}
                     </div>
 
-                    {/* Mobile Anti-Fatigue Split Rows Container */}
+                    {/* Mobile View Display Mapping List */}
                     <div class="block md:hidden space-y-5">
                       {displayPosts.map((post) => (
                         <CompactPostRow
                           title={post.entry.title}
                           slug={post.slug}
                           description={post.entry.description}
-                          featuredImage={post.entry.featuredImage}
+                          featuredImage={getPostImage(post)}
                           categories={post.entry.categories}
                         />
                       ))}
                     </div>
                   </div>
                 ) : (
-                  /* 🎭 RHYTHM STYLE B: Uniform 3-Column Grid Block Matrix */
+                  /* 🎭 RHYTHM STYLE B: Self Balancing Secure Column Grid Framework */
                   <div>
-                    <div class="hidden md:grid grid-cols-3 gap-8">
+                    <div class={`hidden md:grid gap-8 ${displayPosts.length === 1 ? 'grid-cols-1 max-w-xl mx-auto' : displayPosts.length === 2 ? 'grid-cols-2 max-w-4xl mx-auto' : displayPosts.length === 3 ? 'grid-cols-3 max-w-6xl mx-auto' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'}`}>
                       {displayPosts.map((post) => (
                         <PostCard
                           title={post.entry.title}
                           slug={post.slug}
                           description={post.entry.description}
-                          featuredImage={post.entry.featuredImage}
+                          featuredImage={getPostImage(post)}
                           publishedDate={post.entry.publishedDate}
                           categories={post.entry.categories}
                         />
                       ))}
                     </div>
 
-                    {/* Mobile Anti-Fatigue Split Rows Container */}
+                    {/* Mobile View Display Mapping List */}
                     <div class="block md:hidden space-y-5">
                       {displayPosts.map((post) => (
                         <CompactPostRow
                           title={post.entry.title}
                           slug={post.slug}
                           description={post.entry.description}
-                          featuredImage={post.entry.featuredImage}
+                          featuredImage={getPostImage(post)}
                           categories={post.entry.categories}
                         />
                       ))}
@@ -212,7 +213,7 @@ function resolveImage(img?: string) {
             );
           })
         ) : (
-          /* FALLBACK SEGMENT: Executed if Parent Category exists but has zero Child Category trees configured */
+          /* FALLBACK SEGMENT: Executed if Parent Category exists but child trees array parsing returns empty slots */
           <section class="py-12 md:py-16">
             <div class="hidden md:grid grid-cols-3 gap-8">
               {posts.slice(1).map((post) => (
@@ -220,7 +221,7 @@ function resolveImage(img?: string) {
                   title={post.entry.title}
                   slug={post.slug}
                   description={post.entry.description}
-                  featuredImage={post.entry.featuredImage}
+                  featuredImage={getPostImage(post)}
                   publishedDate={post.entry.publishedDate}
                   categories={post.entry.categories}
                 />
@@ -233,7 +234,7 @@ function resolveImage(img?: string) {
                   title={post.entry.title}
                   slug={post.slug}
                   description={post.entry.description}
-                  featuredImage={post.entry.featuredImage}
+                  featuredImage={getPostImage(post)}
                   categories={post.entry.categories}
                 />
               ))}
@@ -243,7 +244,7 @@ function resolveImage(img?: string) {
 
       </div>
     ) : (
-      /* 📂 CHILD CATEGORY ARCHIVE DIRECTORY VIEW (Executed if user lands directly on a sub-category leaf) */
+      /* 📂 CHILD CATEGORY LEAF STREAM DIRECTORY VIEW */
       <div class="py-12 md:py-16">
         {posts.length > 0 ? (
           <div>
@@ -253,7 +254,7 @@ function resolveImage(img?: string) {
                   title={post.entry.title}
                   slug={post.slug}
                   description={post.entry.description}
-                  featuredImage={resolveImage(post.entry.featuredImage)}
+                  featuredImage={getPostImage(post)}
                   publishedDate={post.entry.publishedDate}
                   categories={post.entry.categories}
                 />
@@ -266,7 +267,7 @@ function resolveImage(img?: string) {
                   title={post.entry.title}
                   slug={post.slug}
                   description={post.entry.description}
-                  featuredImage={post.entry.featuredImage}
+                  featuredImage={getPostImage(post)}
                   categories={post.entry.categories}
                 />
               ))}
