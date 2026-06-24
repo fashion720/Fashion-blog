@@ -173,8 +173,9 @@ const isMonetized = false;
 
     images.forEach((img) => {
       // Create wide wrapper container Frame Frame (matching provided Canvas style Architecture)
+      // ⚡ PADDING KILLED LAYER: Set padding to p-0 and overflow-hidden to clean up layout borders completely
       const wrapper = document.createElement('div');
-      wrapper.className = 'img-pin-wrapper my-12 block w-full bg-white p-4 border border-neutral-200/30 shadow-sm/5 rounded-sm';
+      wrapper.className = 'img-pin-wrapper my-12 block w-full bg-white p-0 overflow-hidden border border-neutral-200/20 shadow-sm rounded-sm';
 
       // Insert wrapper before image, move image inside wrapper
       img.parentNode.insertBefore(wrapper, img);
@@ -197,10 +198,26 @@ const isMonetized = false;
       pinBtn.target = '_blank';
       pinBtn.rel = 'noopener noreferrer';
       pinBtn.className = 'pin-save-btn';
+      
+      // 👑 STYLING FIX: Injected direct full width inline configurations so button stretches cleanly under tight p-0 layout frames
+      pinBtn.style.cssText = 'display:flex!important; align-items:center!important; justify-content:center!important; gap:8px!important; width:100%!important; padding:11px 0!important; background:#fff!important; border-top:1px solid rgba(229,231,235,0.5)!important; color:#E60023!important; font-size:10.5px!important; font-weight:700!important; letter-spacing:0.2em!important; text-transform:uppercase!important; text-decoration:none!important; cursor:pointer!important; font-family:sans-serif!important; border-radius:0!important; border-left:0!important; border-right:0!important; border-bottom:0!important;';
+      
       pinBtn.innerHTML = `
-        <svg width="13" height="14" viewBox="0 0 24 24" fill="#E60023"><path d="M12 0C5.373 0 0 5.372 0 12c0 5.084 3.163 9.426 7.627 11.174-.105-.949-.2-2.405.042-3.441.218-.937 1.407-5.965 1.407-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.992 3.993-.283 1.194.599 2.169 1.775 2.169 2.13 0 3.769-2.247 3.769-5.491 0-2.871-2.063-4.878-5.01-4.878-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738a.36.36 0 0 1 .083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.359-.631-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.179 23.774 10.551 24 12 24c6.627 0 12-5.373 12-12 0-6.628-5.373-12-12-12z"/></svg>
+        <svg width="13" height="14" viewBox="0 0 24 24" fill="#E60023" style="transition:fill 0.3s ease;"><path d="M12 0C5.373 0 0 5.372 0 12c0 5.084 3.163 9.426 7.627 11.174-.105-.949-.2-2.405.042-3.441.218-.937 1.407-5.965 1.407-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.992 3.993-.283 1.194.599 2.169 1.775 2.169 2.13 0 3.769-2.247 3.769-5.491 0-2.871-2.063-4.878-5.01-4.878-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738a.36.36 0 0 1 .083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.359-.631-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.179 23.774 10.551 24 12 24c6.627 0 12-5.373 12-12 0-6.628-5.373-12-12-12z"/></svg>
         Save to Pinterest
       `;
+
+      // Hover bindings to maintain luxury contrast feel dynamically dynamically
+      pinBtn.addEventListener('mouseenter', () => {
+        pinBtn.style.background = '#E60023';
+        pinBtn.style.color = '#fff';
+        pinBtn.querySelector('svg').style.fill = '#fff';
+      });
+      pinBtn.addEventListener('mouseleave', () => {
+        pinBtn.style.background = '#fff';
+        pinBtn.style.color = '#E60023';
+        pinBtn.querySelector('svg').style.fill = '#E60023';
+      });
 
       wrapper.appendChild(pinBtn);
     });
@@ -272,35 +289,5 @@ const isMonetized = false;
     margin-bottom: 0.65rem !important;
     font-size: 15px !important;
     line-height: 1.8 !important;
-  }
-
-  .img-pin-wrapper .pin-save-btn {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    gap: 8px !important;
-    width: 100% !important;
-    margin-top: 12px !important;
-    padding: 11px 0 !important;
-    background: #fff !important;
-    border: 1px solid #E60023 !important;
-    color: #E60023 !important;
-    font-size: 10.5px !important;
-    font-weight: 700 !important;
-    letter-spacing: 0.2em !important;
-    text-transform: uppercase !important;
-    text-decoration: none !important;
-    cursor: pointer !important;
-    transition: all 0.3s ease !important;
-    font-family: sans-serif !important;
-  }
-
-  .img-pin-wrapper .pin-save-btn:hover {
-    background: #E60023 !important;
-    color: #fff !important;
-  }
-
-  .img-pin-wrapper .pin-save-btn:hover svg {
-    fill: #fff !important;
   }
 </style>
