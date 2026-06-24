@@ -38,11 +38,12 @@ const formattedDate = new Date(publishedDate).toLocaleDateString('en-US', {
 });
 ---
 
-<article class="post-card group w-full bg-white p-4 border border-neutral-200/30 rounded-sm flex flex-col transition-all duration-300 hover:shadow-sm">
+<article class="post-card group w-full bg-white p-4 border border-neutral-200/30 rounded-sm flex flex-col transition-all duration-300 hover:shadow-sm box-border overflow-hidden">
   
   {/* 🔒 Strict 4:5 Aspect Boundary Frame matching our single source canvas architecture */}
-  <div class="overflow-hidden w-full aspect-[4/5] relative block bg-neutral-100 rounded-[1px] containment-layout">
-    <a href={`/posts/${slug}/`} class="block w-full h-full no-underline pointer-events-auto">
+  {/* ⚡ CROP LOCK: relative + flex properties make sure image fills the box and hides the whitespace underneath */}
+  <div class="w-full aspect-[4/5] relative block bg-neutral-100 rounded-[1px] containment-layout overflow-hidden select-none shrink-0">
+    <a href={`/posts/${slug}/`} class="absolute inset-0 w-full h-full no-underline pointer-events-auto block">
       <img
         src={imgSrc}
         alt={title}
@@ -52,14 +53,14 @@ const formattedDate = new Date(publishedDate).toLocaleDateString('en-US', {
         decoding="async"
         data-pin-nopin="true"
         data-pin-nohover="true"
-        class="w-full h-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-103 block pointer-events-none select-none z-10"
+        class="w-full h-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-103 block pointer-events-none select-none z-10 absolute inset-0 min-w-full min-h-full"
         onerror="this.onerror=null; this.src='/images/placeholder.jpg';"
       />
     </a>
   </div>
 
-  <div class="text-left pt-5 flex flex-col flex-1 min-w-0">
-    <a href={`/posts/${slug}/`} class="block no-underline flex-1">
+  <div class="text-left pt-5 flex flex-col flex-1 min-w-0 w-full">
+    <a href={`/posts/${slug}/`} class="block no-underline flex-1 w-full">
       {categories.length > 0 && (
         <span class="block text-[10px] font-bold uppercase tracking-[0.2em] text-[#bba15c] mb-1.5">
           {categories[0].replace(/-/g, ' ')}
@@ -71,13 +72,13 @@ const formattedDate = new Date(publishedDate).toLocaleDateString('en-US', {
         {title}
       </h3>
       
-      <p class="text-[12.5px] font-light text-neutral-500 leading-relaxed line-clamp-2 mb-4">
+      <p class="text-[12.5px] font-light text-neutral-500 leading-relaxed line-clamp-2 mb-4 break-words">
         {description}
       </p>
     </a>
     
     {/* 👑 PREMIUM LABELS LAYER: Refined uppercase tracking sequence for high contrast editorial feel */}
-    <div class="text-[10px] uppercase tracking-[0.2em] text-neutral-400 mt-auto pt-2 border-t border-neutral-100/60">
+    <div class="text-[10px] uppercase tracking-[0.2em] text-neutral-400 mt-auto pt-2 border-t border-neutral-100/60 w-full block">
       <time datetime={publishedDate}>{formattedDate}</time>
     </div>
   </div>
