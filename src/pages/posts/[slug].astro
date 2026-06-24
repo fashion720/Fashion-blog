@@ -26,28 +26,17 @@ const rawContent = (await entry.content()) as string;
 const renderedContent = marked(rawContent ?? '');
 const author = entry.author ? await getAuthorBySlug(entry.author) : null;
 
-// 👑 UPGRADED ASYNC PARSER: Content text scanner loop (Nayi aur Purani sab posts k liye standard)
-async function getPostImage(post: any) {
-  const rawText = (await post.entry.content()) as string;
-  if (!rawText) return '/images/og/default.jpg';
-
-  // Fallback 1: Agar admin sections object matrix ho
-  if (post.entry.sections && post.entry.sections[0]?.image) {
-    const img = post.entry.sections[0].image;
-    return img.startsWith('/') ? img : `/images/posts/${img}`;
-  }
-
-  // Fallback 2: Regex check for markdown image tags match layout
-  const match = rawText.match(/!\[.*?\]\((.*?)\)/);
+// 👑 SCRAPER: Direct local file text analysis loop matches Canvas architecture
+function getPostImage(rawContent: string) {
+  if (!rawContent) return null;
+  const match = rawContent.match(/!\[.*?\]\((.*?)\)/);
   if (match && match[1]) {
-    return match[1].trim();
+    return match[1].trim(); // Extract first image path from mdx body directly
   }
-
-  return '/images/og/default.jpg';
+  return null;
 }
 
-// 👑 FIXED: Resolved promise with strict await call constraint lock
-const featuredImage = await getPostImage(post);
+const featuredImage = getPostImage(rawContent);
 const postUrl = new URL(`/posts/${post.slug}/`, Astro.site).toString();
 
 const formattedDate = entry.publishedDate
@@ -58,7 +47,7 @@ const formattedDate = entry.publishedDate
     })
   : '';
 
-// 👑 AUTOMATIC TEXT EXTRACTOR FOR SEO METADATA DESC
+// 👑 UPGRADED METADATA PARSER: Direct content analysis loop (no duplicate variables)
 function getPostDescription(rawContent: string, length = 160) {
   if (!rawContent) return "Explore contemporary style and curated fashion insights inside this editorial.";
   const cleanText = rawContent
@@ -76,7 +65,7 @@ const isMonetized = false;
 <Layout
   title={`${entry.title} — Fashion Editorial`}
   description={seoDescription}
-  image={featuredImage}
+  image={featuredImage || '/images/og/default.jpg'}
   article={true}
   publishedTime={entry.publishedDate}
   modifiedTime={entry.updatedDate}
@@ -102,7 +91,7 @@ const isMonetized = false;
           </div>
         )}
         
-        <h1 class="text-2xl sm:text-4xl md:text-5xl lg:text-5.5xl font-serif font-light tracking-tight text-neutral-950 leading-[1.2] max-w-2xl mx-auto break-words">
+        <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-5.5xl font-serif font-light tracking-tight text-neutral-950 leading-[1.15] max-w-2xl mx-auto break-words">
           {entry.title}
         </h1>
         
@@ -115,38 +104,21 @@ const isMonetized = false;
         <div class="w-16 h-[1px] bg-[#bba15c] mx-auto pt-4"></div>
       </header>
 
-      {/* 👑 STRUCTURE BANNER LAYER: Forced 4:5 mobile bounds layout matrix check */}
-      {featuredImage && (
-        <div class="w-full max-w-4xl mx-auto mb-12 overflow-hidden bg-white p-2 md:p-4 border border-neutral-200/30 shadow-sm rounded-sm block">
-          <div class="overflow-hidden w-full h-auto rounded-[1px] relative block aspect-[4/5] md:aspect-[16/9]">
-            <img
-              src={featuredImage}
-              alt={entry.title}
-              class="w-full h-full object-cover block select-none"
-              loading="eager"
-              fetchpriority="high"
-              decoding="async"
-              onerror="this.onerror=null; this.src='/images/og/default.jpg';"
-            />
-          </div>
-        </div>
-      )}
-
-      {/* 📖 NARROW READING MATRIX */}
+      {/* 📖 ARTICLE BODY: Standard narrow reading width (strict boundary framework) */}
       <div class="max-w-2xl sm:max-w-3xl mx-auto block overflow-hidden w-full">
         <div class="prose prose-neutral max-w-none fashion-prose-content block w-full break-words" set:html={renderedContent} />
 
         {/* 💸 IN-CONTENT SPONSORED PANEL BUFFER MAP */}
         {isMonetized && (
-          <div class="my-12 p-6 bg-white border border-neutral-200/30 shadow-sm rounded-sm text-center relative w-full block">
+          <div class="my-12 p-6 bg-white border border-neutral-200/30 shadow-sm/5 rounded-sm text-center relative w-full block">
             <span class="absolute -top-2.5 left-4 bg-[#F8F6F2] px-2 text-[9px] font-bold uppercase tracking-widest text-neutral-400">Sponsored Content</span>
             <AdSlot slot="in-content" format="horizontal" />
           </div>
         )}
 
         {/* ✉️ SHARING ACTION REGISTRY DRAWER */}
-        <div class="border-t border-b border-neutral-200/40 py-5 my-10 flex flex-col sm:flex-row gap-4 items-center justify-between w-full">
-          <span class="text-[10px] uppercase tracking-[0.2em] text-neutral-400 font-bold">Share This Article</span>
+        <div class="border-t border-b border-neutral-200/40 py-5 my-10 flex items-center justify-between gap-4 w-full flex-wrap sm:flex-nowrap">
+          <span class="text-[10px] uppercase tracking-[0.2em] text-neutral-400 font-bold whitespace-nowrap">Share This Article</span>
           <SocialShare
             title={entry.title}
             description={seoDescription}
@@ -157,7 +129,7 @@ const isMonetized = false;
 
         {/* ✍️ AUTHOR PROFILE EDITORIAL MODULE CARD */}
         {author && (
-          <div class="mt-12 p-6 bg-white border border-neutral-200/30 shadow-sm rounded-sm flex flex-col sm:flex-row items-center sm:items-start gap-5 text-center sm:text-left w-full block">
+          <div class="mt-12 p-6 bg-white border border-neutral-200/30 shadow-sm/5 rounded-sm flex flex-col sm:flex-row items-center sm:items-start gap-5 text-center sm:text-left w-full block">
             {author.avatar && (
               <img
                 src={`/images/authors/${author.avatar}`}
@@ -200,19 +172,21 @@ const isMonetized = false;
     const images = contentDiv.querySelectorAll('img');
 
     images.forEach((img) => {
-      if (img.classList.contains('processed-pin')) return;
-      
+      // Create wide wrapper container Frame Frame (matching provided Canvas style Architecture)
       const wrapper = document.createElement('div');
-      wrapper.className = 'img-pin-wrapper my-12 block w-full bg-white p-2 md:p-4 border border-neutral-200/30 shadow-sm rounded-sm';
+      wrapper.className = 'img-pin-wrapper my-12 block w-full bg-white p-4 border border-neutral-200/30 shadow-sm/5 rounded-sm';
 
+      // Insert wrapper before image, move image inside wrapper
       img.parentNode.insertBefore(wrapper, img);
       wrapper.appendChild(img);
 
+      // Apply styling to image element to fill Frame properly properly
       img.style.margin = '0';
       img.style.width = '100%';
       img.style.display = 'block';
-      img.classList.add('rounded-[1px]', 'processed-pin');
+      img.classList.add('rounded-[1px]');
 
+      // Construct final final absolute Pinterest save save parameters
       const imgSrc = img.getAttribute('src');
       const absoluteImgSrc = imgSrc?.startsWith('http')
         ? imgSrc
@@ -234,10 +208,12 @@ const isMonetized = false;
 </script>
 
 <style is:global>
+  /* 🔒 SECURE ANTI-BLEED WRAPPER RULES RULES */
   html, body {
     max-width: 100% !important;
     overflow-x: hidden !important;
   }
+
   .fashion-prose-content {
     max-width: 100% !important;
   }
