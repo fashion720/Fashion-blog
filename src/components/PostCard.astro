@@ -3,7 +3,7 @@ interface Props {
   title: string;
   slug: string;
   description: string;
-  featuredImage?: string;
+  featuredImage?: string; // ⚡ Yahan ab direct scraped content image path aayega
   author?: string;
   publishedDate: string;
   categories?: string[];
@@ -21,9 +21,11 @@ const {
   tags = [],
 } = Astro.props;
 
+// 👑 FIXED PARSER MAP: Ab automatic images bina kisi layout space broken glitch ke fully stretch cover karengi
 function resolveImage(img?: string) {
   if (!img) return '/images/placeholder.jpg';
-  if (img.startsWith('/')) return img;
+  // Agar scraper se direct absolute path matching content body mile toh wahi use karo
+  if (img.startsWith('/') || img.startsWith('http')) return img;
   return `/images/posts/${img}`;
 }
 
@@ -40,7 +42,7 @@ const formattedDate = new Date(publishedDate).toLocaleDateString('en-US', {
   
   {/* 🔒 Strict 4:5 Aspect Boundary Frame matching our single source canvas architecture */}
   <div class="overflow-hidden w-full aspect-[4/5] relative block bg-neutral-100 rounded-[1px] containment-layout">
-    <a href={`/posts/${slug}`} class="block w-full h-full no-underline pointer-events-auto">
+    <a href={`/posts/${slug}/`} class="block w-full h-full no-underline pointer-events-auto">
       <img
         src={imgSrc}
         alt={title}
@@ -50,13 +52,14 @@ const formattedDate = new Date(publishedDate).toLocaleDateString('en-US', {
         decoding="async"
         data-pin-nopin="true"
         data-pin-nohover="true"
-        class="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-103 block pointer-events-none select-none z-10"
+        class="w-full h-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-103 block pointer-events-none select-none z-10"
+        onerror="this.onerror=null; this.src='/images/placeholder.jpg';"
       />
     </a>
   </div>
 
   <div class="text-left pt-5 flex flex-col flex-1 min-w-0">
-    <a href={`/posts/${slug}`} class="block no-underline flex-1">
+    <a href={`/posts/${slug}/`} class="block no-underline flex-1">
       {categories.length > 0 && (
         <span class="block text-[10px] font-bold uppercase tracking-[0.2em] text-[#bba15c] mb-1.5">
           {categories[0].replace(/-/g, ' ')}
