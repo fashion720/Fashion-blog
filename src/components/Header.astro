@@ -64,14 +64,14 @@ const categoryTree = sortedParentCategories.map((parent) => ({
         </form>
       </div>
 
-      {/* 👑 CENTER SIDE: LUXURY HIGH-TRACKING BRAND IDENTITY LOGO (Mobile Fluid Bounds Locked) */}
-      <div class="text-center w-full min-w-0 overflow-hidden">
+      {/* 👑 CENTER SIDE: LUXURY HIGH-TRACKING BRAND IDENTITY LOGO */}
+      {/* ⚡ FIXED: Removed truncation and forced clean whitespace handling across all device break-points */}
+      <div class="text-center w-full min-w-0">
         <a href="/" class="inline-block no-underline max-w-full">
           {settings.logoImage ? (
             <img src={settings.logoImage} alt={settings.siteName} class="h-6 sm:h-8 max-h-9 mx-auto object-contain" />
           ) : (
-            /* ⚡ FIXED: Scales down flawlessly on small viewports, resets letter tracking constraints dynamically */
-            <span class="text-xs sm:text-lg md:text-2xl lg:text-3xl font-serif tracking-[0.15em] sm:tracking-[0.25em] md:tracking-[0.35em] uppercase text-neutral-950 hover:text-neutral-700 transition duration-300 block font-light truncate max-w-full px-1">
+            <span class="text-[11px] xs:text-xs sm:text-lg md:text-2xl lg:text-3xl font-serif uppercase text-neutral-950 hover:text-neutral-700 transition duration-300 block font-light tracking-[0.08em] xs:tracking-[0.15em] sm:tracking-[0.25em] md:tracking-[0.35em] whitespace-normal sm:whitespace-nowrap leading-tight px-1 max-w-full">
               {settings.siteName || "FASHION EDITORIAL"}
             </span>
           )}
