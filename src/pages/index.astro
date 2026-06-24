@@ -18,23 +18,32 @@ const parentCategories = allCategories.filter((cat) => !cat.entry.parentCategory
 
 const allPosts = await getAllPosts();
 
-// 💸 MONETIZATION CONFIGURATION (SWITCH TO 'true' ONCE MONETIZED APPROVED)
+// 💸 MONETIZATION CONFIGURATION (SWITCH TO 'true' ONCE APPROVED)
 const isMonetized = false; 
 
-// 👑 SECTION 1: MASTER HERO (45% Image / 55% Text Editorial Split)
+// 👑 FALLBACK UTILITY: Extracts the first available image if explicit featuredImage field is omitted
+function getPostImage(post: any) {
+  if (post.entry.featuredImage) return post.entry.featuredImage;
+  // Fallback programmatic route: handles parsing schemas seamlessly if direct properties match block types
+  if (post.entry.sections && post.entry.sections[0]?.image) return post.entry.sections[0].image;
+  if (post.entry.images && post.entry.images[0]) return post.entry.images[0];
+  return '/images/placeholder.jpg';
+}
+
+// 👑 SECTION 1: MASTER HERO (45% Image / 55% Text Editorial Split Layout)
 const flagshipPost = allPosts[0];
 const flagshipSlug = flagshipPost ? [flagshipPost.slug] : [];
 
-// 💎 SECTION 2: THE LATEST (Excluding flagship post - next 3 posts)
+// 💎 SECTION 2: THE LATEST EDITORIALS (Excluding flagship post)
 const latestPosts = allPosts
-  .filter((p) => !flagshipSlug.includes(p.slug) && p.entry.featuredImage)
+  .filter((p) => !flagshipSlug.includes(p.slug))
   .slice(0, 3);
 const latestSlugs = latestPosts.map(p => p.slug);
 
-// Combined global filter to maintain layout hierarchy mapping without content duplicates
+// Combined global dynamic filters to preserve hierarchy limits and block duplicate elements
 const globallyExcludedSlugs = [...flagshipSlug, ...latestSlugs];
 
-// 🎨 CATEGORY ALTERNATING RHYTHM BLUEPRINT
+// 🎨 CATEGORY ALTERNATING RHYTHM DISTRIBUTION MAP
 const categoryWithPosts = await Promise.all(
   parentCategories.map(async (cat) => {
     const posts = await getPostsByCategory(cat.slug);
@@ -48,32 +57,32 @@ const activeCategoryWithPosts = categoryWithPosts.filter((c) => c.posts.length >
 <Layout title={`${settings.siteName} — ${settings.tagline}`}>
   <Header currentPath="/" />
 
-  <main class="bg-[#faf9f6] min-h-screen font-sans antialiased text-neutral-900 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+  <main class="bg-[#F8F6F2] min-h-screen font-sans antialiased text-neutral-900 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
 
-    {/* 👑 SECTION 1: OPTIMIZED 45/55 EDITORIAL SPLIT HERO */}
+    {/* 👑 SECTION 1: FULLY CENTERED 45/55 EDITORIAL SPLIT HERO */}
     {flagshipPost && (
-      <section class="py-10 md:py-16 border-b border-neutral-200/60">
-        <div class="grid grid-cols-1 lg:grid-cols-[45fr_55fr] gap-x-12 gap-y-8 items-center">
+      <section class="py-12 md:py-20 border-b border-neutral-200/40">
+        <div class="grid grid-cols-1 lg:grid-cols-[45fr_55fr] gap-x-12 lg:gap-x-20 gap-y-10 items-center">
           
-          {/* 45% Portrait Layout Wrapper (Ideal for 4:5 and 2x2 Collage Matrix) */}
-          <div class="overflow-hidden w-full aspect-[4/5] bg-neutral-100 rounded-sm relative containment-layout group">
+          {/* Left Block Layout Wrapper: Locked on strict 4:5 aspect layout spaces */}
+          <div class="overflow-hidden w-full aspect-[4/5] bg-white p-3 border border-neutral-200/20 shadow-sm/5 rounded-sm relative containment-layout group">
             <a href={`/posts/${flagshipPost.slug}`} class="block w-full h-full pointer-events-auto">
               <img
-                src={flagshipPost.entry.featuredImage?.startsWith('/') ? flagshipPost.entry.featuredImage : `/images/posts/${flagshipPost.entry.featuredImage}`}
+                src={getPostImage(flagshipPost)?.startsWith('/') ? getPostImage(flagshipPost) : `/images/posts/${getPostImage(flagshipPost)}`}
                 alt={flagshipPost.entry.title}
                 data-pin-nopin="true"
                 data-pin-nohover="true"
                 loading="eager"
                 fetchpriority="high"
-                class="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105 block pointer-events-none select-none z-10"
+                class="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-103 block pointer-events-none select-none z-10"
               />
             </a>
           </div>
 
-          {/* 55% Text Block (Luxury Breathing Space Allocation) */}
-          <div class="space-y-4 lg:pl-4 text-left">
+          {/* Right Block Text Element Architecture (Luxury Breathing Geometry Allocation) */}
+          <div class="space-y-5 text-left lg:pl-2">
             {flagshipPost.entry.categories?.[0] && (
-              <span class="block text-[11px] font-bold uppercase tracking-[0.3em] text-[#bba15c]">
+              <span class="block text-[10px] font-bold uppercase tracking-[0.3em] text-[#bba15c]">
                 {flagshipPost.entry.categories[0].replace(/-/g, ' ')}
               </span>
             )}
@@ -82,12 +91,12 @@ const activeCategoryWithPosts = categoryWithPosts.filter((c) => c.posts.length >
                 {flagshipPost.entry.title}
               </h1>
             </a>
-            <p class="text-neutral-500 text-sm md:text-base leading-relaxed font-light max-w-xl line-clamp-3">
+            <p class="text-neutral-500 text-sm md:text-[15px] leading-relaxed font-light max-w-xl line-clamp-3">
               {flagshipPost.entry.description}
             </p>
-            <div class="pt-4">
-              <a href={`/posts/${flagshipPost.slug}`} class="inline-block text-xs uppercase tracking-widest font-medium border-b border-neutral-950 pb-0.5 hover:text-[#bba15c] hover:border-[#bba15c] transition-colors duration-300 no-underline">
-                Read Story →
+            <div class="pt-3">
+              <a href={`/posts/${flagshipPost.slug}`} class="inline-block text-xs uppercase tracking-[0.2em] font-medium border-b border-neutral-950/20 pb-1 text-neutral-950 hover:text-[#bba15c] hover:border-[#bba15c] transition-all duration-300 no-underline group">
+                Read Story <span class="inline-block transition-transform duration-300 group-hover:translate-x-1">→</span>
               </a>
             </div>
           </div>
@@ -96,36 +105,36 @@ const activeCategoryWithPosts = categoryWithPosts.filter((c) => c.posts.length >
       </section>
     )}
 
-    {/* 💎 SECTION 2: THE LATEST (Uniform Matrix Grid & Mobile Alternative Rows) */}
+    {/* 💎 SECTION 2: LATEST EDITORIALS MATRICES BLOCK */}
     {latestPosts.length > 0 && (
-      <section class="py-12 md:py-16 border-b border-neutral-200/60">
-        <div class="text-center mb-10 md:mb-14 space-y-2">
-          <h2 class="text-xs font-serif tracking-[0.3em] uppercase text-neutral-950 font-medium">Latest Stories</h2>
+      <section class="py-14 md:py-20 border-b border-neutral-200/40">
+        <div class="text-center mb-12 md:mb-16 space-y-3">
+          <h2 class="text-[11px] font-sans tracking-[0.35em] uppercase text-neutral-950 font-bold">Latest Editorials</h2>
           <div class="w-12 h-[1px] bg-[#bba15c] mx-auto"></div>
         </div>
 
-        {/* Desktop View Grid Grid Stack */}
+        {/* Desktop Balanced Symmetric Grid Columns Block */}
         <div class="hidden md:grid grid-cols-3 gap-8">
           {latestPosts.map((post) => (
             <PostCard
               title={post.entry.title}
               slug={post.slug}
               description={post.entry.description}
-              featuredImage={post.entry.featuredImage}
+              featuredImage={getPostImage(post)}
               publishedDate={post.entry.publishedDate}
               categories={post.entry.categories}
             />
           ))}
         </div>
 
-        {/* 📱 Mobile Optimized Side-by-Side Splits (Anti-Fatigue Stack) */}
+        {/* Mobile View Safe Row Multi-Stack Rendering */}
         <div class="block md:hidden space-y-5">
           {latestPosts.map((post) => (
             <CompactPostRow
               title={post.entry.title}
               slug={post.slug}
               description={post.entry.description}
-              featuredImage={post.entry.featuredImage}
+              featuredImage={getPostImage(post)}
               categories={post.entry.categories}
             />
           ))}
@@ -133,27 +142,28 @@ const activeCategoryWithPosts = categoryWithPosts.filter((c) => c.posts.length >
       </section>
     )}
 
-    {/* 💸 MONETIZATION PANEL 1 (Only visible if isMonetized is true) */}
+    {/* 💸 MONETIZATION PANEL MODULE 1 */}
     {isMonetized && (
-      <div class="my-10 p-6 bg-neutral-50/80 border border-neutral-200/40 rounded-sm text-center relative max-w-5xl mx-auto">
-        <span class="absolute -top-2.5 left-4 bg-[#faf9f6] px-2 text-[9px] font-bold uppercase tracking-widest text-neutral-400">Sponsored</span>
+      <div class="my-12 p-6 bg-white border border-neutral-200/30 rounded-sm text-center relative max-w-5xl mx-auto shadow-sm/5">
+        <span class="absolute -top-2.5 left-4 bg-[#F8F6F2] px-2 text-[9px] font-bold uppercase tracking-widest text-neutral-400">Sponsored</span>
         <AdSlot slot="header" format="horizontal" />
       </div>
     )}
 
-    {/* 🎨 DYNAMIC ALTERNATING RHYTHM SECTIONS */}
+    {/* 🎨 DYNAMIC CATEGORIES LOOP (INTEGRATED CONTENT HEIGHT BALANCING RULES) */}
     {activeCategoryWithPosts.map(({ category, posts }, idx) => {
-      // Index mapping allows switching grids layout styles cleanly
+      // Alternating index sequence maps styles dynamically to preserve alignment balances
       const isEven = idx % 2 === 0;
-      const displayPosts = isEven ? posts.slice(0, 2) : posts.slice(0, 4);
-
-      if (displayPosts.length === 0) return null;
+      
+      // Dynamic layout constraint switch logic
+      const currentSectionPosts = isEven ? posts.slice(0, 2) : posts.slice(0, 4);
+      if (currentSectionPosts.length === 0) return null;
 
       return (
-        <section class="py-12 md:py-16 border-b border-neutral-200/60 last:border-0">
-          <div class="text-center mb-10 md:mb-14 space-y-2">
-            <a href={`/category/${category.slug}/`} class="no-underline hover:opacity-80 transition">
-              <h2 class="text-xs font-serif tracking-[0.3em] uppercase text-neutral-950 font-medium">
+        <section class="py-14 md:py-20 border-b border-neutral-200/40 last:border-0">
+          <div class="text-center mb-12 md:mb-16 space-y-3">
+            <a href={`/category/${category.slug}/`} class="no-underline group inline-block">
+              <h2 class="text-[11px] font-sans tracking-[0.35em] uppercase text-neutral-950 font-bold group-hover:text-neutral-600 transition-colors">
                 {category.entry.name}
               </h2>
             </a>
@@ -161,14 +171,14 @@ const activeCategoryWithPosts = categoryWithPosts.filter((c) => c.posts.length >
           </div>
 
           {isEven ? (
-            /* 🎭 SECTION TYPE A: 2 Large Featured Columns (Alternating Blueprint) wrapped in balanced constraint dimensions */
+            /* 🎭 RHYTHM TYPE A: Centered Large 2-Column Row Block Matrix Frame */
             <div>
               <div class="hidden md:grid grid-cols-2 gap-10 max-w-5xl 2xl:max-w-6xl mx-auto">
-                {displayPosts.map((post) => (
-                  <a href={`/posts/${post.slug}`} class="block no-underline group space-y-4">
-                    <div class="overflow-hidden w-full aspect-[4/5] bg-neutral-100 rounded-sm relative containment-layout">
+                {currentSectionPosts.map((post) => (
+                  <a href={`/posts/${post.slug}`} class="block no-underline group bg-white p-4 border border-neutral-200/30 shadow-sm/5 transition-all duration-300 hover:shadow-sm rounded-sm space-y-4">
+                    <div class="overflow-hidden w-full aspect-[4/5] bg-neutral-100 rounded-[1px] relative containment-layout">
                       <img
-                        src={post.entry.featuredImage?.startsWith('/') ? post.entry.featuredImage : `/images/posts/${post.entry.featuredImage}`}
+                        src={getPostImage(post)?.startsWith('/') ? getPostImage(post) : `/images/posts/${getPostImage(post)}`}
                         alt={post.entry.title}
                         data-pin-nopin="true"
                         data-pin-nohover="true"
@@ -176,11 +186,11 @@ const activeCategoryWithPosts = categoryWithPosts.filter((c) => c.posts.length >
                         class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-102"
                       />
                     </div>
-                    <div class="space-y-1.5 text-left">
-                      <span class="block text-[10px] font-bold uppercase tracking-widest text-[#bba15c]">
+                    <div class="space-y-1.5 text-left pt-1">
+                      <span class="block text-[9px] font-bold uppercase tracking-[0.2em] text-[#bba15c]">
                         {category.entry.name}
                       </span>
-                      <h3 class="text-xl font-serif font-light text-neutral-950 leading-tight group-hover:text-neutral-600 transition-colors">
+                      <h3 class="text-lg md:text-xl font-serif font-light text-neutral-950 leading-tight group-hover:text-neutral-700 transition-colors">
                         {post.entry.title}
                       </h3>
                       <p class="text-neutral-500 text-xs leading-relaxed line-clamp-2 font-light">
@@ -191,43 +201,43 @@ const activeCategoryWithPosts = categoryWithPosts.filter((c) => c.posts.length >
                 ))}
               </div>
 
-              {/* Mobile Mirror Sync View */}
+              {/* Mobile Adaptive Target Sync View List */}
               <div class="block md:hidden space-y-5">
-                {displayPosts.map((post) => (
+                {currentSectionPosts.map((post) => (
                   <CompactPostRow
                     title={post.entry.title}
                     slug={post.slug}
                     description={post.entry.description}
-                    featuredImage={post.entry.featuredImage}
+                    featuredImage={getPostImage(post)}
                     categories={post.entry.categories}
                   />
                 ))}
               </div>
             </div>
           ) : (
-            /* 🎭 SECTION TYPE B: 4-Column Breakpoint Secure Responsive Grid */
+            /* 🎭 RHYTHM TYPE B: Grid Matrix Columns Switch Frame (If data counts require balancing) */
             <div>
-              <div class="hidden md:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {displayPosts.map((post) => (
+              <div class={`hidden md:grid gap-6 ${currentSectionPosts.length === 1 ? 'grid-cols-1 max-w-xl mx-auto' : currentSectionPosts.length === 2 ? 'grid-cols-2 max-w-4xl mx-auto' : currentSectionPosts.length === 3 ? 'grid-cols-3 max-w-6xl mx-auto' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'}`}>
+                {currentSectionPosts.map((post) => (
                   <PostCard
                     title={post.entry.title}
                     slug={post.slug}
                     description={post.entry.description}
-                    featuredImage={post.entry.featuredImage}
+                    featuredImage={getPostImage(post)}
                     publishedDate={post.entry.publishedDate}
                     categories={post.entry.categories}
                   />
                 ))}
               </div>
 
-              {/* Mobile Mirror Sync View */}
+              {/* Mobile Adaptive Target Sync View List */}
               <div class="block md:hidden space-y-5">
-                {displayPosts.map((post) => (
+                {currentSectionPosts.map((post) => (
                   <CompactPostRow
                     title={post.entry.title}
                     slug={post.slug}
                     description={post.entry.description}
-                    featuredImage={post.entry.featuredImage}
+                    featuredImage={getPostImage(post)}
                     categories={post.entry.categories}
                   />
                 ))}
@@ -238,30 +248,30 @@ const activeCategoryWithPosts = categoryWithPosts.filter((c) => c.posts.length >
       );
     })}
 
-    {/* 💸 MONETIZATION PANEL 2 (Only visible if isMonetized is true) */}
+    {/* 💸 MONETIZATION PANEL MODULE 2 */}
     {isMonetized && (
-      <div class="my-14 p-6 bg-neutral-50/80 border border-neutral-200/40 rounded-sm text-center relative max-w-5xl mx-auto">
-        <span class="absolute -top-2.5 left-4 bg-[#faf9f6] px-2 text-[9px] font-bold uppercase tracking-widest text-neutral-400">Sponsored</span>
+      <div class="my-14 p-6 bg-white border border-neutral-200/30 rounded-sm text-center relative max-w-5xl mx-auto shadow-sm/5">
+        <span class="absolute -top-2.5 left-4 bg-[#F8F6F2] px-2 text-[9px] font-bold uppercase tracking-widest text-neutral-400">Sponsored</span>
         <AdSlot slot="footer" format="horizontal" />
       </div>
     )}
 
-    {/* ✉️ LUXURY NEWSLETTER BLOCK */}
-    <section class="bg-neutral-950 text-white py-16 md:py-24 px-6 -mx-4 sm:-mx-6 lg:-mx-8">
+    {/* ✉️ LUXURY HIGH-CONTRAST NEWSLETTER MODULE */}
+    <section class="bg-neutral-950 text-white py-16 md:py-24 px-6 -mx-4 sm:-mx-6 lg:-mx-8 rounded-sm shadow-xl mt-8">
       <div class="max-w-xl mx-auto text-center space-y-5">
         <span class="text-[10px] tracking-[0.3em] uppercase text-[#bba15c] font-bold">Newsletter</span>
         <h2 class="text-3xl md:text-4xl font-serif font-light tracking-tight">Stay in the Loop</h2>
         <p class="text-xs md:text-sm text-neutral-400 font-light leading-relaxed max-w-xs mx-auto">
           Get the latest fashion edits and timeless style updates directly into your inbox.
         </p>
-        <form class="flex flex-col sm:flex-row gap-2 max-w-md mx-auto pt-4">
+        <form class="flex flex-col sm:flex-row gap-2 max-w-md mx-auto pt-4 px-2">
           <input
             type="email"
             placeholder="Your email address"
             class="flex-1 bg-neutral-900 border border-neutral-800 text-xs px-4 py-3 text-white focus:outline-none focus:border-[#bba15c] transition-colors duration-200"
             required
           />
-          <button type="submit" class="bg-white text-neutral-950 font-bold uppercase tracking-widest text-[10px] px-6 py-3 hover:bg-[#bba15c] hover:text-white transition duration-300 rounded-none">
+          <button type="submit" class="bg-white text-neutral-950 font-bold uppercase tracking-widest text-[10px] px-6 py-3 hover:bg-[#bba15c] hover:text-white transition duration-300 rounded-none shrink-0">
             Subscribe
           </button>
         </form>
