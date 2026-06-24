@@ -23,7 +23,7 @@ const isMonetized = false;
 
 // 👑 PURE TEXT IMAGE EXTRACTOR: MDX text se automatic pehli image ka src nikalega (Nayi + Purani sab k liye)
 async function getPostImage(post: any) {
-  const rawContent = await post.entry.content() as string;
+  const rawContent = (await post.entry.content()) as string;
   if (!rawContent) return '/images/placeholder.jpg';
 
   // Fallback 1: Agar sections matrix bana ho
@@ -35,7 +35,7 @@ async function getPostImage(post: any) {
   // Fallback 2: Pure Markdown image syntax check karo -> ![alt](url)
   const match = rawContent.match(/!\[.*?\]\((.*?)\)/);
   if (match && match[1]) {
-    return match[1]; // Direct content path return karega bina break kiye
+    return match[1].trim(); // Direct content path return karega bina break kiye
   }
 
   return '/images/placeholder.jpg';
@@ -43,7 +43,7 @@ async function getPostImage(post: any) {
 
 // 👑 AUTOMATIC TEXT EXTRACTOR: Strips markdown syntax and slices the first 140 chars as description overview
 async function getPostDescription(post: any, length = 140) {
-  const rawContent = await post.entry.content() as string;
+  const rawContent = (await post.entry.content()) as string;
   if (!rawContent) return "Explore contemporary style and curated fashion insights inside this editorial.";
   
   const cleanText = rawContent
@@ -58,7 +58,7 @@ async function getPostDescription(post: any, length = 140) {
 // 👑 SECTION 1: MASTER HERO (45% Image / 55% Text Editorial Split Layout)
 const flagshipPost = allPosts[0];
 const flagshipSlug = flagshipPost ? [flagshipPost.slug] : [];
-const flagshipDesc = flagshipPost ? await getPostDescription(flagshipPost, 160) : '';
+const flagshipDesc = flagshipPost ? await getPostDescription(flagshipPost, 140) : '';
 const flagshipImg = flagshipPost ? await getPostImage(flagshipPost) : '/images/placeholder.jpg';
 
 // 💎 SECTION 2: THE LATEST EDITORIALS (Excluding flagship post)
@@ -103,14 +103,14 @@ const activeCategoryWithPosts = categoryWithPosts.filter((c) => c.posts.length >
 <Layout title={`${settings.siteName} — ${settings.tagline}`}>
   <Header currentPath="/" />
 
-  <main class="bg-[#F8F6F2] min-h-screen font-sans antialiased text-neutral-900 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+  <main class="bg-[#F8F6F2] min-h-screen font-sans antialiased text-neutral-900 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16 overflow-x-hidden w-full block">
 
     {/* 👑 SECTION 1: FULLY CENTERED 45/55 EDITORIAL SPLIT HERO */}
     {flagshipPost && (
-      <section class="py-12 md:py-20 border-b border-neutral-200/40">
-        <div class="grid grid-cols-1 lg:grid-cols-[45fr_55fr] gap-x-12 lg:gap-x-20 gap-y-10 items-center">
+      <section class="py-8 md:py-20 border-b border-neutral-200/40 w-full max-w-full block overflow-hidden">
+        <div class="grid grid-cols-1 lg:grid-cols-[45fr_55fr] gap-x-12 lg:gap-x-20 gap-y-6 items-center w-full">
           
-          <div class="overflow-hidden w-full aspect-[4/5] bg-white p-3 border border-neutral-200/20 shadow-sm/5 rounded-sm relative containment-layout group">
+          <div class="overflow-hidden w-full aspect-[4/5] bg-white p-2 md:p-3 border border-neutral-200/20 shadow-sm rounded-sm relative containment-layout group block">
             <a href={`/posts/${flagshipPost.slug}`} class="block w-full h-full pointer-events-auto">
               <img
                 src={flagshipImg}
@@ -119,26 +119,27 @@ const activeCategoryWithPosts = categoryWithPosts.filter((c) => c.posts.length >
                 data-pin-nohover="true"
                 loading="eager"
                 fetchpriority="high"
-                class="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-103 block pointer-events-none select-none z-10"
+                class="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-103 block select-none z-10"
+                onerror="this.onerror=null; this.src='/images/placeholder.jpg';"
               />
             </a>
           </div>
 
-          <div class="space-y-5 text-left lg:pl-2">
+          <div class="space-y-3 md:space-y-5 text-left w-full block overflow-hidden">
             {flagshipPost.entry.categories?.[0] && (
               <span class="block text-[10px] font-bold uppercase tracking-[0.3em] text-[#bba15c]">
                 {flagshipPost.entry.categories[0].replace(/-/g, ' ')}
               </span>
             )}
-            <a href={`/posts/${flagshipPost.slug}`} class="block no-underline group">
-              <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-5.5xl font-serif font-light tracking-tight text-neutral-950 leading-[1.15] group-hover:text-neutral-700 transition-colors duration-300 max-w-2xl line-clamp-2">
+            <a href={`/posts/${flagshipPost.slug}`} class="block no-underline group max-w-full">
+              <h1 class="text-2xl sm:text-4xl md:text-5xl lg:text-5.5xl font-serif font-light tracking-tight text-neutral-950 leading-tight group-hover:text-neutral-700 transition-colors duration-300 line-clamp-2 max-w-full">
                 {flagshipPost.entry.title}
               </h1>
             </a>
-            <p class="text-neutral-500 text-sm md:text-[15px] leading-relaxed font-light max-w-xl line-clamp-3">
+            <p class="text-neutral-500 text-xs md:text-[15px] leading-relaxed font-light line-clamp-3 w-full">
               {flagshipDesc}
             </p>
-            <div class="pt-3">
+            <div class="pt-2">
               <a href={`/posts/${flagshipPost.slug}`} class="inline-block text-xs uppercase tracking-[0.2em] font-medium border-b border-neutral-950/20 pb-1 text-neutral-950 hover:text-[#bba15c] hover:border-[#bba15c] transition-all duration-300 no-underline group">
                 Read Story <span class="inline-block transition-transform duration-300 group-hover:translate-x-1">→</span>
               </a>
@@ -151,13 +152,13 @@ const activeCategoryWithPosts = categoryWithPosts.filter((c) => c.posts.length >
 
     {/* 💎 SECTION 2: LATEST EDITORIALS MATRICES BLOCK */}
     {latestPostsResolved.length > 0 && (
-      <section class="py-14 md:py-20 border-b border-neutral-200/40">
-        <div class="text-center mb-12 md:mb-16 space-y-3">
+      <section class="py-10 md:py-20 border-b border-neutral-200/40 w-full max-w-full block overflow-hidden">
+        <div class="text-center mb-8 md:mb-16 space-y-2">
           <h2 class="text-[11px] font-sans tracking-[0.35em] uppercase text-neutral-950 font-bold">Latest Editorials</h2>
           <div class="w-12 h-[1px] bg-[#bba15c] mx-auto"></div>
         </div>
 
-        <div class="hidden md:grid grid-cols-3 gap-8">
+        <div class="hidden md:grid grid-cols-3 gap-8 w-full">
           {latestPostsResolved.map((post) => (
             <PostCard
               title={post.entry.title}
@@ -170,7 +171,7 @@ const activeCategoryWithPosts = categoryWithPosts.filter((c) => c.posts.length >
           ))}
         </div>
 
-        <div class="block md:hidden space-y-5">
+        <div class="block md:hidden space-y-6 w-full max-w-full overflow-hidden">
           {latestPostsResolved.map((post) => (
             <CompactPostRow
               title={post.entry.title}
@@ -199,8 +200,8 @@ const activeCategoryWithPosts = categoryWithPosts.filter((c) => c.posts.length >
       if (currentSectionPosts.length === 0) return null;
 
       return (
-        <section class="py-14 md:py-20 border-b border-neutral-200/40 last:border-0">
-          <div class="text-center mb-12 md:mb-16 space-y-3">
+        <section class="py-10 md:py-20 border-b border-neutral-200/40 last:border-0 w-full max-w-full block overflow-hidden">
+          <div class="text-center mb-8 md:mb-16 space-y-2">
             <a href={`/category/${category.slug}/`} class="no-underline group inline-block">
               <h2 class="text-[11px] font-sans tracking-[0.35em] uppercase text-neutral-950 font-bold group-hover:text-neutral-600 transition-colors">
                 {category.entry.name}
@@ -211,10 +212,10 @@ const activeCategoryWithPosts = categoryWithPosts.filter((c) => c.posts.length >
 
           {isEven ? (
             /* 🎭 RHYTHM TYPE A: Centered Large 2-Column Row Block Matrix Frame */
-            <div>
-              <div class="hidden md:grid grid-cols-2 gap-10 max-w-5xl 2xl:max-w-6xl mx-auto">
+            <div class="w-full">
+              <div class="hidden md:grid grid-cols-2 gap-10 max-w-5xl 2xl:max-w-6xl mx-auto w-full">
                 {currentSectionPosts.map((post) => (
-                  <a href={`/posts/${post.slug}`} class="block no-underline group bg-white p-4 border border-neutral-200/30 shadow-sm/5 transition-all duration-300 hover:shadow-sm rounded-sm space-y-4">
+                  <a href={`/posts/${post.slug}`} class="block no-underline group bg-white p-4 border border-neutral-200/30 shadow-sm transition-all duration-300 hover:shadow rounded-sm space-y-4 w-full">
                     <div class="overflow-hidden w-full aspect-[4/5] bg-neutral-100 rounded-[1px] relative containment-layout">
                       <img
                         src={post.dynamicImg}
@@ -223,13 +224,14 @@ const activeCategoryWithPosts = categoryWithPosts.filter((c) => c.posts.length >
                         data-pin-nohover="true"
                         loading="lazy"
                         class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-102"
+                        onerror="this.onerror=null; this.src='/images/placeholder.jpg';"
                       />
                     </div>
-                    <div class="space-y-1.5 text-left pt-1">
+                    <div class="space-y-1.5 text-left pt-1 w-full">
                       <span class="block text-[9px] font-bold uppercase tracking-[0.2em] text-[#bba15c]">
                         {category.entry.name}
                       </span>
-                      <h3 class="text-lg md:text-xl font-serif font-light text-neutral-950 leading-tight group-hover:text-neutral-700 transition-colors">
+                      <h3 class="text-lg md:text-xl font-serif font-light text-neutral-950 leading-tight group-hover:text-neutral-700 transition-colors line-clamp-2">
                         {post.entry.title}
                       </h3>
                       <p class="text-neutral-500 text-xs leading-relaxed line-clamp-2 font-light">
@@ -240,7 +242,7 @@ const activeCategoryWithPosts = categoryWithPosts.filter((c) => c.posts.length >
                 ))}
               </div>
 
-              <div class="block md:hidden space-y-5">
+              <div class="block md:hidden space-y-6 w-full max-w-full overflow-hidden">
                 {currentSectionPosts.map((post) => (
                   <CompactPostRow
                     title={post.entry.title}
@@ -254,8 +256,8 @@ const activeCategoryWithPosts = categoryWithPosts.filter((c) => c.posts.length >
             </div>
           ) : (
             /* 🎭 RHYTHM TYPE B: Grid Matrix Columns Switch Frame */
-            <div>
-              <div class={`hidden md:grid gap-6 ${currentSectionPosts.length === 1 ? 'grid-cols-1 max-w-xl mx-auto' : currentSectionPosts.length === 2 ? 'grid-cols-2 max-w-4xl mx-auto' : currentSectionPosts.length === 3 ? 'grid-cols-3 max-w-6xl mx-auto' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'}`}>
+            <div class="w-full">
+              <div class={`hidden md:grid gap-6 w-full ${currentSectionPosts.length === 1 ? 'grid-cols-1 max-w-xl mx-auto' : currentSectionPosts.length === 2 ? 'grid-cols-2 max-w-4xl mx-auto' : currentSectionPosts.length === 3 ? 'grid-cols-3 max-w-6xl mx-auto' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'}`}>
                 {currentSectionPosts.map((post) => (
                   <PostCard
                     title={post.entry.title}
@@ -268,7 +270,7 @@ const activeCategoryWithPosts = categoryWithPosts.filter((c) => c.posts.length >
                 ))}
               </div>
 
-              <div class="block md:hidden space-y-5">
+              <div class="block md:hidden space-y-6 w-full max-w-full overflow-hidden">
                 {currentSectionPosts.map((post) => (
                   <CompactPostRow
                     title={post.entry.title}
@@ -294,21 +296,21 @@ const activeCategoryWithPosts = categoryWithPosts.filter((c) => c.posts.length >
     )}
 
     {/* ✉️ LUXURY HIGH-CONTRAST NEWSLETTER MODULE */}
-    <section class="bg-neutral-950 text-white py-16 md:py-24 px-6 -mx-4 sm:-mx-6 lg:-mx-8 rounded-sm shadow-xl mt-8">
-      <div class="max-w-xl mx-auto text-center space-y-5">
+    <section class="bg-neutral-950 text-white py-12 md:py-24 px-4 md:px-6 rounded-sm shadow-xl mt-8 w-full block overflow-hidden">
+      <div class="max-w-xl mx-auto text-center space-y-4">
         <span class="text-[10px] tracking-[0.3em] uppercase text-[#bba15c] font-bold">Newsletter</span>
-        <h2 class="text-3xl md:text-4xl font-serif font-light tracking-tight">Stay in the Loop</h2>
+        <h2 class="text-2xl md:text-4xl font-serif font-light tracking-tight">Stay in the Loop</h2>
         <p class="text-xs md:text-sm text-neutral-400 font-light leading-relaxed max-w-xs mx-auto">
           Get the latest fashion edits and timeless style updates directly into your inbox.
         </p>
-        <form class="flex flex-col sm:flex-row gap-2 max-w-md mx-auto pt-4 px-2">
+        <form class="flex flex-col gap-2 max-w-md mx-auto pt-2 w-full">
           <input
             type="email"
             placeholder="Your email address"
-            class="flex-1 bg-neutral-900 border border-neutral-800 text-xs px-4 py-3 text-white focus:outline-none focus:border-[#bba15c] transition-colors duration-200"
+            class="w-full bg-neutral-900 border border-neutral-800 text-xs px-4 py-3 text-white focus:outline-none focus:border-[#bba15c] transition-colors"
             required
           />
-          <button type="submit" class="bg-white text-neutral-950 font-bold uppercase tracking-widest text-[10px] px-6 py-3 hover:bg-[#bba15c] hover:text-white transition duration-300 rounded-none shrink-0">
+          <button type="submit" class="w-full bg-white text-neutral-950 font-bold uppercase tracking-widest text-[10px] py-3 hover:bg-[#bba15c] hover:text-white transition duration-300 rounded-none shrink-0">
             Subscribe
           </button>
         </form>
@@ -321,6 +323,10 @@ const activeCategoryWithPosts = categoryWithPosts.filter((c) => c.posts.length >
 </Layout>
 
 <style is:global>
+  html, body {
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+  }
   .containment-layout {
     contain: paint !important;
   }
