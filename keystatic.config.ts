@@ -66,6 +66,7 @@ export default config({
         
         // ⚡ VALIDATION SHIELD: Registers existing data without breaking the layout or showing on UI
         description: fields.empty(), 
+        featuredImage: fields.empty(),
         
         publishedDate: fields.date({ label: 'Published Date' }),
         updatedDate: fields.date({ label: 'Updated Date', defaultValue: { kind: 'today' } }),
