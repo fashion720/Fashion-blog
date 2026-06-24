@@ -63,6 +63,10 @@ export default config({
       format: { contentField: 'content' },
       schema: {
         title: fields.slug({ name: { label: 'Title' } }),
+        
+        // ⚡ VALIDATION SHIELD: Registers existing data without breaking the layout or showing on UI
+        description: fields.empty(), 
+        
         publishedDate: fields.date({ label: 'Published Date' }),
         updatedDate: fields.date({ label: 'Updated Date', defaultValue: { kind: 'today' } }),
         author: fields.relationship({ label: 'Author', collection: 'authors' }),
