@@ -36,43 +36,45 @@ const formattedDate = new Date(publishedDate).toLocaleDateString('en-US', {
 });
 ---
 
-<article class="post-card group w-full bg-transparent flex flex-col">
-  <div class="overflow-hidden w-full aspect-[3/4] relative block bg-neutral-100 rounded-sm containment-layout">
+<article class="post-card group w-full bg-white p-4 border border-neutral-200/30 rounded-sm flex flex-col transition-all duration-300 hover:shadow-sm">
+  
+  {/* 🔒 Strict 4:5 Aspect Boundary Frame matching our single source canvas architecture */}
+  <div class="overflow-hidden w-full aspect-[4/5] relative block bg-neutral-100 rounded-[1px] containment-layout">
     <a href={`/posts/${slug}`} class="block w-full h-full no-underline pointer-events-auto">
       <img
         src={imgSrc}
         alt={title}
         width="600"
-        height="800"
+        height="750"
         loading="lazy"
         decoding="async"
-        /* Double programmatic block mapping to fully blind peripheral engine hooks */
         data-pin-nopin="true"
         data-pin-nohover="true"
-        class="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-102 block pointer-events-none select-none z-10"
+        class="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-103 block pointer-events-none select-none z-10"
       />
     </a>
   </div>
 
-  <div class="text-left pt-4 flex flex-col flex-1 min-w-0">
+  <div class="text-left pt-5 flex flex-col flex-1 min-w-0">
     <a href={`/posts/${slug}`} class="block no-underline flex-1">
       {categories.length > 0 && (
-        <span class="block text-[10px] font-bold uppercase tracking-widest text-[#bba15c] mb-1">
+        <span class="block text-[10px] font-bold uppercase tracking-[0.2em] text-[#bba15c] mb-1.5">
           {categories[0].replace(/-/g, ' ')}
         </span>
       )}
       
-      {/* ⚡ HEIGHT SECURITY LAYER: Prevents alignment breakage from titles scaling into multiple strings */}
-      <h3 class="text-base font-serif font-light tracking-tight text-neutral-950 mb-1.5 group-hover:text-neutral-600 transition-colors duration-200 leading-snug line-clamp-2 min-h-[44px] md:min-h-[48px]">
+      {/* ⚡ HEIGHT SECURITY LAYER: Plays clean typography scales with strict line boundaries */}
+      <h3 class="text-base font-serif font-light tracking-tight text-neutral-950 mb-2 group-hover:text-neutral-700 transition-colors duration-200 leading-snug line-clamp-2 min-h-[44px] md:min-h-[48px]">
         {title}
       </h3>
       
-      <p class="text-[13px] font-light text-neutral-500 leading-relaxed line-clamp-2 mb-3">
+      <p class="text-[12.5px] font-light text-neutral-500 leading-relaxed line-clamp-2 mb-4">
         {description}
       </p>
     </a>
     
-    <div class="text-[9px] uppercase tracking-[0.15em] text-neutral-400 mt-auto pt-1 border-t border-neutral-100/40">
+    {/* 👑 PREMIUM LABELS LAYER: Refined uppercase tracking sequence for high contrast editorial feel */}
+    <div class="text-[10px] uppercase tracking-[0.2em] text-neutral-400 mt-auto pt-2 border-t border-neutral-100/60">
       <time datetime={publishedDate}>{formattedDate}</time>
     </div>
   </div>
