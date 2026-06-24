@@ -108,7 +108,7 @@ const directPostsWithData = !isParentCategory
     
     {/* 📋 ARCHIVE TYPE INTROHEADER HEADER */}
     <header class="text-center py-10 md:py-14 border-b border-neutral-200/40">
-      <span class="text-[10px] tracking-[0.3em] uppercase text-neutral-400 block mb-2">Category Explore</span>
+      <span class="text-[10px] tracking-[0.35em] uppercase text-neutral-400 block mb-2">Category Explore</span>
       <h1 class="text-3xl md:text-5xl font-serif tracking-[0.15em] uppercase text-neutral-950 font-light">
         {category.entry.name}
       </h1>
@@ -128,8 +128,9 @@ const directPostsWithData = !isParentCategory
           <section class="py-8 md:py-16 border-b border-neutral-200/40 w-full max-w-full block overflow-hidden">
             <div class="grid grid-cols-1 lg:grid-cols-[45fr_55fr] gap-x-12 lg:gap-x-20 gap-y-6 items-center w-full">
               
-              <div class="overflow-hidden w-full aspect-[4/5] bg-white p-2 md:p-3 border border-neutral-200/20 shadow-sm rounded-sm relative containment-layout group block">
-                <a href={`/posts/${heroPost.slug}`} class="block w-full h-full pointer-events-auto">
+              {/* 🔥 FIXED HERO COVER FRAME: Stretch rule kills lat white zones */}
+              <div class="overflow-hidden w-full aspect-[4/5] bg-white p-2 md:p-3 border border-neutral-200/20 shadow-sm rounded-sm relative containment-layout group block select-none shrink-0">
+                <a href={`/posts/${heroPost.slug}/`} class="absolute inset-0 w-full h-full pointer-events-auto block">
                   <img
                     src={heroImg}
                     alt={heroPost.entry.title}
@@ -137,7 +138,7 @@ const directPostsWithData = !isParentCategory
                     data-pin-nohover="true"
                     loading="eager"
                     fetchpriority="high"
-                    class="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-103 block select-none z-10"
+                    class="w-full h-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-103 block select-none z-10 absolute inset-0 min-w-full min-h-full"
                     onerror="this.onerror=null; this.src='/images/placeholder.jpg';"
                   />
                 </a>
@@ -147,7 +148,7 @@ const directPostsWithData = !isParentCategory
                 <span class="block text-[10px] font-bold uppercase tracking-[0.3em] text-[#bba15c]">
                   Latest Feature
                 </span>
-                <a href={`/posts/${heroPost.slug}`} class="block no-underline group max-w-full">
+                <a href={`/posts/${heroPost.slug}/`} class="block no-underline group max-w-full">
                   <h2 class="text-2xl sm:text-3xl md:text-4xl font-serif font-light tracking-tight text-neutral-950 leading-tight group-hover:text-neutral-700 transition-colors duration-300 line-clamp-2">
                     {heroPost.entry.title}
                   </h2>
@@ -156,7 +157,7 @@ const directPostsWithData = !isParentCategory
                   {heroDesc}
                 </p>
                 <div class="pt-2">
-                  <a href={`/posts/${heroPost.slug}`} class="inline-block text-xs uppercase tracking-[0.2em] font-medium border-b border-neutral-950/20 pb-1 text-neutral-950 hover:text-[#bba15c] hover:border-[#bba15c] transition-all duration-300 no-underline group">
+                  <a href={`/posts/${heroPost.slug}/`} class="inline-block text-xs uppercase tracking-[0.2em] font-medium border-b border-neutral-950/20 pb-1 text-neutral-950 hover:text-[#bba15c] hover:border-[#bba15c] transition-all duration-300 no-underline group">
                     Read Article <span class="inline-block transition-transform duration-300 group-hover:translate-x-1">→</span>
                   </a>
                 </div>
@@ -188,26 +189,27 @@ const directPostsWithData = !isParentCategory
                   <div class="w-full">
                     <div class="hidden md:grid grid-cols-2 gap-10 max-w-5xl mx-auto w-full">
                       {displayPosts.map((post) => (
-                        <a href={`/posts/${post.slug}`} class="block no-underline group bg-white p-4 border border-neutral-200/30 shadow-sm transition-all duration-300 hover:shadow rounded-sm space-y-4 w-full">
-                          <div class="overflow-hidden w-full aspect-[4/5] bg-neutral-100 rounded-[1px] relative containment-layout">
+                        <a href={`/posts/${post.slug}/`} class="block no-underline group bg-white p-4 border border-neutral-200/30 shadow-sm transition-all duration-300 hover:shadow rounded-sm space-y-4 w-full box-border overflow-hidden flex flex-col">
+                          {/* 🔥 FIXED ROW FRAME: Absolute crop system system */}
+                          <div class="overflow-hidden w-full aspect-[4/5] bg-neutral-100 rounded-[1px] relative containment-layout shrink-0 select-none">
                             <img
                               src={post.dynamicImg}
                               alt={post.entry.title}
                               data-pin-nopin="true"
                               data-pin-nohover="true"
                               loading="lazy"
-                              class="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-102"
+                              class="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-102 absolute inset-0 min-w-full min-h-full"
                               onerror="this.onerror=null; this.src='/images/placeholder.jpg';"
                             />
                           </div>
-                          <div class="space-y-1.5 text-left pt-1 w-full">
+                          <div class="space-y-1.5 text-left pt-1 w-full flex-1">
                             <span class="block text-[9px] font-bold uppercase tracking-[0.2em] text-[#bba15c]">
                               {childCategory.entry.name}
                             </span>
                             <h4 class="text-lg md:text-xl font-serif font-light text-neutral-950 leading-tight group-hover:text-neutral-700 transition-colors line-clamp-2">
                               {post.entry.title}
                             </h4>
-                            <p class="text-neutral-500 text-xs leading-relaxed line-clamp-2 font-light">
+                            <p class="text-neutral-500 text-xs leading-relaxed line-clamp-2 font-light break-words">
                               {post.dynamicDesc}
                             </p>
                           </div>
