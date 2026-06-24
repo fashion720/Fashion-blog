@@ -23,16 +23,29 @@ const childCategories = allCategories.filter(
   (cat) => cat.entry.parentCategory === category.slug
 );
 
-// 👑 SYSTEM UTILITY: Fallback to first image from structures if standalone field doesn't exist
-function getPostImage(post: any) {
-  if (post.entry.sections && post.entry.sections[0]?.image) return post.entry.sections[0].image;
-  if (post.entry.images && post.entry.images[0]) return post.entry.images[0];
+// 👑 PURE TEXT IMAGE EXTRACTOR: MDX text se automatic pehli image ka src nikalega (Nayi + Purani sab k liye)
+async function getPostImage(post: any) {
+  const rawContent = (await post.entry.content()) as string;
+  if (!rawContent) return '/images/placeholder.jpg';
+
+  // Fallback 1: Agar sections matrix bana ho
+  if (post.entry.sections && post.entry.sections[0]?.image) {
+    const img = post.entry.sections[0].image;
+    return img.startsWith('/') ? img : `/images/posts/${img}`;
+  }
+
+  // Fallback 2: Pure Markdown image syntax check karo -> ![alt](url)
+  const match = rawContent.match(/!\[.*?\]\((.*?)\)/);
+  if (match && match[1]) {
+    return match[1].trim();
+  }
+
   return '/images/placeholder.jpg';
 }
 
 // 👑 AUTOMATIC TEXT EXTRACTOR: Strips markdown syntax and slices the first sentences as description overview
 async function getPostDescription(post: any, length = 120) {
-  const rawContent = await post.entry.content() as string;
+  const rawContent = (await post.entry.content()) as string;
   if (!rawContent) return "Explore contemporary style and curated fashion insights inside this editorial.";
   
   const cleanText = rawContent
@@ -47,7 +60,8 @@ async function getPostDescription(post: any, length = 120) {
 // 👑 VISUAL RHYTHM SEGMENT 1: 45/55 EDITORIAL SPLIT HERO (Latest post inside this scope)
 const heroPost = isParentCategory && posts.length > 0 ? posts[0] : null;
 const heroSlug = heroPost ? [heroPost.slug] : [];
-const heroDesc = heroPost ? await getPostDescription(heroPost, 160) : '';
+const heroDesc = heroPost ? await getPostDescription(heroPost, 140) : '';
+const heroImg = heroPost ? await getPostImage(heroPost) : '/images/placeholder.jpg';
 
 // 2. Collect child posts mapping while executing zero-duplicate global filtration
 const childSections = isParentCategory
@@ -56,27 +70,29 @@ const childSections = isParentCategory
         const childPosts = await getPostsByCategory(child.slug);
         const filteredChildPosts = childPosts.filter((p) => !heroSlug.includes(p.slug));
         
-        // Resolve dynamic descriptions asynchronously inside the nested collection streams
-        const childPostsWithDesc = await Promise.all(
+        // Resolve dynamic descriptions AND images asynchronously inside the nested collection streams
+        const childPostsWithData = await Promise.all(
           filteredChildPosts.map(async (p) => {
             const desc = await getPostDescription(p, 120);
-            return { ...p, dynamicDesc: desc };
+            const img = await getPostImage(p);
+            return { ...p, dynamicDesc: desc, dynamicImg: img };
           })
         );
 
-        return { childCategory: child, posts: childPostsWithDesc };
+        return { childCategory: child, posts: childPostsWithData };
       })
     )
   : [];
 
 const activeChildSections = childSections.filter((sec) => sec.posts.length > 0);
 
-// Resolve direct standalone posts with descriptions if user lands on a child category view leaf directly
-const directPostsWithDesc = !isParentCategory
+// Resolve direct standalone posts with descriptions AND images if user lands on a child category view leaf directly
+const directPostsWithData = !isParentCategory
   ? await Promise.all(
       posts.map(async (p) => {
         const desc = await getPostDescription(p, 120);
-        return { ...p, dynamicDesc: desc };
+        const img = await getPostImage(p);
+        return { ...p, dynamicDesc: desc, dynamicImg: img };
       })
     )
   : [];
@@ -88,7 +104,7 @@ const directPostsWithDesc = !isParentCategory
 >
   <Header currentPath={`/category/${category.slug}`} />
 
-  <main class="min-h-screen bg-[#F8F6F2] text-neutral-900 font-sans antialiased max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+  <main class="min-h-screen bg-[#F8F6F2] text-neutral-900 font-sans antialiased max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16 overflow-x-hidden w-full block">
     
     {/* 📋 ARCHIVE TYPE INTROHEADER HEADER */}
     <header class="text-center py-10 md:py-14 border-b border-neutral-200/40">
@@ -105,40 +121,41 @@ const directPostsWithDesc = !isParentCategory
     </header>
 
     {isParentCategory ? (
-      <div class="pb-16">
+      <div class="pb-16 w-full block">
         
         {/* 👑 VISUAL RHYTHM SEGMENT 1: OPTIMIZED 45/55 EDITORIAL SPLIT HERO */}
         {heroPost && (
-          <section class="py-12 md:py-16 border-b border-neutral-200/40">
-            <div class="grid grid-cols-1 lg:grid-cols-[45fr_55fr] gap-x-12 lg:gap-x-20 gap-y-10 items-center">
+          <section class="py-8 md:py-16 border-b border-neutral-200/40 w-full max-w-full block overflow-hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-[45fr_55fr] gap-x-12 lg:gap-x-20 gap-y-6 items-center w-full">
               
-              <div class="overflow-hidden w-full aspect-[4/5] bg-white p-3 border border-neutral-200/20 shadow-sm/5 rounded-sm relative containment-layout group">
+              <div class="overflow-hidden w-full aspect-[4/5] bg-white p-2 md:p-3 border border-neutral-200/20 shadow-sm rounded-sm relative containment-layout group block">
                 <a href={`/posts/${heroPost.slug}`} class="block w-full h-full pointer-events-auto">
                   <img
-                    src={getPostImage(heroPost)?.startsWith('/') ? getPostImage(heroPost) : `/images/posts/${getPostImage(heroPost)}`}
+                    src={heroImg}
                     alt={heroPost.entry.title}
                     data-pin-nopin="true"
                     data-pin-nohover="true"
                     loading="eager"
                     fetchpriority="high"
-                    class="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-103 block pointer-events-none select-none z-10"
+                    class="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-103 block select-none z-10"
+                    onerror="this.onerror=null; this.src='/images/placeholder.jpg';"
                   />
                 </a>
               </div>
 
-              <div class="space-y-4 text-left lg:pl-2">
+              <div class="space-y-3 md:space-y-4 text-left w-full block overflow-hidden">
                 <span class="block text-[10px] font-bold uppercase tracking-[0.3em] text-[#bba15c]">
                   Latest Feature
                 </span>
-                <a href={`/posts/${heroPost.slug}`} class="block no-underline group">
+                <a href={`/posts/${heroPost.slug}`} class="block no-underline group max-w-full">
                   <h2 class="text-2xl sm:text-3xl md:text-4xl font-serif font-light tracking-tight text-neutral-950 leading-tight group-hover:text-neutral-700 transition-colors duration-300 line-clamp-2">
                     {heroPost.entry.title}
                   </h2>
                 </a>
-                <p class="text-neutral-500 text-sm md:text-[15px] leading-relaxed font-light max-w-xl line-clamp-3">
+                <p class="text-neutral-500 text-xs md:text-[15px] leading-relaxed font-light line-clamp-3 w-full">
                   {heroDesc}
                 </p>
-                <div class="pt-3">
+                <div class="pt-2">
                   <a href={`/posts/${heroPost.slug}`} class="inline-block text-xs uppercase tracking-[0.2em] font-medium border-b border-neutral-950/20 pb-1 text-neutral-950 hover:text-[#bba15c] hover:border-[#bba15c] transition-all duration-300 no-underline group">
                     Read Article <span class="inline-block transition-transform duration-300 group-hover:translate-x-1">→</span>
                   </a>
@@ -158,8 +175,8 @@ const directPostsWithDesc = !isParentCategory
             if (displayPosts.length === 0) return null;
 
             return (
-              <section class="py-14 md:py-20 border-b border-neutral-200/40 last:border-0 dynamic-child-section">
-                <div class="text-center mb-12 md:mb-16 space-y-3">
+              <section class="py-10 md:py-20 border-b border-neutral-200/40 last:border-0 w-full max-w-full block overflow-hidden">
+                <div class="text-center mb-8 md:mb-16 space-y-2">
                   <h3 class="text-[11px] font-sans tracking-[0.35em] uppercase text-neutral-950 font-bold">
                     {childCategory.entry.name}
                   </h3>
@@ -168,25 +185,26 @@ const directPostsWithDesc = !isParentCategory
 
                 {isFirstChild ? (
                   /* 🎭 RHYTHM STYLE A: 2 Large Cards Editorial Grid Layout */
-                  <div>
-                    <div class="hidden md:grid grid-cols-2 gap-10 max-w-5xl 2xl:max-w-6xl mx-auto">
+                  <div class="w-full">
+                    <div class="hidden md:grid grid-cols-2 gap-10 max-w-5xl mx-auto w-full">
                       {displayPosts.map((post) => (
-                        <a href={`/posts/${post.slug}`} class="block no-underline group bg-white p-4 border border-neutral-200/30 shadow-sm/5 transition-all duration-300 hover:shadow-sm rounded-sm space-y-4">
+                        <a href={`/posts/${post.slug}`} class="block no-underline group bg-white p-4 border border-neutral-200/30 shadow-sm transition-all duration-300 hover:shadow rounded-sm space-y-4 w-full">
                           <div class="overflow-hidden w-full aspect-[4/5] bg-neutral-100 rounded-[1px] relative containment-layout">
                             <img
-                              src={getPostImage(post)?.startsWith('/') ? getPostImage(post) : `/images/posts/${getPostImage(post)}`}
+                              src={post.dynamicImg}
                               alt={post.entry.title}
                               data-pin-nopin="true"
                               data-pin-nohover="true"
                               loading="lazy"
-                              class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-102"
+                              class="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-102"
+                              onerror="this.onerror=null; this.src='/images/placeholder.jpg';"
                             />
                           </div>
-                          <div class="space-y-1.5 text-left pt-1">
+                          <div class="space-y-1.5 text-left pt-1 w-full">
                             <span class="block text-[9px] font-bold uppercase tracking-[0.2em] text-[#bba15c]">
                               {childCategory.entry.name}
                             </span>
-                            <h4 class="text-lg md:text-xl font-serif font-light text-neutral-950 leading-tight group-hover:text-neutral-700 transition-colors">
+                            <h4 class="text-lg md:text-xl font-serif font-light text-neutral-950 leading-tight group-hover:text-neutral-700 transition-colors line-clamp-2">
                               {post.entry.title}
                             </h4>
                             <p class="text-neutral-500 text-xs leading-relaxed line-clamp-2 font-light">
@@ -197,13 +215,13 @@ const directPostsWithDesc = !isParentCategory
                       ))}
                     </div>
 
-                    <div class="block md:hidden space-y-5">
+                    <div class="block md:hidden space-y-6 w-full max-w-full overflow-hidden">
                       {displayPosts.map((post) => (
                         <CompactPostRow
                           title={post.entry.title}
                           slug={post.slug}
                           description={post.dynamicDesc}
-                          featuredImage={getPostImage(post)}
+                          featuredImage={post.dynamicImg}
                           categories={post.entry.categories}
                         />
                       ))}
@@ -211,27 +229,27 @@ const directPostsWithDesc = !isParentCategory
                   </div>
                 ) : (
                   /* 🎭 RHYTHM STYLE B: Self Balancing Secure Column Grid Framework */
-                  <div>
-                    <div class={`hidden md:grid gap-8 ${displayPosts.length === 1 ? 'grid-cols-1 max-w-xl mx-auto' : displayPosts.length === 2 ? 'grid-cols-2 max-w-4xl mx-auto' : displayPosts.length === 3 ? 'grid-cols-3 max-w-6xl mx-auto' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'}`}>
+                  <div class="w-full">
+                    <div class={`hidden md:grid gap-6 w-full ${displayPosts.length === 1 ? 'grid-cols-1 max-w-xl mx-auto' : displayPosts.length === 2 ? 'grid-cols-2 max-w-4xl mx-auto' : displayPosts.length === 3 ? 'grid-cols-3 max-w-6xl mx-auto' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'}`}>
                       {displayPosts.map((post) => (
                         <PostCard
                           title={post.entry.title}
                           slug={post.slug}
                           description={post.dynamicDesc}
-                          featuredImage={getPostImage(post)}
+                          featuredImage={post.dynamicImg}
                           publishedDate={post.entry.publishedDate}
                           categories={post.entry.categories}
                         />
                       ))}
                     </div>
 
-                    <div class="block md:hidden space-y-5">
+                    <div class="block md:hidden space-y-6 w-full max-w-full overflow-hidden">
                       {displayPosts.map((post) => (
                         <CompactPostRow
                           title={post.entry.title}
                           slug={post.slug}
                           description={post.dynamicDesc}
-                          featuredImage={getPostImage(post)}
+                          featuredImage={post.dynamicImg}
                           categories={post.entry.categories}
                         />
                       ))}
@@ -243,14 +261,14 @@ const directPostsWithDesc = !isParentCategory
           })
         ) : (
           /* FALLBACK SEGMENT */
-          <section class="py-12 md:py-16">
-            <div class="hidden md:grid grid-cols-3 gap-8">
-              {posts.slice(1).map((post) => (
+          <section class="py-10 md:py-16 w-full max-w-full block overflow-hidden">
+            <div class="hidden md:grid grid-cols-3 gap-8 w-full">
+              {posts.slice(1).map(async (post) => (
                 <PostCard
                   title={post.entry.title}
                   slug={post.slug}
                   description="Explore contemporary style and curated fashion insights inside this editorial."
-                  featuredImage={getPostImage(post)}
+                  featuredImage={await getPostImage(post)}
                   publishedDate={post.entry.publishedDate}
                   categories={post.entry.categories}
                 />
@@ -262,29 +280,29 @@ const directPostsWithDesc = !isParentCategory
       </div>
     ) : (
       /* 📂 CHILD CATEGORY LEAF STREAM DIRECTORY VIEW */
-      <div class="py-12 md:py-16">
-        {directPostsWithDesc.length > 0 ? (
-          <div>
-            <div class="hidden md:grid grid-cols-3 gap-8">
-              {directPostsWithDesc.map((post) => (
+      <div class="py-10 md:py-16 w-full block">
+        {directPostsWithData.length > 0 ? (
+          <div class="w-full">
+            <div class="hidden md:grid grid-cols-3 gap-8 w-full">
+              {directPostsWithData.map((post) => (
                 <PostCard
                   title={post.entry.title}
                   slug={post.slug}
                   description={post.dynamicDesc}
-                  featuredImage={getPostImage(post)}
+                  featuredImage={post.dynamicImg}
                   publishedDate={post.entry.publishedDate}
                   categories={post.entry.categories}
                 />
               ))}
             </div>
 
-            <div class="block md:hidden space-y-5">
-              {directPostsWithDesc.map((post) => (
+            <div class="block md:hidden space-y-6 w-full max-w-full overflow-hidden">
+              {directPostsWithData.map((post) => (
                 <CompactPostRow
                   title={post.entry.title}
                   slug={post.slug}
                   description={post.dynamicDesc}
-                  featuredImage={getPostImage(post)}
+                  featuredImage={post.dynamicImg}
                   categories={post.entry.categories}
                 />
               ))}
@@ -303,6 +321,10 @@ const directPostsWithDesc = !isParentCategory
 </Layout>
 
 <style is:global>
+  html, body {
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+  }
   .containment-layout {
     contain: paint !important;
   }
