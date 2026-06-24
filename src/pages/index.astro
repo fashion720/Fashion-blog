@@ -18,27 +18,48 @@ const parentCategories = allCategories.filter((cat) => !cat.entry.parentCategory
 
 const allPosts = await getAllPosts();
 
-// 💸 MONETIZATION CONFIGURATION (SWITCH TO 'true' ONCE APPROVED)
+// 💸 MONETIZATION CONFIGURATION
 const isMonetized = false; 
 
 // 👑 FALLBACK UTILITY: Extracts the first available image if explicit featuredImage field is omitted
 function getPostImage(post: any) {
-  if (post.entry.featuredImage) return post.entry.featuredImage;
-  // Fallback programmatic route: handles parsing schemas seamlessly if direct properties match block types
   if (post.entry.sections && post.entry.sections[0]?.image) return post.entry.sections[0].image;
   if (post.entry.images && post.entry.images[0]) return post.entry.images[0];
   return '/images/placeholder.jpg';
 }
 
+// 👑 AUTOMATIC TEXT EXTRACTOR: Strips markdown syntax and slices the first 140 chars as description overview
+async function getPostDescription(post: any, length = 140) {
+  const rawContent = await post.entry.content() as string;
+  if (!rawContent) return "Explore contemporary style and curated fashion insights inside this editorial.";
+  
+  const cleanText = rawContent
+    .replace(/[#*_`~]/g, '') // Remove formatting characters
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // Keep link text, remove URL formatting
+    .replace(/^[-\s]*\n/gm, '') // Remove linebreaks
+    .trim();
+
+  return cleanText.length > length ? `${cleanText.substring(0, length)}...` : cleanText;
+}
+
 // 👑 SECTION 1: MASTER HERO (45% Image / 55% Text Editorial Split Layout)
 const flagshipPost = allPosts[0];
 const flagshipSlug = flagshipPost ? [flagshipPost.slug] : [];
+const flagshipDesc = flagshipPost ? await getPostDescription(flagshipPost, 160) : '';
 
 // 💎 SECTION 2: THE LATEST EDITORIALS (Excluding flagship post)
 const latestPosts = allPosts
   .filter((p) => !flagshipSlug.includes(p.slug))
   .slice(0, 3);
 const latestSlugs = latestPosts.map(p => p.slug);
+
+// Resolve dynamic asynchronous descriptions array map for latest editorial stack
+const latestPostsWithDesc = await Promise.all(
+  latestPosts.map(async (post) => {
+    const desc = await getPostDescription(post, 120);
+    return { ...post, dynamicDesc: desc };
+  })
+);
 
 // Combined global dynamic filters to preserve hierarchy limits and block duplicate elements
 const globallyExcludedSlugs = [...flagshipSlug, ...latestSlugs];
@@ -48,7 +69,16 @@ const categoryWithPosts = await Promise.all(
   parentCategories.map(async (cat) => {
     const posts = await getPostsByCategory(cat.slug);
     const filteredPosts = posts.filter((p) => !globallyExcludedSlugs.includes(p.slug));
-    return { category: cat, posts: filteredPosts };
+    
+    // Resolve content text items asynchronously inside nested categories maps
+    const resolvedCategoryPosts = await Promise.all(
+      filteredPosts.map(async (p) => {
+        const desc = await getPostDescription(p, 120);
+        return { ...p, dynamicDesc: desc };
+      })
+    );
+
+    return { category: cat, posts: resolvedCategoryPosts };
   })
 );
 const activeCategoryWithPosts = categoryWithPosts.filter((c) => c.posts.length > 0);
@@ -64,7 +94,6 @@ const activeCategoryWithPosts = categoryWithPosts.filter((c) => c.posts.length >
       <section class="py-12 md:py-20 border-b border-neutral-200/40">
         <div class="grid grid-cols-1 lg:grid-cols-[45fr_55fr] gap-x-12 lg:gap-x-20 gap-y-10 items-center">
           
-          {/* Left Block Layout Wrapper: Locked on strict 4:5 aspect layout spaces */}
           <div class="overflow-hidden w-full aspect-[4/5] bg-white p-3 border border-neutral-200/20 shadow-sm/5 rounded-sm relative containment-layout group">
             <a href={`/posts/${flagshipPost.slug}`} class="block w-full h-full pointer-events-auto">
               <img
@@ -79,7 +108,6 @@ const activeCategoryWithPosts = categoryWithPosts.filter((c) => c.posts.length >
             </a>
           </div>
 
-          {/* Right Block Text Element Architecture (Luxury Breathing Geometry Allocation) */}
           <div class="space-y-5 text-left lg:pl-2">
             {flagshipPost.entry.categories?.[0] && (
               <span class="block text-[10px] font-bold uppercase tracking-[0.3em] text-[#bba15c]">
@@ -92,7 +120,7 @@ const activeCategoryWithPosts = categoryWithPosts.filter((c) => c.posts.length >
               </h1>
             </a>
             <p class="text-neutral-500 text-sm md:text-[15px] leading-relaxed font-light max-w-xl line-clamp-3">
-              {flagshipPost.entry.description}
+              {flagshipDesc}
             </p>
             <div class="pt-3">
               <a href={`/posts/${flagshipPost.slug}`} class="inline-block text-xs uppercase tracking-[0.2em] font-medium border-b border-neutral-950/20 pb-1 text-neutral-950 hover:text-[#bba15c] hover:border-[#bba15c] transition-all duration-300 no-underline group">
@@ -106,20 +134,19 @@ const activeCategoryWithPosts = categoryWithPosts.filter((c) => c.posts.length >
     )}
 
     {/* 💎 SECTION 2: LATEST EDITORIALS MATRICES BLOCK */}
-    {latestPosts.length > 0 && (
+    {latestPostsWithDesc.length > 0 && (
       <section class="py-14 md:py-20 border-b border-neutral-200/40">
         <div class="text-center mb-12 md:mb-16 space-y-3">
           <h2 class="text-[11px] font-sans tracking-[0.35em] uppercase text-neutral-950 font-bold">Latest Editorials</h2>
           <div class="w-12 h-[1px] bg-[#bba15c] mx-auto"></div>
         </div>
 
-        {/* Desktop Balanced Symmetric Grid Columns Block */}
         <div class="hidden md:grid grid-cols-3 gap-8">
-          {latestPosts.map((post) => (
+          {latestPostsWithDesc.map((post) => (
             <PostCard
               title={post.entry.title}
               slug={post.slug}
-              description={post.entry.description}
+              description={post.dynamicDesc}
               featuredImage={getPostImage(post)}
               publishedDate={post.entry.publishedDate}
               categories={post.entry.categories}
@@ -127,13 +154,12 @@ const activeCategoryWithPosts = categoryWithPosts.filter((c) => c.posts.length >
           ))}
         </div>
 
-        {/* Mobile View Safe Row Multi-Stack Rendering */}
         <div class="block md:hidden space-y-5">
-          {latestPosts.map((post) => (
+          {latestPostsWithDesc.map((post) => (
             <CompactPostRow
               title={post.entry.title}
               slug={post.slug}
-              description={post.entry.description}
+              description={post.dynamicDesc}
               featuredImage={getPostImage(post)}
               categories={post.entry.categories}
             />
@@ -150,12 +176,9 @@ const activeCategoryWithPosts = categoryWithPosts.filter((c) => c.posts.length >
       </div>
     )}
 
-    {/* 🎨 DYNAMIC CATEGORIES LOOP (INTEGRATED CONTENT HEIGHT BALANCING RULES) */}
+    {/* 🎨 DYNAMIC CATEGORIES LOOP */}
     {activeCategoryWithPosts.map(({ category, posts }, idx) => {
-      // Alternating index sequence maps styles dynamically to preserve alignment balances
       const isEven = idx % 2 === 0;
-      
-      // Dynamic layout constraint switch logic
       const currentSectionPosts = isEven ? posts.slice(0, 2) : posts.slice(0, 4);
       if (currentSectionPosts.length === 0) return null;
 
@@ -194,20 +217,19 @@ const activeCategoryWithPosts = categoryWithPosts.filter((c) => c.posts.length >
                         {post.entry.title}
                       </h3>
                       <p class="text-neutral-500 text-xs leading-relaxed line-clamp-2 font-light">
-                        {post.entry.description}
+                        {post.dynamicDesc}
                       </p>
                     </div>
                   </a>
                 ))}
               </div>
 
-              {/* Mobile Adaptive Target Sync View List */}
               <div class="block md:hidden space-y-5">
                 {currentSectionPosts.map((post) => (
                   <CompactPostRow
                     title={post.entry.title}
                     slug={post.slug}
-                    description={post.entry.description}
+                    description={post.dynamicDesc}
                     featuredImage={getPostImage(post)}
                     categories={post.entry.categories}
                   />
@@ -215,14 +237,14 @@ const activeCategoryWithPosts = categoryWithPosts.filter((c) => c.posts.length >
               </div>
             </div>
           ) : (
-            /* 🎭 RHYTHM TYPE B: Grid Matrix Columns Switch Frame (If data counts require balancing) */
+            /* 🎭 RHYTHM TYPE B: Grid Matrix Columns Switch Frame */
             <div>
               <div class={`hidden md:grid gap-6 ${currentSectionPosts.length === 1 ? 'grid-cols-1 max-w-xl mx-auto' : currentSectionPosts.length === 2 ? 'grid-cols-2 max-w-4xl mx-auto' : currentSectionPosts.length === 3 ? 'grid-cols-3 max-w-6xl mx-auto' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'}`}>
                 {currentSectionPosts.map((post) => (
                   <PostCard
                     title={post.entry.title}
                     slug={post.slug}
-                    description={post.entry.description}
+                    description={post.dynamicDesc}
                     featuredImage={getPostImage(post)}
                     publishedDate={post.entry.publishedDate}
                     categories={post.entry.categories}
@@ -230,13 +252,12 @@ const activeCategoryWithPosts = categoryWithPosts.filter((c) => c.posts.length >
                 ))}
               </div>
 
-              {/* Mobile Adaptive Target Sync View List */}
               <div class="block md:hidden space-y-5">
                 {currentSectionPosts.map((post) => (
                   <CompactPostRow
                     title={post.entry.title}
                     slug={post.slug}
-                    description={post.entry.description}
+                    description={post.dynamicDesc}
                     featuredImage={getPostImage(post)}
                     categories={post.entry.categories}
                   />
