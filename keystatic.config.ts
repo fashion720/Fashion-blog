@@ -24,7 +24,7 @@ export default config({
           multiline: true 
         }),
         
-        // Custom Navigation Toggle Fields (To match your second site.yaml configurations seamlessly)
+        // Custom Navigation Toggle Fields
         showHomeLink: fields.checkbox({ label: 'Show Home Link', defaultValue: true }),
         showAllArticlesLink: fields.checkbox({ label: 'Show All Articles Link', defaultValue: true }),
         showCategoriesLink: fields.checkbox({ label: 'Show Categories Link', defaultValue: true }),
@@ -63,11 +63,9 @@ export default config({
       format: { contentField: 'content' },
       schema: {
         title: fields.slug({ name: { label: 'Title' } }),
-        description: fields.text({ label: 'Description (SEO)', validation: { length: { min: 50, max: 160 } } }),
         publishedDate: fields.date({ label: 'Published Date' }),
         updatedDate: fields.date({ label: 'Updated Date', defaultValue: { kind: 'today' } }),
         author: fields.relationship({ label: 'Author', collection: 'authors' }),
-        featuredImage: fields.image({ label: 'Featured Image', directory: 'public/images/posts', publicPath: '/images/posts/' }),
         categories: fields.multiRelationship({ label: 'Categories', collection: 'categories' }),
         tags: fields.array(fields.text({ label: 'Tag' }), { label: 'Tags', itemLabel: (props) => props.value }),
         isDraft: fields.checkbox({ label: 'Draft', defaultValue: true }),
@@ -111,7 +109,6 @@ export default config({
       schema: {
         name: fields.slug({ name: { label: 'Category Name' } }),
         description: fields.text({ label: 'Description', multiline: true }),
-        // ⚡ OPTIMIZED RELATIONSHIP: Safe binding to avoid blank sync loops in cloud state
         parentCategory: fields.relationship({ 
           label: 'Parent Category (Leave empty if this IS a Parent Category)', 
           collection: 'categories', 
