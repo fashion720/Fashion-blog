@@ -12,68 +12,63 @@ const footerDesc = settings?.footerDescription || "Premium editorial content exp
 const siteName = settings?.siteName || "FASHION EDITORIAL";
 ---
 
-<footer class="bg-black text-white mt-20 md:mt-24 py-16 md:py-20 antialiased">
-  <div class="max-w-7xl mx-auto px-4 md:px-6">
-    <!-- Main Footer Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12 md:mb-16">
+<footer class="bg-black text-white mt-20 md:mt-24 py-12 md:py-20 antialiased w-full max-w-full block overflow-hidden">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full block box-border">
+    {/* ⚡ GRID LOCK: Explicit widths and fallback column constraints wrap clean on smaller devices */}
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-10 md:gap-12 mb-12 md:mb-16 w-full text-left">
       
-      <!-- 🏛️ Brand Column: Now 100% Dynamic from Keystatic Settings -->
-      <div>
-        <h3 class="text-sm md:text-base font-medium tracking-[0.2em] uppercase mb-6 text-white">
+      <div class="min-w-0 w-full block break-words">
+        <h3 class="text-xs md:text-sm font-medium tracking-[0.2em] uppercase mb-4 md:mb-6 text-white truncate">
           {siteName}
         </h3>
-        <p class="text-xs md:text-sm text-neutral-400 font-light leading-relaxed">
+        <p class="text-xs md:text-sm text-neutral-400 font-light leading-relaxed break-words">
           {footerDesc}
         </p>
       </div>
 
-      <!-- 🧭 Explore Links Column -->
-      <div>
-        <h4 class="text-xs font-bold tracking-widest text-neutral-400 uppercase mb-6 border-b border-neutral-900 pb-4">
+      <div class="min-w-0 w-full block">
+        <h4 class="text-[10px] md:text-xs font-bold tracking-widest text-neutral-400 uppercase mb-4 md:mb-6 border-b border-neutral-900 pb-3 md:pb-4 truncate">
           EXPLORE
         </h4>
-        <ul class="space-y-4 text-xs md:text-sm">
+        <ul class="space-y-3 md:space-y-4 text-xs md:text-sm block">
           <li>
-            <a href="/" class="text-neutral-300 hover:text-white transition-colors duration-300 font-light no-underline">
+            <a href="/" class="text-neutral-300 hover:text-white transition-colors duration-300 font-light no-underline block">
               Home
             </a>
           </li>
           <li>
-            <a href="/posts/" class="text-neutral-300 hover:text-white transition-colors duration-300 font-light no-underline">
+            <a href="/posts/" class="text-neutral-300 hover:text-white transition-colors duration-300 font-light no-underline block">
               All Articles
             </a>
           </li>
           <li>
-            <a href="/categories/" class="text-neutral-300 hover:text-white transition-colors duration-300 font-light no-underline">
+            <a href="/categories/" class="text-neutral-300 hover:text-white transition-colors duration-300 font-light no-underline block">
               Categories
             </a>
           </li>
         </ul>
       </div>
 
-      <!-- 📋 Information Column: Dynamic Loop with Slug Fallback -->
-      <div>
-        <h4 class="text-xs font-bold tracking-widest text-neutral-400 uppercase mb-6 border-b border-neutral-900 pb-4">
+      <div class="min-w-0 w-full block">
+        <h4 class="text-[10px] md:text-xs font-bold tracking-widest text-neutral-400 uppercase mb-4 md:mb-6 border-b border-neutral-900 pb-3 md:pb-4 truncate">
           INFORMATION
         </h4>
-        <ul class="space-y-4 text-xs md:text-sm">
+        <ul class="space-y-3 md:space-y-4 text-xs md:text-sm block">
           {allPages && allPages.length > 0 ? (
             allPages.map((page) => {
-              // ⚡ Title fallbacks handle kar rahy hain agar entry load hony mai delay ho
               const displayTitle = page.entry?.title 
                 ? page.entry.title 
                 : page.slug.replace(/-/g, ' ');
 
               return (
-                <li>
-                  <a href={`/${page.slug}/`} class="text-neutral-300 hover:text-white transition-colors duration-300 font-light no-underline block capitalize">
+                <li class="block truncate">
+                  <a href={`/${page.slug}/`} class="text-neutral-300 hover:text-white transition-colors duration-300 font-light no-underline block capitalize truncate">
                     {displayTitle}
                   </a>
                 </li>
               );
             })
           ) : (
-            /* Fallback link agar panel se sync queue delayed ho */
             <li>
               <span class="text-neutral-500 font-light text-xs italic">No pages published yet.</span>
             </li>
@@ -81,18 +76,17 @@ const siteName = settings?.siteName || "FASHION EDITORIAL";
         </ul>
       </div>
 
-      <!-- 📲 Connect Column: Links managed from Admin Panel Social fields -->
-      <div>
-        <h4 class="text-xs font-bold tracking-widest text-neutral-400 uppercase mb-6 border-b border-neutral-900 pb-4">
+      <div class="min-w-0 w-full block">
+        <h4 class="text-[10px] md:text-xs font-bold tracking-widest text-neutral-400 uppercase mb-4 md:mb-6 border-b border-neutral-900 pb-3 md:pb-4 truncate">
           CONNECT
         </h4>
-        <div class="flex gap-6 mb-6">
+        <div class="flex flex-wrap gap-5 md:gap-6 mb-4">
           {settings?.instagramUrl && (
             <a
               href={settings.instagramUrl}
               target="_blank"
               rel="noopener noreferrer"
-              class="text-neutral-400 hover:text-white transition-colors duration-300"
+              class="text-neutral-400 hover:text-white transition-colors duration-300 shrink-0"
               aria-label="Instagram"
             >
               <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -105,7 +99,7 @@ const siteName = settings?.siteName || "FASHION EDITORIAL";
               href={settings.twitterUrl}
               target="_blank"
               rel="noopener noreferrer"
-              class="text-neutral-400 hover:text-white transition-colors duration-300"
+              class="text-neutral-400 hover:text-white transition-colors duration-300 shrink-0"
               aria-label="Twitter"
             >
               <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -118,7 +112,7 @@ const siteName = settings?.siteName || "FASHION EDITORIAL";
               href={settings.pinterestUrl}
               target="_blank"
               rel="noopener noreferrer"
-              class="text-neutral-400 hover:text-white transition-colors duration-300"
+              class="text-neutral-400 hover:text-white transition-colors duration-300 shrink-0"
               aria-label="Pinterest"
             >
               <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -130,12 +124,10 @@ const siteName = settings?.siteName || "FASHION EDITORIAL";
       </div>
     </div>
 
-    <!-- Divider -->
-    <div class="border-t border-neutral-900 my-12"></div>
+    <div class="border-t border-neutral-900 my-8 md:my-12 w-full block"></div>
 
-    <!-- Bottom Copyright Section -->
-    <div class="text-center">
-      <p class="text-xs text-neutral-500 font-light tracking-wide">
+    <div class="text-center w-full block">
+      <p class="text-xs text-neutral-500 font-light tracking-wide break-words">
         &copy; {currentYear} {siteName}. All rights reserved.
       </p>
     </div>
