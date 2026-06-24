@@ -26,15 +26,28 @@ const rawContent = (await entry.content()) as string;
 const renderedContent = marked(rawContent ?? '');
 const author = entry.author ? await getAuthorBySlug(entry.author) : null;
 
-// 👑 FALLBACK UTILITY: Extracts the first available image strings for assets parsing
-function getPostImage(post: any) {
-  if (post.entry.sections && post.entry.sections[0]?.image) return post.entry.sections[0].image;
-  if (post.entry.images && post.entry.images[0]) return post.entry.images[0];
+// 👑 UPGRADED ASYNC PARSER: Content text scanner loop (Nayi aur Purani sab posts k liye standard)
+async function getPostImage(post: any) {
+  const rawText = (await post.entry.content()) as string;
+  if (!rawText) return '/images/og/default.jpg';
+
+  // Fallback 1: Agar admin sections object matrix ho
+  if (post.entry.sections && post.entry.sections[0]?.image) {
+    const img = post.entry.sections[0].image;
+    return img.startsWith('/') ? img : `/images/posts/${img}`;
+  }
+
+  // Fallback 2: Regex check for markdown image tags match layout
+  const match = rawText.match(/!\[.*?\]\((.*?)\)/);
+  if (match && match[1]) {
+    return match[1].trim();
+  }
+
   return '/images/og/default.jpg';
 }
 
-const resolvedImg = getPostImage(post);
-const featuredImage = resolvedImg.startsWith('/') ? resolvedImg : `/images/posts/${resolvedImg}`;
+// 👑 FIXED: Resolved promise with strict await call constraint lock
+const featuredImage = await getPostImage(post);
 const postUrl = new URL(`/posts/${post.slug}/`, Astro.site).toString();
 
 const formattedDate = entry.publishedDate
@@ -73,14 +86,14 @@ const isMonetized = false;
   <ReadingProgress />
   <Header currentPath={`/posts/${post.slug}`} />
 
-  <main class="min-h-screen bg-[#F8F6F2] text-neutral-900 font-sans antialiased max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-16">
+  <main class="min-h-screen bg-[#F8F6F2] text-neutral-900 font-sans antialiased max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-16 overflow-x-hidden w-full block">
     
-    <article class="w-full">
+    <article class="w-full block">
       
       {/* 📋 NARROW STRUCTURE WRAPPER: Title Header block */}
-      <header class="text-center mb-10 md:mb-14 space-y-4 max-w-3xl mx-auto">
+      <header class="text-center mb-10 md:mb-14 space-y-4 max-w-3xl mx-auto block">
         {entry.categories && entry.categories.length > 0 && (
-          <div class="flex justify-center gap-x-4 gap-y-1 items-center">
+          <div class="flex justify-center gap-x-4 gap-y-1 items-center flex-wrap">
             {entry.categories.map((cat: string) => (
               <a href={`/category/${cat}/`} class="text-[10px] font-bold uppercase tracking-[0.25em] text-[#bba15c] hover:opacity-80 transition no-underline">
                 {cat.replace(/-/g, ' ')}
@@ -89,7 +102,7 @@ const isMonetized = false;
           </div>
         )}
         
-        <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-5.5xl font-serif font-light tracking-tight text-neutral-950 leading-[1.15] max-w-2xl mx-auto">
+        <h1 class="text-2xl sm:text-4xl md:text-5xl lg:text-5.5xl font-serif font-light tracking-tight text-neutral-950 leading-[1.2] max-w-2xl mx-auto break-words">
           {entry.title}
         </h1>
         
@@ -102,48 +115,49 @@ const isMonetized = false;
         <div class="w-16 h-[1px] bg-[#bba15c] mx-auto pt-4"></div>
       </header>
 
-      {/* 👑 WIDE STRUCTURE BANNER LAYER */}
+      {/* 👑 STRUCTURE BANNER LAYER: Forced 4:5 mobile bounds layout matrix check */}
       {featuredImage && (
-        <div class="w-full max-w-4xl mx-auto mb-12 overflow-hidden bg-white p-4 border border-neutral-200/30 shadow-sm/5 rounded-sm">
-          <div class="overflow-hidden w-full h-auto rounded-[1px] relative block">
+        <div class="w-full max-w-4xl mx-auto mb-12 overflow-hidden bg-white p-2 md:p-4 border border-neutral-200/30 shadow-sm rounded-sm block">
+          <div class="overflow-hidden w-full h-auto rounded-[1px] relative block aspect-[4/5] md:aspect-[16/9]">
             <img
               src={featuredImage}
               alt={entry.title}
-              class="w-full h-auto block select-none max-h-[65vh] md:max-h-[70vh] object-cover"
+              class="w-full h-full object-cover block select-none"
               loading="eager"
               fetchpriority="high"
               decoding="async"
+              onerror="this.onerror=null; this.src='/images/og/default.jpg';"
             />
           </div>
         </div>
       )}
 
       {/* 📖 NARROW READING MATRIX */}
-      <div class="max-w-2xl sm:max-w-3xl mx-auto">
-        <div class="prose prose-neutral max-w-none fashion-prose-content" set:html={renderedContent} />
+      <div class="max-w-2xl sm:max-w-3xl mx-auto block overflow-hidden w-full">
+        <div class="prose prose-neutral max-w-none fashion-prose-content block w-full break-words" set:html={renderedContent} />
 
         {/* 💸 IN-CONTENT SPONSORED PANEL BUFFER MAP */}
         {isMonetized && (
-          <div class="my-12 p-6 bg-white border border-neutral-200/30 shadow-sm/5 rounded-sm text-center relative w-full">
+          <div class="my-12 p-6 bg-white border border-neutral-200/30 shadow-sm rounded-sm text-center relative w-full block">
             <span class="absolute -top-2.5 left-4 bg-[#F8F6F2] px-2 text-[9px] font-bold uppercase tracking-widest text-neutral-400">Sponsored Content</span>
             <AdSlot slot="in-content" format="horizontal" />
           </div>
         )}
 
         {/* ✉️ SHARING ACTION REGISTRY DRAWER */}
-        <div class="border-t border-b border-neutral-200/40 py-5 my-10 flex items-center justify-between">
+        <div class="border-t border-b border-neutral-200/40 py-5 my-10 flex flex-col sm:flex-row gap-4 items-center justify-between w-full">
           <span class="text-[10px] uppercase tracking-[0.2em] text-neutral-400 font-bold">Share This Article</span>
           <SocialShare
             title={entry.title}
-            description={entry.description}
+            description={seoDescription}
             url={postUrl}
-            image={new URL(featuredImage, Astro.site).toString()}
+            image={featuredImage ? new URL(featuredImage, Astro.site).toString() : ''}
           />
         </div>
 
         {/* ✍️ AUTHOR PROFILE EDITORIAL MODULE CARD */}
         {author && (
-          <div class="mt-12 p-6 bg-white border border-neutral-200/30 shadow-sm/5 rounded-sm flex flex-col sm:flex-row items-center sm:items-start gap-5 text-center sm:text-left">
+          <div class="mt-12 p-6 bg-white border border-neutral-200/30 shadow-sm rounded-sm flex flex-col sm:flex-row items-center sm:items-start gap-5 text-center sm:text-left w-full block">
             {author.avatar && (
               <img
                 src={`/images/authors/${author.avatar}`}
@@ -155,9 +169,9 @@ const isMonetized = false;
                 class="w-14 h-14 rounded-full object-cover border border-neutral-100 shrink-0 select-none pointer-events-none"
               />
             )}
-            <div class="space-y-1">
+            <div class="space-y-1 w-full">
               <p class="font-serif text-base font-light text-neutral-950">{author.name}</p>
-              <p class="text-xs text-neutral-500 font-light leading-relaxed max-w-xl">{author.bio}</p>
+              <p class="text-xs text-neutral-500 font-light leading-relaxed max-w-xl break-words">{author.bio}</p>
             </div>
           </div>
         )}
@@ -165,7 +179,7 @@ const isMonetized = false;
 
     </article>
 
-    <section class="mt-16 pt-12 border-t border-neutral-200/40 max-w-7xl mx-auto">
+    <section class="mt-16 pt-12 border-t border-neutral-200/40 max-w-7xl mx-auto w-full block">
       <div class="text-center mb-10 md:mb-14 space-y-2">
         <h3 class="text-[11px] font-sans tracking-[0.35em] uppercase text-neutral-950 font-bold">Trending Now</h3>
         <div class="w-12 h-[1px] bg-[#bba15c] mx-auto"></div>
@@ -186,8 +200,10 @@ const isMonetized = false;
     const images = contentDiv.querySelectorAll('img');
 
     images.forEach((img) => {
+      if (img.classList.contains('processed-pin')) return;
+      
       const wrapper = document.createElement('div');
-      wrapper.className = 'img-pin-wrapper my-12 block w-full bg-white p-4 border border-neutral-200/30 shadow-sm/5 rounded-sm';
+      wrapper.className = 'img-pin-wrapper my-12 block w-full bg-white p-2 md:p-4 border border-neutral-200/30 shadow-sm rounded-sm';
 
       img.parentNode.insertBefore(wrapper, img);
       wrapper.appendChild(img);
@@ -195,7 +211,7 @@ const isMonetized = false;
       img.style.margin = '0';
       img.style.width = '100%';
       img.style.display = 'block';
-      img.classList.add('rounded-[1px]');
+      img.classList.add('rounded-[1px]', 'processed-pin');
 
       const imgSrc = img.getAttribute('src');
       const absoluteImgSrc = imgSrc?.startsWith('http')
@@ -218,6 +234,10 @@ const isMonetized = false;
 </script>
 
 <style is:global>
+  html, body {
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+  }
   .fashion-prose-content {
     max-width: 100% !important;
   }
