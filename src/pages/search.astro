@@ -6,34 +6,55 @@ import { getAllPosts } from '../lib/keystatic-reader';
 
 const allPosts = await getAllPosts();
 
-const searchIndex = allPosts.map((post) => ({
-  title: post.entry.title,
-  description: post.entry.description,
-  slug: post.slug,
-  image: post.entry.featuredImage ? (post.entry.featuredImage.startsWith('/') ? post.entry.featuredImage : `/images/posts/${post.entry.featuredImage}`) : '/images/placeholder.jpg',
-  publishedDate: post.entry.publishedDate,
-  categories: post.entry.categories || [],
-}));
+// 👑 FAIL-SAFE SEARCH INDEX MAP: Resolves dynamic content string streams to prevent javascript execution crashes
+const searchIndex = await Promise.all(
+  allPosts.map(async (post) => {
+    // Content read kar rahy hain agar fallback overview generate karni paray
+    const rawContent = (await post.entry.content()) as string || '';
+    
+    // Explicit description fallback setup taake undefined toLowerCase() error se bacha ja sakay
+    const postDesc = post.entry.description || rawContent.substring(0, 140).replace(/[#*_`~]/g, '') || '';
+    
+    // Post images extraction parsing block
+    let postImg = '/images/placeholder.jpg';
+    if (post.entry.sections && post.entry.sections[0]?.image) {
+      const sectionImg = post.entry.sections[0].image;
+      postImg = sectionImg.startsWith('/') ? sectionImg : `/images/posts/${sectionImg}`;
+    } else {
+      const match = rawContent.match(/!\[.*?\]\((.*?)\)/);
+      if (match && match[1]) {
+        postImg = match[1].trim();
+      }
+    }
+
+    return {
+      title: post.entry.title || 'Untitled Article',
+      description: postDesc,
+      slug: post.slug,
+      image: postImg,
+      publishedDate: post.entry.publishedDate || new Date().toISOString(),
+      categories: post.entry.categories || [],
+    };
+  })
+);
 ---
 
 <Layout title="Search Results - Fashion Editorial" description="Search outfit ideas, style guides, and fashion inspiration.">
   <Header currentPath="/search" />
 
-  <main class="min-h-screen bg-[#faf9f6] text-neutral-900 font-sans antialiased">
+  <main class="min-h-screen bg-[#F8F6F2] text-neutral-900 font-sans antialiased max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16 overflow-x-hidden w-full block">
     
-    <!-- Minimalist Dynamic Title Header -->
-    <div class="border-b border-neutral-200/60 py-16 text-center space-y-3">
-      <p class="text-xs tracking-widest uppercase text-[#bba15c] font-bold">Search Archive</p>
-      <h1 id="search-title-text" class="text-2xl md:text-4xl font-serif font-light tracking-wide text-neutral-950 uppercase px-4">
+    <div class="border-b border-neutral-200/40 py-12 md:py-16 text-center space-y-3 w-full block">
+      <p class="text-[10px] tracking-[0.35em] uppercase text-[#bba15c] font-bold">Search Archive</p>
+      <h1 id="search-title-text" class="text-2xl md:text-4xl font-serif font-light tracking-wide text-neutral-950 uppercase px-4 break-words max-w-3xl mx-auto">
         Search Results
       </h1>
+      <div class="w-12 h-[1px] bg-[#bba15c] mx-auto pt-2"></div>
     </div>
 
-    <!-- Clean Results Container (Uses the exact max-7xl width as homepage) -->
-    <div class="max-w-7xl mx-auto px-6 py-16">
-      <div id="search-results-grid" class="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-12 transition-opacity duration-200">
-        <!-- Results or placeholder injections via pure vanilla js mapping -->
-        <div class="col-span-full text-center py-12 text-neutral-400 font-light text-sm tracking-wide">
+    <div class="py-10 md:py-16 w-full block">
+      <div id="search-results-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 w-full block">
+        <div class="col-span-full text-center py-24 text-neutral-400 font-light text-sm tracking-wide">
           Processing your query...
         </div>
       </div>
@@ -44,16 +65,17 @@ const searchIndex = allPosts.map((post) => ({
 </Layout>
 
 <script define:vars={{ searchIndex }}>
-  const resultsContainer = document.getElementById('search-results-grid');
-  const titleText = document.getElementById('search-title-text');
-
   function runSearch() {
-    // 1. Extract query standard key values from URL parameter '?q='
+    const resultsContainer = document.getElementById('search-results-grid');
+    const titleText = document.getElementById('search-title-text');
+    if (!resultsContainer || !titleText) return;
+
+    // 1. Extract query values from URL parameter '?q='
     const urlParams = new URLSearchParams(window.location.search);
     const query = urlParams.get('q') || '';
 
     if (!query.trim()) {
-      titleText.innerText = "Search Results";
+      titleText.innerText = "Search Archive";
       resultsContainer.innerHTML = `
         <div class="col-span-full text-center py-24 text-neutral-400 font-light text-sm tracking-wide">
           <p>No search term provided. Use the header icon to start exploring.</p>
@@ -62,14 +84,17 @@ const searchIndex = allPosts.map((post) => ({
       return;
     }
 
-    // Update editorial page header with searched query text dynamically
+    // Update headline text
     titleText.innerText = `Results for: ${query}`;
 
     const q = query.toLowerCase().trim();
-    const matches = searchIndex.filter((post) =>
-      post.title.toLowerCase().includes(q) ||
-      post.description.toLowerCase().includes(q)
-    );
+    
+    // Fail-safe validation checks block crash conditions cleanly
+    const matches = searchIndex.filter((post) => {
+      const titleMatch = post.title ? post.title.toLowerCase().includes(q) : false;
+      const descMatch = post.description ? post.description.toLowerCase().includes(q) : false;
+      return titleMatch || descMatch;
+    });
 
     if (matches.length === 0) {
       resultsContainer.innerHTML = `
@@ -80,7 +105,7 @@ const searchIndex = allPosts.map((post) => ({
       return;
     }
 
-    // 2. Render matched elements into the identical luxury magazine grid using custom mapping
+    // 2. Render matched elements into our native luxury magazine grid layout
     resultsContainer.innerHTML = matches
       .map((post) => {
         const formattedDate = new Date(post.publishedDate).toLocaleDateString('en-US', {
@@ -94,41 +119,52 @@ const searchIndex = allPosts.map((post) => ({
           : '';
 
         return `
-          <article class="post-card group w-full bg-transparent">
-            <a href="/posts/${post.slug}" class="block no-underline">
-              <div class="overflow-hidden aspect-[3/4] w-full block">
+          <article class="post-card group w-full bg-white p-4 border border-neutral-200/30 rounded-sm flex flex-col transition-all duration-300 hover:shadow-sm box-border overflow-hidden">
+            
+            <div class="w-full aspect-[4/5] relative block bg-neutral-100 rounded-[1px] overflow-hidden select-none shrink-0">
+              <a href="/posts/${post.slug}/" class="absolute inset-0 w-full h-full no-underline block">
                 <img
                   src="${post.image}"
                   alt="${post.title}"
                   loading="lazy"
-                  class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-102 block"
+                  class="w-full h-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-103 block absolute inset-0 min-w-full min-h-full"
+                  onerror="this.onerror=null; this.src='/images/placeholder.jpg';"
                 />
-              </div>
-              <div class="text-left pt-3 px-0">
-                ${categoryLabel ? `<span class="block text-[11px] font-bold uppercase tracking-widest text-[#bba15c] mb-1">${categoryLabel}</span>` : ''}
-                <h3 class="text-lg font-medium tracking-tight text-neutral-900 mb-1.5 group-hover:text-neutral-600 transition-colors duration-200 leading-tight">
+              </a>
+            </div>
+
+            <div class="text-left pt-5 flex flex-col flex-1 min-w-0 w-full">
+              <a href="/posts/${post.slug}/" class="block no-underline flex-1 w-full">
+                ${categoryLabel ? `<span class="block text-[10px] font-bold uppercase tracking-[0.2em] text-[#bba15c] mb-1.5">${categoryLabel}</span>` : ''}
+                
+                <h3 class="text-base font-serif font-light tracking-tight text-neutral-950 mb-2 group-hover:text-neutral-700 transition-colors duration-200 leading-snug line-clamp-2 min-h-[44px]">
                   ${post.title}
                 </h3>
-                <p class="text-[13px] font-normal text-neutral-500 leading-relaxed line-clamp-2 mb-2">
+                
+                <p class="text-[12.5px] font-light text-neutral-500 leading-relaxed line-clamp-2 mb-4 break-words">
                   ${post.description}
                 </p>
-                <div class="text-[10px] uppercase tracking-widest text-neutral-400">
-                  <time>${formattedDate}</time>
-                </div>
+              </a>
+              
+              <div class="text-[10px] uppercase tracking-[0.2em] text-neutral-400 mt-auto pt-2 border-t border-neutral-100/60 w-full block">
+                <time>${formattedDate}</time>
               </div>
-            </a>
+            </div>
+
           </article>
         `;
       })
       .join('');
   }
 
-  // Trigger auto evaluation on page mount
+  // Self evaluate immediately on load
   runSearch();
+
+  // Astro page swap fallback handler
+  document.addEventListener('astro:page-load', runSearch);
 </script>
 
 <style is:global>
-  /* Ensuring line clamps inside string literal template additions behave safely */
   .line-clamp-2 {
     display: -webkit-box;
     -webkit-line-clamp: 2;
