@@ -1,9 +1,21 @@
-siteName: FASHION EDITORIAL
-tagline: CURATED STYLE & FASHION INSIGHTS
+siteName: OUTFIT EDITS
+tagline: OUTFIT IDEAS & STYLE INSPIRATION
 footerDescription: >-
-  Premium editorial content exploring contemporary fashion, timeless style, and
-  cultural trends. Curated for the discerning reader.
+  Outfit Edits brings you easy to follow style guides, seasonal trend roundups,
+  and DIY fashion ideas. Real outfits, simple steps, inspiration you can
+  actually wear.
+showHomeLink: true
+showAllArticlesLink: true
+showCategoriesLink: true
+showAboutUsPage: true
+showContactUsPage: true
+showPrivacyPolicyPage: true
+showDisclaimerPage: true
+showRSSFeed: true
 instagramUrl: https://instagram.com
 pinterestUrl: https://pinterest.com
 twitterUrl: https://twitter.com
+showInstagram: true
+showTwitter: true
+showPinterest: true
 adsenseEnabled: false
