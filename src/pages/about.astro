@@ -1,0 +1,56 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+const pageTitle = "About Us | Outfit Edits";
+const pageDescription = "Learn about Outfit Edits, a fashion and style blog covering outfit ideas, trends, and DIY fashion inspiration.";
+---
+
+<Layout title={pageTitle} description={pageDescription}>
+  <main class="max-w-3xl mx-auto px-4 py-12">
+    <h1 class="text-3xl md:text-4xl font-bold mb-6">About Outfit Edits</h1>
+
+    <div class="prose prose-lg max-w-none">
+      <p>
+        Welcome to Outfit Edits. We started this blog with a simple goal:
+        to make putting together an outfit feel less like guesswork and
+        more like fun. Whether you are searching for back to school looks,
+        autumn color trends, or a weekend DIY project to refresh your
+        closet, we put together guides that are easy to follow and easy
+        to copy.
+      </p>
+
+      <p>
+        Outfit Edits covers a wide range of style topics, including sneaker
+        and shoe styling, seasonal trend roundups, accessory guides, and
+        budget friendly DIY fashion projects. Every post is written to be
+        practical first. We focus on outfits you can actually recreate
+        with pieces you already own or can find without much effort.
+      </p>
+
+      <h2 class="text-2xl font-semibold mt-8 mb-3">What We Cover</h2>
+      <ul class="list-disc pl-6 space-y-2">
+        <li>Seasonal outfit ideas and trend breakdowns</li>
+        <li>Sneaker and footwear styling guides</li>
+        <li>DIY fashion projects and closet upcycling</li>
+        <li>Accessory and bag recommendations</li>
+        <li>Everyday outfit inspiration for school, work, and weekends</li>
+      </ul>
+
+      <h2 class="text-2xl font-semibold mt-8 mb-3">Our Approach</h2>
+      <p>
+        We keep our content simple, visual, and to the point. No filler,
+        no fluff, just outfit ideas and styling tips you can use right
+        away. Many of our guides are built around real outfit photos so
+        you can see exactly how a look comes together before you try it
+        yourself.
+      </p>
+
+      <h2 class="text-2xl font-semibold mt-8 mb-3">Get In Touch</h2>
+      <p>
+        Have a question, a collaboration idea, or just want to say hello?
+        Visit our <a href="/contact" class="underline">Contact page</a> and
+        we will get back to you.
+      </p>
+    </div>
+  </main>
+</Layout>
