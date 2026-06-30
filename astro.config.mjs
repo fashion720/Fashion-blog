@@ -6,7 +6,7 @@ import react from '@astrojs/react';
 import cloudflare from '@astrojs/cloudflare';
 
 export default defineConfig({
-  site: 'https://fashion-blog.pages.dev', // ← Aapka live pages url yahan set kar diya hai
+  site: 'https://outfitedits.com', // ← Aapka live pages url yahan set kar diya hai
 
   integrations: [
     react(),
