@@ -4,6 +4,7 @@ import tailwindcss from '@tailwindcss/vite';
 import keystatic from '@keystatic/astro';
 import react from '@astrojs/react';
 import cloudflare from '@astrojs/cloudflare';
+import sitemap from '@astrojs/sitemap';
 
 export default defineConfig({
   site: 'https://outfitedits.com', // ← Aapka live pages url yahan set kar diya hai
@@ -11,6 +12,7 @@ export default defineConfig({
   integrations: [
     react(),
     keystatic(), // HAMESHA on — sirf isi se /keystatic panel kaam karta hai
+    sitemap(), // sitemap-index.xml generate karega Search Console ke liye
   ],
 
   // ⚠️ IMPORTANT: 'static' mein Keystatic kaam nahi karta
