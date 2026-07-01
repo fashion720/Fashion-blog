@@ -5,7 +5,7 @@ A fast, free-to-host fashion/Pinterest blog built with **Astro (static)**,
 
 ## What changed from the old project
 
-- Removed the Node server adapter and `output: 'server'` — the site now
+- Removed the Node-server adapter and `output: 'server'` — the site now
   builds as **pure static HTML**, which deploys for free on Cloudflare
   Pages / Netlify / Vercel with no backend server needed.
 - Removed the custom `/api` image upload routes (they required a running
@@ -41,7 +41,7 @@ instead of Astro's `<Image />` component. With 500-2000 articles,
 `import.meta.glob()`-based optimization scans the whole folder at build
 time and can make Cloudflare Pages builds slow or hit limits.
 
-Instead:
+Instead,
 - Before uploading via Keystatic, **compress and convert images to `.webp`
   yourself** (TinyPNG, Squoosh, or any batch converter — takes seconds).
 - All `<img>` tags already have `width`/`height`/`loading` set to avoid
