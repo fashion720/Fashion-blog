@@ -5,7 +5,7 @@ footerDescription: >-
   and DIY fashion ideas. Real outfits, simple steps, inspiration you can
   actually wear.
 showHomeLink: true
-showAllArticlesLink: true
+showAllArticlesLink: false
 showCategoriesLink: true
 showAboutUsPage: true
 showContactUsPage: true
