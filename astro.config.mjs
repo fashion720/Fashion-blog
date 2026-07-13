@@ -9,9 +9,6 @@ import sitemap from '@astrojs/sitemap';
 export default defineConfig({
   site: 'https://outfitedits.com', // ← Aapka live pages url yahan set kar diya hai
 
-  // ✅ FIX: Trailing slash consistent rakhne ke liye — duplicate URL issue (with/without slash) khatam
-  trailingSlash: 'always',
-
   integrations: [
     react(),
     keystatic(), // HAMESHA on — sirf isi se /keystatic panel kaam karta hai
