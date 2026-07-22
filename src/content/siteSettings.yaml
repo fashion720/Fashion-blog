@@ -18,5 +18,6 @@ twitterUrl: https://twitter.com
 showInstagram: true
 showTwitter: true
 showPinterest: true
-adsenseEnabled: false
+adsenseEnabled: true
+adsenseClientId: ca-pub-3924946370902693
 ga4Id: G-JBQVBDQ27Z
