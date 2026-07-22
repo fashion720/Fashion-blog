@@ -1,7 +1,23 @@
 ---
 import { getFeaturedPosts } from '../lib/keystatic-reader';
 
-const popularPosts = await getFeaturedPosts(5);
+const popularPostsRaw = await getFeaturedPosts(5);
+
+// Same first-image extraction pattern used on the post detail page,
+// since `featuredImage` in the posts schema is a no-op field.
+function getPostImage(rawContent: string | null | undefined) {
+  if (!rawContent) return null;
+  const match = rawContent.match(/!\[.*?\]\((.*?)\)/);
+  return match && match[1] ? match[1].trim() : null;
+}
+
+const popularPosts = await Promise.all(
+  popularPostsRaw.map(async (post) => {
+    const rawContent = (await post.entry.content()) as string;
+    const image = getPostImage(rawContent);
+    return { ...post, image };
+  })
+);
 ---
 
 {popularPosts.length > 0 && (
@@ -13,11 +29,32 @@ const popularPosts = await getFeaturedPosts(5);
       {popularPosts.map((post, index) => (
         <a
           href={`/posts/${post.slug}/`}
-          class="flex items-start gap-3 group"
+          class="flex items-center gap-3 group"
         >
           <span class="text-2xl font-extrabold text-gray-200 group-hover:text-gray-400 transition leading-none">
             {String(index + 1).padStart(2, '0')}
           </span>
+          <div class="w-14 h-14 shrink-0 rounded-lg overflow-hidden bg-gray-200">
+            {post.image ? (
+              <img
+                src={post.image}
+                alt={post.entry.title}
+                width="56"
+                height="56"
+                loading="lazy"
+                class="w-full h-full object-cover"
+              />
+            ) : (
+              <img
+                src="/images/og/default.jpg"
+                alt={post.entry.title}
+                width="56"
+                height="56"
+                loading="lazy"
+                class="w-full h-full object-cover"
+              />
+            )}
+          </div>
           <div>
             <p class="font-semibold text-sm leading-snug group-hover:underline">
               {post.entry.title}
