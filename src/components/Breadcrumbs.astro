@@ -1,0 +1,43 @@
+---
+interface Crumb {
+  label: string;
+  href?: string; // omit href on the last (current) item
+}
+
+interface Props {
+  items: Crumb[];
+}
+
+const { items } = Astro.props;
+
+// JSON-LD for Google — helps eligibility for breadcrumb rich results
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: items.map((item, i) => ({
+    '@type': 'ListItem',
+    position: i + 1,
+    name: item.label,
+    ...(item.href ? { item: new URL(item.href, Astro.site).toString() } : {}),
+  })),
+};
+---
+
+<nav aria-label="Breadcrumb" class="max-w-2xl sm:max-w-3xl mx-auto w-full block mb-6 md:mb-8">
+  <ol class="flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] uppercase tracking-[0.2em] text-neutral-400 font-sans">
+    {items.map((item, i) => (
+      <li class="flex items-center gap-x-2">
+        {i > 0 && <span class="text-neutral-300" aria-hidden="true">/</span>}
+        {item.href ? (
+          <a href={item.href} class="hover:text-[#bba15c] transition-colors no-underline">
+            {item.label}
+          </a>
+        ) : (
+          <span class="text-neutral-600 font-bold truncate max-w-[200px] sm:max-w-none">{item.label}</span>
+        )}
+      </li>
+    ))}
+  </ol>
+</nav>
+
+<script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
