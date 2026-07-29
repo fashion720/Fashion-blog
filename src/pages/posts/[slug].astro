@@ -8,8 +8,15 @@ import AdSlot from '../../components/AdSlot.astro';
 import SocialShare from '../../components/SocialShare.astro';
 import ReadingProgress from '../../components/ReadingProgress.astro';
 import PopularPosts from '../../components/PopularPosts.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import PostCard from '../../components/PostCard.astro';
 import { marked } from 'marked';
-import { getAllPosts, getAuthorBySlug } from '../../lib/keystatic-reader';
+import {
+  getAllPosts,
+  getAuthorBySlug,
+  getPostsByCategory,
+  getCategoryBreadcrumb,
+} from '../../lib/keystatic-reader';
 
 export async function getStaticPaths() {
   const posts = await getAllPosts();
@@ -60,6 +67,44 @@ function getPostDescription(rawContent: string, length = 160) {
 
 const seoDescription = getPostDescription(rawContent, 160);
 const isMonetized = false;
+
+// ─── BREADCRUMBS ─────────────────────────────────────────────────────────────
+const primaryCategorySlug = entry.categories?.[0];
+const categoryBreadcrumb = primaryCategorySlug
+  ? await getCategoryBreadcrumb(primaryCategorySlug)
+  : null;
+
+const breadcrumbItems = [
+  { label: 'Home', href: '/' },
+  ...(categoryBreadcrumb?.parent
+    ? [{ label: categoryBreadcrumb.parent.name, href: `/category/${categoryBreadcrumb.parent.slug}/` }]
+    : []),
+  ...(categoryBreadcrumb?.current
+    ? [{ label: categoryBreadcrumb.current.name, href: `/category/${categoryBreadcrumb.current.slug}/` }]
+    : []),
+  { label: entry.title },
+];
+
+// ─── RELATED POSTS ────────────────────────────────────────────────────────────
+const relatedPostsRaw = primaryCategorySlug
+  ? (await getPostsByCategory(primaryCategorySlug))
+      .filter((p) => p.slug !== post.slug)
+      .slice(0, 3)
+  : [];
+
+const relatedPosts = await Promise.all(
+  relatedPostsRaw.map(async (related) => {
+    const relatedRaw = (await related.entry.content()) as string;
+    return {
+      slug: related.slug,
+      title: related.entry.title,
+      description: getPostDescription(relatedRaw, 90),
+      featuredImage: getPostImage(relatedRaw),
+      publishedDate: related.entry.publishedDate,
+      categories: related.entry.categories,
+    };
+  })
+);
 ---
 
 <Layout
@@ -76,7 +121,9 @@ const isMonetized = false;
   <Header currentPath={`/posts/${post.slug}`} />
 
   <main class="min-h-screen bg-[#F8F6F2] text-neutral-900 font-sans antialiased max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-16 overflow-x-hidden w-full block">
-    
+
+    <Breadcrumbs items={breadcrumbItems} />
+
     <article class="w-full block">
       
       {/* 📋 NARROW STRUCTURE WRAPPER: Title Header block */}
@@ -150,6 +197,28 @@ const isMonetized = false;
       </div>
 
     </article>
+
+    {/* 🔗 RELATED POSTS: same-category articles to strengthen internal linking */}
+    {relatedPosts.length > 0 && (
+      <section class="mt-16 pt-12 border-t border-neutral-200/40 max-w-7xl mx-auto w-full block">
+        <div class="text-center mb-10 md:mb-14 space-y-2">
+          <h3 class="text-[11px] font-sans tracking-[0.35em] uppercase text-neutral-950 font-bold">You Might Also Like</h3>
+          <div class="w-12 h-[1px] bg-[#bba15c] mx-auto"></div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-8">
+          {relatedPosts.map((related) => (
+            <PostCard
+              title={related.title}
+              slug={related.slug}
+              description={related.description}
+              featuredImage={related.featuredImage}
+              publishedDate={related.publishedDate}
+              categories={related.categories}
+            />
+          ))}
+        </div>
+      </section>
+    )}
 
     <section class="mt-16 pt-12 border-t border-neutral-200/40 max-w-7xl mx-auto w-full block">
       <div class="text-center mb-10 md:mb-14 space-y-2">
