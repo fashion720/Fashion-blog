@@ -95,6 +95,22 @@ export async function getCategoriesHierarchy() {
   });
 }
 
+// ⚡ NEW: Resolves a category slug + its parent, used for breadcrumb navigation
+export async function getCategoryBreadcrumb(categorySlug: string) {
+  const allCategories = await getAllCategories();
+  const current = allCategories.find((c) => c.slug === categorySlug);
+  if (!current) return null;
+
+  const parent = current.entry.parentCategory
+    ? allCategories.find((c) => c.slug === current.entry.parentCategory)
+    : null;
+
+  return {
+    current: { slug: current.slug, name: current.entry.name },
+    parent: parent ? { slug: parent.slug, name: parent.entry.name } : null,
+  };
+}
+
 export async function getCategoriesFlat() {
   const allCategories = await getAllCategories();
   return allCategories.map((category) => ({
