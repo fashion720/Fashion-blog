@@ -16,7 +16,7 @@ instagramUrl: https://instagram.com
 pinterestUrl: https://www.pinterest.com/outfiteditssocial/
 twitterUrl: https://twitter.com
 showInstagram: false
-showTwitter: true
+showTwitter: false
 showPinterest: true
 adsenseEnabled: true
 adsenseClientId: ca-pub-3924946370902693
