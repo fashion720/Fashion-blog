@@ -13,10 +13,10 @@ showPrivacyPolicyPage: true
 showDisclaimerPage: true
 showRSSFeed: true
 instagramUrl: https://instagram.com
-pinterestUrl: https://pinterest.com
+pinterestUrl: https://www.pinterest.com/outfiteditssocial/
 twitterUrl: https://twitter.com
-showInstagram: true
-showTwitter: true
+showInstagram: false
+showTwitter: false
 showPinterest: true
 adsenseEnabled: true
 adsenseClientId: ca-pub-3924946370902693
