@@ -49,7 +49,7 @@ const siteName = settings?.siteName || "FASHION EDITORIAL";
 
           <li>
             <a
-              href="/categories/"
+              href="/categories"
               class="text-neutral-300 hover:text-white transition-colors duration-300 font-light no-underline block"
             >
               Categories
@@ -69,7 +69,7 @@ const siteName = settings?.siteName || "FASHION EDITORIAL";
           {settings?.showAboutUsPage !== false && (
             <li class="block truncate">
               <a
-                href="/about/"
+                href="/about"
                 class="text-neutral-300 hover:text-white transition-colors duration-300 font-light no-underline block truncate"
               >
                 About Us
@@ -80,7 +80,7 @@ const siteName = settings?.siteName || "FASHION EDITORIAL";
           {settings?.showContactUsPage !== false && (
             <li class="block truncate">
               <a
-                href="/contact/"
+                href="/contact"
                 class="text-neutral-300 hover:text-white transition-colors duration-300 font-light no-underline block truncate"
               >
                 Contact Us
@@ -91,7 +91,7 @@ const siteName = settings?.siteName || "FASHION EDITORIAL";
           {settings?.showPrivacyPolicyPage !== false && (
             <li class="block truncate">
               <a
-                href="/privacy-policy/"
+                href="/privacy-policy"
                 class="text-neutral-300 hover:text-white transition-colors duration-300 font-light no-underline block truncate"
               >
                 Privacy Policy
@@ -102,7 +102,7 @@ const siteName = settings?.siteName || "FASHION EDITORIAL";
           {settings?.showDisclaimerPage !== false && (
             <li class="block truncate">
               <a
-                href="/disclaimer/"
+                href="/disclaimer"
                 class="text-neutral-300 hover:text-white transition-colors duration-300 font-light no-underline block truncate"
               >
                 Disclaimer
@@ -120,7 +120,7 @@ const siteName = settings?.siteName || "FASHION EDITORIAL";
               return (
                 <li class="block truncate">
                   <a
-                    href={`/${page.slug}/`}
+                    href={`/${page.slug}`}
                     class="text-neutral-300 hover:text-white transition-colors duration-300 font-light no-underline block capitalize truncate"
                   >
                     {displayTitle}
