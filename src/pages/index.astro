@@ -100,7 +100,10 @@ const categoryWithPosts = await Promise.all(
 const activeCategoryWithPosts = categoryWithPosts.filter((c) => c.posts.length > 0);
 ---
 
-<Layout title={`${settings.siteName} — ${settings.tagline}`}>
+<Layout
+  title={`${settings.siteName} — ${settings.tagline}`}
+  modifiedTime={flagshipPost?.entry.updatedDate || new Date().toISOString()}
+>
   <Header currentPath="/" />
 
   <main class="bg-[#F8F6F2] min-h-screen font-sans antialiased text-neutral-900 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16 overflow-x-hidden w-full block">
