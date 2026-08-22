@@ -32,6 +32,9 @@ export default config({
         showContactUsPage: fields.checkbox({ label: 'Show Contact Us Page', defaultValue: true }),
         showPrivacyPolicyPage: fields.checkbox({ label: 'Show Privacy Policy Page', defaultValue: true }),
         showDisclaimerPage: fields.checkbox({ label: 'Show Disclaimer Page', defaultValue: true }),
+        showDmcaPage: fields.checkbox({ label: 'Show DMCA Page', defaultValue: true }),
+        showEditorialGuidelinesPage: fields.checkbox({ label: 'Show Editorial Guidelines Policy Page', defaultValue: true }),
+        showTermsOfServicePage: fields.checkbox({ label: 'Show Terms of Service Page', defaultValue: true }),
         showRSSFeed: fields.checkbox({ label: 'Show RSS Feed', defaultValue: true }),
 
         instagramUrl: fields.text({ label: 'Instagram URL', defaultValue: 'https://instagram.com' }),
