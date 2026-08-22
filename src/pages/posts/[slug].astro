@@ -119,14 +119,21 @@ const tocDisplayItems = showToc ? tocItems.slice(0, -1) : [];
 
 // Build TOC HTML and inject it right before the first H2 (i.e. after the intro paragraph)
 if (showToc) {
+  // Strip a leading "Look 1:", "Outfit 2:", "Step 3:" style prefix so the
+  // TOC doesn't show double numbering ("1. Look 1: ...") — the <ol> already
+  // supplies the number, so only the descriptive part of the title is kept.
+  function stripLeadingNumberLabel(text: string) {
+    return text.replace(/^[A-Za-z]+\s*\d+\s*[:.\-–]\s*/, '').trim();
+  }
+
   const tocListItems = tocDisplayItems
     .map(
       (item) =>
-        `<li><a href="#${item.id}" class="text-sm text-neutral-700 hover:text-[#bba15c] transition no-underline leading-snug">${item.text}</a></li>`
+        `<li><a href="#${item.id}" class="text-sm text-neutral-700 hover:text-[#bba15c] transition no-underline leading-snug">${stripLeadingNumberLabel(item.text)}</a></li>`
     )
     .join('');
 
-  const tocHtml = `<nav class="not-prose my-10 p-6 bg-white border border-neutral-200/30 shadow-sm/5 rounded-sm block w-full" aria-label="Table of Contents"><p class="text-[11px] font-sans tracking-[0.35em] uppercase text-neutral-950 font-bold mb-4">Table of Contents</p><ol class="space-y-2.5 list-none pl-0">${tocListItems}</ol></nav>`;
+  const tocHtml = `<nav class="not-prose my-10 p-6 bg-white border border-neutral-200/30 shadow-sm/5 rounded-sm block w-full" aria-label="Table of Contents"><p class="text-[11px] font-sans tracking-[0.35em] uppercase text-neutral-950 font-bold mb-4">Table of Contents</p><ol class="space-y-2.5 list-decimal list-inside marker:text-neutral-950 marker:font-bold pl-0">${tocListItems}</ol></nav>`;
 
   renderedContent = renderedContent.replace('<h2', `${tocHtml}<h2`);
 }
@@ -136,9 +143,14 @@ const author = entry.author ? await getAuthorBySlug(entry.author) : null;
 // 👑 SCRAPER: Direct local file text analysis loop matches Canvas architecture
 function getPostImage(rawContent: string) {
   if (!rawContent) return null;
-  const match = rawContent.match(/!\[.*?\]\((.*?)\)/);
+  // ⚡ FIX: require the captured URL to end in an image extension. Without
+  // this, a nested markdown link inside the alt text (e.g. an inline
+  // "[sneakers](/posts/...)" reference) tricks the old regex into grabbing
+  // that link's URL instead of the actual image path, producing broken
+  // images on cards/category pages.
+  const match = rawContent.match(/!\[[\s\S]*?\]\(([^)]+\.(?:jpe?g|png|gif|webp|svg))\)/i);
   if (match && match[1]) {
-    return match[1].trim(); // Extract first image path from mdx body directly
+    return match[1].trim();
   }
   return null;
 }
