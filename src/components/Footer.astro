@@ -119,6 +119,39 @@ const siteName = settings?.siteName || "FASHION EDITORIAL";
             </li>
           )}
 
+          {settings?.showDmcaPage !== false && (
+            <li class="block truncate">
+              <a
+                href="/dmca"
+                class="text-neutral-300 hover:text-white transition-colors duration-300 font-light no-underline block truncate"
+              >
+                DMCA
+              </a>
+            </li>
+          )}
+
+          {settings?.showEditorialGuidelinesPage !== false && (
+            <li class="block truncate">
+              <a
+                href="/editorial-guidelines-policy"
+                class="text-neutral-300 hover:text-white transition-colors duration-300 font-light no-underline block truncate"
+              >
+                Editorial Guidelines Policy
+              </a>
+            </li>
+          )}
+
+          {settings?.showTermsOfServicePage !== false && (
+            <li class="block truncate">
+              <a
+                href="/terms-of-service"
+                class="text-neutral-300 hover:text-white transition-colors duration-300 font-light no-underline block truncate"
+              >
+                Terms of Service
+              </a>
+            </li>
+          )}
+
           {allPages &&
             allPages.length > 0 &&
             allPages.map((page) => {
