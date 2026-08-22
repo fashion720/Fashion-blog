@@ -189,14 +189,7 @@ const relatedPosts = await Promise.all(
           <p class="text-[11px] font-sans tracking-[0.35em] uppercase text-neutral-950 font-bold mb-4">In This Article</p>
           <ol class="space-y-2.5 list-none pl-0">
             {tocItems.map((item) => (
-              <li>
-                
-                  href={`#${item.id}`}
-                  class="text-sm text-neutral-700 hover:text-[#bba15c] transition no-underline leading-snug"
-                >
-                  {item.text}
-                </a>
-              </li>
+              <li><a href={`#${item.id}`} class="text-sm text-neutral-700 hover:text-[#bba15c] transition no-underline leading-snug">{item.text}</a></li>
             ))}
           </ol>
         </nav>
