@@ -123,7 +123,15 @@ if (showToc) {
   // TOC doesn't show double numbering ("1. Look 1: ...") — the <ol> already
   // supplies the number, so only the descriptive part of the title is kept.
   function stripLeadingNumberLabel(text: string) {
-    return text.replace(/^[A-Za-z]+\s*\d+\s*[:.\-–]\s*/, '').trim();
+    // Look for a short leading label (up to ~30 chars) ending in a colon/dash,
+    // e.g. "Look 1:", "Outfit 2:", "T Shirt 1:", "Style #3 -". If that label
+    // contains a digit, it's a redundant number the <ol> already shows, so
+    // strip the whole label and keep just the descriptive part of the title.
+    const labelMatch = text.match(/^(.{1,30}?)[:.\-–—]\s*/);
+    if (labelMatch && /\d/.test(labelMatch[1])) {
+      return text.slice(labelMatch[0].length).trim();
+    }
+    return text;
   }
 
   const tocListItems = tocDisplayItems
