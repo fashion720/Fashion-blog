@@ -172,6 +172,8 @@ export async function getSiteSettings() {
       instagramUrl:         s.instagramUrl         || 'https://instagram.com',
       pinterestUrl:         s.pinterestUrl         || 'https://pinterest.com',
       twitterUrl:           s.twitterUrl           || 'https://twitter.com',
+      facebookUrl:          s.facebookUrl          || '',
+      contactEmail:         s.contactEmail         || '',
     };
   } catch {
     return defaultSettings();
@@ -196,5 +198,7 @@ function defaultSettings() {
     instagramUrl:         'https://instagram.com',
     pinterestUrl:         'https://pinterest.com',
     twitterUrl:           'https://twitter.com',
+    facebookUrl:          '',
+    contactEmail:         '',
   };
 }
