@@ -37,10 +37,13 @@ export default config({
         instagramUrl: fields.text({ label: 'Instagram URL', defaultValue: 'https://instagram.com' }),
         pinterestUrl: fields.text({ label: 'Pinterest URL', defaultValue: 'https://pinterest.com' }),
         twitterUrl: fields.text({ label: 'Twitter / X URL', defaultValue: 'https://twitter.com' }),
+        facebookUrl: fields.text({ label: 'Facebook URL', defaultValue: '' }),
+        contactEmail: fields.text({ label: 'Contact Email (for footer mail icon)', defaultValue: '' }),
         
         showInstagram: fields.checkbox({ label: 'Show Instagram Icon', defaultValue: true }),
         showTwitter: fields.checkbox({ label: 'Show Twitter Icon', defaultValue: true }),
         showPinterest: fields.checkbox({ label: 'Show Pinterest Icon', defaultValue: true }),
+        showFacebook: fields.checkbox({ label: 'Show Facebook Icon', defaultValue: true }),
 
         adsenseEnabled: fields.checkbox({ label: 'AdSense Enabled', defaultValue: false }),
         adsenseClientId: fields.text({ label: 'AdSense Publisher ID', defaultValue: '' }),
