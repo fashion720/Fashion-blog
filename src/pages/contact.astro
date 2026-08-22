@@ -3,11 +3,13 @@ import Layout from '../layouts/Layout.astro';
 
 const pageTitle = "Contact Us | Outfit Edits";
 const pageDescription = "Get in touch with the Outfit Edits team for collaborations, questions, or feedback.";
+const lastUpdated = "July 1, 2026";
 ---
 
 <Layout title={pageTitle} description={pageDescription}>
   <main class="max-w-3xl mx-auto px-4 py-12">
-    <h1 class="text-3xl md:text-4xl font-bold mb-6">Contact Us</h1>
+    <h1 class="text-3xl md:text-4xl font-bold mb-2">Contact Us</h1>
+    <p class="text-sm text-gray-600 mb-6">Last updated: {lastUpdated}</p>
 
     <div class="prose prose-lg max-w-none">
       <p>
@@ -26,6 +28,14 @@ const pageDescription = "Get in touch with the Outfit Edits team for collaborati
         </a>
       </p>
 
+      <h2 class="text-2xl font-semibold mt-8 mb-3">Editorial Team</h2>
+      <p>
+        Outfit Edits is edited by Sara Khan, our Lead Fashion Writer and
+        Style Editor. For questions about a specific article, a correction,
+        or a styling topic you'd like us to cover, the email above reaches
+        our editorial team directly.
+      </p>
+
       <h2 class="text-2xl font-semibold mt-8 mb-3">Response Time</h2>
       <p>
         We try to respond to all messages within two to three business
@@ -36,8 +46,9 @@ const pageDescription = "Get in touch with the Outfit Edits team for collaborati
       <h2 class="text-2xl font-semibold mt-8 mb-3">Follow Along</h2>
       <p>
         You can also find our latest outfit ideas and updates on
-        Pinterest. We regularly post new pins linking back to our guides
-        and styling tips.
+        Pinterest, and connect with us through the social links in our
+        footer. We regularly post new pins and updates linking back to
+        our guides and styling tips.
       </p>
     </div>
   </main>
