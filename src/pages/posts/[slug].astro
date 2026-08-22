@@ -63,6 +63,20 @@ renderedContent = renderedContent.replace(/<h2>(.*?)<\/h2>/gs, (_match, inner) =
 // Only show TOC on longer list-style articles
 const showToc = tocItems.length >= 5;
 
+// Build TOC HTML and inject it right before the first H2 (i.e. after the intro paragraph)
+if (showToc) {
+  const tocListItems = tocItems
+    .map(
+      (item) =>
+        `<li><a href="#${item.id}" class="text-sm text-neutral-700 hover:text-[#bba15c] transition no-underline leading-snug">${item.text}</a></li>`
+    )
+    .join('');
+
+  const tocHtml = `<nav class="not-prose my-10 p-6 bg-white border border-neutral-200/30 shadow-sm/5 rounded-sm block w-full" aria-label="Table of Contents"><p class="text-[11px] font-sans tracking-[0.35em] uppercase text-neutral-950 font-bold mb-4">Table of Contents</p><ol class="space-y-2.5 list-none pl-0">${tocListItems}</ol></nav>`;
+
+  renderedContent = renderedContent.replace('<h2', `${tocHtml}<h2`);
+}
+
 const author = entry.author ? await getAuthorBySlug(entry.author) : null;
 
 // 👑 SCRAPER: Direct local file text analysis loop matches Canvas architecture
@@ -182,18 +196,6 @@ const relatedPosts = await Promise.all(
         
         <div class="w-16 h-[1px] bg-[#bba15c] mx-auto pt-4"></div>
       </header>
-
-      {/* 📚 TABLE OF CONTENTS: auto-generated from H2 headings, only on longer list articles */}
-      {showToc && (
-        <nav class="max-w-2xl sm:max-w-3xl mx-auto mb-10 p-6 bg-white border border-neutral-200/30 shadow-sm/5 rounded-sm block w-full" aria-label="Table of Contents">
-          <p class="text-[11px] font-sans tracking-[0.35em] uppercase text-neutral-950 font-bold mb-4">In This Article</p>
-          <ol class="space-y-2.5 list-none pl-0">
-            {tocItems.map((item) => (
-              <li><a href={`#${item.id}`} class="text-sm text-neutral-700 hover:text-[#bba15c] transition no-underline leading-snug">{item.text}</a></li>
-            ))}
-          </ol>
-        </nav>
-      )}
 
       {/* 📖 ARTICLE BODY: Standard narrow reading width (strict boundary framework) */}
       <div class="max-w-2xl sm:max-w-3xl mx-auto block overflow-hidden w-full">
