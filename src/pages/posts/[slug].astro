@@ -124,11 +124,15 @@ if (showToc) {
   // supplies the number, so only the descriptive part of the title is kept.
   function stripLeadingNumberLabel(text: string) {
     // Look for a short leading label (up to ~30 chars) ending in a colon/dash,
-    // e.g. "Look 1:", "Outfit 2:", "T Shirt 1:", "Style #3 -". If that label
-    // contains a digit, it's a redundant number the <ol> already shows, so
-    // strip the whole label and keep just the descriptive part of the title.
+    // e.g. "Look 1:", "Outfit 2:", "T Shirt 1:", "Item Name:", "Style #3 -".
+    // Strip it when it either contains a digit (redundant with the <ol>
+    // number) OR is one of a handful of known filler labels that carry no
+    // real information ("Item Name:" repeated identically on every heading).
     const labelMatch = text.match(/^(.{1,30}?)[:.\-–—]\s*/);
-    if (labelMatch && /\d/.test(labelMatch[1])) {
+    if (!labelMatch) return text;
+    const label = labelMatch[1].trim();
+    const isGenericFiller = /^(item\s*name|item|look|outfit|idea|style|piece|design)$/i.test(label);
+    if (/\d/.test(label) || isGenericFiller) {
       return text.slice(labelMatch[0].length).trim();
     }
     return text;
