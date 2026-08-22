@@ -63,9 +63,12 @@ renderedContent = renderedContent.replace(/<h2>(.*?)<\/h2>/gs, (_match, inner) =
 // Only show TOC on longer list-style articles
 const showToc = tocItems.length >= 5;
 
+// Drop the final closing/wrap-up heading from the TOC (not useful to jump to)
+const tocDisplayItems = showToc ? tocItems.slice(0, -1) : [];
+
 // Build TOC HTML and inject it right before the first H2 (i.e. after the intro paragraph)
 if (showToc) {
-  const tocListItems = tocItems
+  const tocListItems = tocDisplayItems
     .map(
       (item) =>
         `<li><a href="#${item.id}" class="text-sm text-neutral-700 hover:text-[#bba15c] transition no-underline leading-snug">${item.text}</a></li>`
