@@ -124,6 +124,14 @@ const categoryTree = sortedParentCategories.map((parent) => ({
           )}
         </div>
       ))}
+
+      <a href="/about" class={`text-[10.5px] tracking-[0.25em] uppercase font-bold transition duration-200 pb-1 shrink-0 ${currentPath === '/about' ? 'text-neutral-950 border-b border-neutral-950' : 'text-neutral-400 hover:text-neutral-950'}`}>
+        About Us
+      </a>
+
+      <a href="/contact" class={`text-[10.5px] tracking-[0.25em] uppercase font-bold transition duration-200 pb-1 shrink-0 ${currentPath === '/contact' ? 'text-neutral-950 border-b border-neutral-950' : 'text-neutral-400 hover:text-neutral-950'}`}>
+        Contact Us
+      </a>
     </div>
 
   </div>
@@ -173,6 +181,9 @@ const categoryTree = sortedParentCategories.map((parent) => ({
           )}
         </div>
       ))}
+
+      <a href="/about" class="block py-2 text-xs font-bold uppercase tracking-wider text-neutral-700 hover:text-neutral-950 transition border-b border-neutral-50 pb-1">About Us</a>
+      <a href="/contact" class="block py-2 text-xs font-bold uppercase tracking-wider text-neutral-700 hover:text-neutral-950 transition border-b border-neutral-50 pb-1">Contact Us</a>
     </div>
   </div>
 </header>
