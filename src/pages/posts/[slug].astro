@@ -15,7 +15,9 @@ import {
   getAllPosts,
   getAuthorBySlug,
   getPostsByCategory,
+  getPostsByTag,
   getCategoryBreadcrumb,
+  getAllCategories,
 } from '../../lib/keystatic-reader';
 
 export async function getStaticPaths() {
@@ -59,6 +61,55 @@ renderedContent = renderedContent.replace(/<h2>(.*?)<\/h2>/gs, (_match, inner) =
   tocItems.push({ id, text });
   return `<h2 id="${id}">${inner}</h2>`;
 });
+
+// ─── CONTEXTUAL AUTO-LINKING ───────────────────────────────────────────────
+// Scans the article body for plain-text mentions of *other* category names
+// and links the first mention of each to that category page — free internal
+// links without the author having to add them by hand.
+function escapeRegExp(str: string) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function autoLinkCategories(html: string, categories: { slug: string; name: string }[]) {
+  const parts = html.split(/(<[^>]+>)/g); // alternating text / tag chunks
+  let insideAnchor = false;
+  let linksAdded = 0;
+  const MAX_LINKS = 4;
+
+  for (const cat of categories) {
+    if (linksAdded >= MAX_LINKS) break;
+    if (!cat.name || cat.name.trim().length < 4) continue; // skip short/ambiguous names
+    const regex = new RegExp(`\\b(${escapeRegExp(cat.name)})\\b`, 'i');
+    let linked = false;
+
+    for (let i = 0; i < parts.length && !linked; i++) {
+      const part = parts[i];
+      if (part.startsWith('<')) {
+        if (/^<a[\s>]/i.test(part)) insideAnchor = true;
+        if (/^<\/a>/i.test(part)) insideAnchor = false;
+        continue;
+      }
+      if (insideAnchor) continue;
+      if (regex.test(part)) {
+        parts[i] = part.replace(
+          regex,
+          (m) => `<a href="/category/${cat.slug}/" class="text-[#bba15c] underline underline-offset-4 font-normal">${m}</a>`
+        );
+        linked = true;
+        linksAdded++;
+      }
+    }
+  }
+
+  return parts.join('');
+}
+
+const allCategoriesForLinking = await getAllCategories();
+const categoriesToLink = allCategoriesForLinking
+  .filter((c) => !entry.categories?.includes(c.slug))
+  .map((c) => ({ slug: c.slug, name: c.entry.name }));
+
+renderedContent = autoLinkCategories(renderedContent, categoriesToLink);
 
 // Only show TOC on longer list-style articles
 const showToc = tocItems.length >= 5;
@@ -151,7 +202,18 @@ const categoryPoolForRelated = primaryCategorySlug
   ? (await getPostsByCategory(primaryCategorySlug)).filter((p) => p.slug !== post.slug)
   : [];
 
-const relatedPostsRaw = shuffleArray(categoryPoolForRelated).slice(0, 3);
+// ⚡ Cross-category matches: posts that share a tag with this post, even if
+// they live in a different category. Widens the related-posts pool beyond
+// a single category so internal links reach across the site.
+const tagPoolForRelated = entry.tags && entry.tags.length > 0
+  ? (await getPostsByTag(entry.tags)).filter((p) => p.slug !== post.slug)
+  : [];
+
+const combinedPoolForRelated = [...categoryPoolForRelated, ...tagPoolForRelated].filter(
+  (p, index, arr) => arr.findIndex((x) => x.slug === p.slug) === index
+);
+
+const relatedPostsRaw = shuffleArray(combinedPoolForRelated).slice(0, 3);
 
 const categoryNameForRelated = categoryBreadcrumb?.current?.name ?? null;
 
