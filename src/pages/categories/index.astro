@@ -2,33 +2,142 @@
 import Layout from '../../layouts/Layout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
-import { getAllCategories } from '../../lib/keystatic-reader';
+import { getCategoriesHierarchy, getPostsByCategory } from '../../lib/keystatic-reader';
 
-const categories = await getAllCategories();
+const hierarchy = await getCategoriesHierarchy();
+
+// 👑 Pull a representative image + post count for every category (parent and child)
+// so the overview page isn't just plain text cards.
+async function getPostImage(post: any) {
+  const rawContent = (await post.entry.content()) as string;
+  if (!rawContent) return '/images/placeholder.jpg';
+  const match = rawContent.match(/!\[.*?\]\((.*?)\)/);
+  return match && match[1] ? match[1].trim() : '/images/placeholder.jpg';
+}
+
+async function getCategoryMeta(slug: string) {
+  const posts = await getPostsByCategory(slug);
+  const image = posts.length > 0 ? await getPostImage(posts[0]) : '/images/placeholder.jpg';
+  return { count: posts.length, image };
+}
+
+const enrichedHierarchy = await Promise.all(
+  hierarchy.map(async (mainCat) => {
+    const mainMeta = await getCategoryMeta(mainCat.slug);
+    const children = await Promise.all(
+      mainCat.children.map(async (child) => {
+        const childMeta = await getCategoryMeta(child.slug);
+        return { ...child, ...childMeta };
+      })
+    );
+    // Roll child post counts into the parent's total so the number shown is meaningful.
+    const totalCount = mainMeta.count + children.reduce((sum, c) => sum + c.count, 0);
+    return { ...mainCat, ...mainMeta, count: totalCount, children };
+  })
+);
 ---
 
-<Layout title="Categories - Fashion Blog" description="Browse fashion content by category.">
+<Layout title="Categories — Fashion Editorial" description="Browse fashion editorial content by category — from outerwear to accessories, explore curated style guides organized the way you think about fashion.">
   <Header currentPath="/categories" />
 
-  <main class="min-h-screen container mx-auto px-4 py-12">
-    <h1 class="text-4xl font-extrabold mb-10">Categories</h1>
+  <main class="min-h-screen bg-[#F8F6F2] text-neutral-900 font-sans antialiased max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-16 overflow-x-hidden w-full block">
 
-    {categories.length > 0 ? (
-      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-        {categories.map((cat) => (
-          <a
-            href={`/category/${cat.slug}/`}
-            class="block p-6 rounded-xl border border-gray-200 hover:shadow-md transition"
-            style={{ borderTopColor: cat.entry.color, borderTopWidth: '4px' }}
-          >
-            <h2 class="text-xl font-bold mb-2">{cat.entry.name}</h2>
-            <p class="text-gray-600 text-sm">{cat.entry.description}</p>
-          </a>
+    <header class="text-center mb-12 md:mb-16 space-y-3 max-w-2xl mx-auto block">
+      <span class="text-[10px] tracking-[0.35em] uppercase text-neutral-400 block">Browse the Archive</span>
+      <h1 class="text-3xl sm:text-4xl md:text-5xl font-serif font-light tracking-tight text-neutral-950 leading-[1.15]">
+        Categories
+      </h1>
+      <p class="text-neutral-500 text-xs md:text-sm font-light leading-relaxed pt-1">
+        Explore contemporary style and curated fashion insights, organized by topic.
+      </p>
+      <div class="w-16 h-[1px] bg-[#bba15c] mx-auto pt-4"></div>
+    </header>
+
+    {enrichedHierarchy.length > 0 ? (
+      <div class="space-y-16 md:space-y-24 pb-8">
+        {enrichedHierarchy.map((mainCat) => (
+          <section class="w-full block">
+
+            {/* 👑 PARENT CATEGORY — large feature card */}
+            <a
+              href={`/category/${mainCat.slug}/`}
+              class="group block no-underline relative w-full overflow-hidden bg-white border border-neutral-200/30 shadow-sm/5 rounded-sm mb-8 md:mb-10"
+            >
+              <div class="grid grid-cols-1 md:grid-cols-[40fr_60fr] w-full">
+                <div class="relative w-full aspect-[16/9] md:aspect-auto md:h-full overflow-hidden bg-neutral-100">
+                  <img
+                    src={mainCat.image}
+                    alt={mainCat.name}
+                    loading="lazy"
+                    decoding="async"
+                    class="w-full h-full object-cover object-center absolute inset-0 min-h-full min-w-full transition-transform duration-700 ease-out group-hover:scale-103"
+                    onerror="this.onerror=null; this.src='/images/placeholder.jpg';"
+                  />
+                </div>
+                <div class="p-6 md:p-10 flex flex-col justify-center space-y-3 text-left">
+                  <span
+                    class="text-[10px] font-bold uppercase tracking-[0.25em]"
+                    style={{ color: mainCat.color || '#bba15c' }}
+                  >
+                    {mainCat.count} {mainCat.count === 1 ? 'Article' : 'Articles'}
+                  </span>
+                  <h2 class="text-2xl md:text-3xl font-serif font-light tracking-tight text-neutral-950 leading-tight group-hover:text-neutral-700 transition-colors duration-300">
+                    {mainCat.name}
+                  </h2>
+                  {mainCat.description && (
+                    <p class="text-neutral-500 text-xs md:text-sm font-light leading-relaxed line-clamp-2 max-w-xl">
+                      {mainCat.description}
+                    </p>
+                  )}
+                  <span class="inline-block text-xs uppercase tracking-[0.2em] font-medium border-b border-neutral-950/20 pb-1 text-neutral-950 group-hover:text-[#bba15c] group-hover:border-[#bba15c] transition-all duration-300 w-fit">
+                    View Category <span class="inline-block transition-transform duration-300 group-hover:translate-x-1">→</span>
+                  </span>
+                </div>
+              </div>
+            </a>
+
+            {/* 🎨 CHILD CATEGORIES — smaller grid under the parent */}
+            {mainCat.children.length > 0 && (
+              <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+                {mainCat.children.map((child) => (
+                  <a
+                    href={`/category/${child.slug}/`}
+                    class="group block no-underline bg-white border border-neutral-200/30 shadow-sm/5 rounded-sm overflow-hidden"
+                  >
+                    <div class="relative w-full aspect-[4/3] overflow-hidden bg-neutral-100">
+                      <img
+                        src={child.image}
+                        alt={child.name}
+                        loading="lazy"
+                        decoding="async"
+                        class="w-full h-full object-cover object-center absolute inset-0 min-h-full min-w-full transition-transform duration-500 group-hover:scale-103"
+                        onerror="this.onerror=null; this.src='/images/placeholder.jpg';"
+                      />
+                    </div>
+                    <div class="p-3.5 space-y-1 text-left">
+                      <span
+                        class="block text-[9px] font-bold uppercase tracking-[0.2em]"
+                        style={{ color: child.color || '#bba15c' }}
+                      >
+                        {child.count} {child.count === 1 ? 'Article' : 'Articles'}
+                      </span>
+                      <h3 class="text-sm font-serif font-light text-neutral-950 leading-snug group-hover:text-neutral-700 transition-colors duration-200 line-clamp-1">
+                        {child.name}
+                      </h3>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            )}
+          </section>
         ))}
       </div>
     ) : (
-      <p class="text-gray-600">No categories yet.</p>
+      <div class="text-center py-24 text-neutral-400 font-light text-sm tracking-wide">
+        <p>No categories yet.</p>
+      </div>
     )}
+
   </main>
 
   <Footer />
