@@ -174,6 +174,13 @@ export async function getSiteSettings() {
       twitterUrl:           s.twitterUrl           || 'https://twitter.com',
       facebookUrl:          s.facebookUrl          || '',
       contactEmail:         s.contactEmail         || '',
+      showAboutUsPage:            s.showAboutUsPage            ?? true,
+      showContactUsPage:          s.showContactUsPage          ?? true,
+      showPrivacyPolicyPage:      s.showPrivacyPolicyPage      ?? true,
+      showDisclaimerPage:         s.showDisclaimerPage         ?? true,
+      showDmcaPage:                s.showDmcaPage               ?? true,
+      showEditorialGuidelinesPage: s.showEditorialGuidelinesPage ?? true,
+      showTermsOfServicePage:      s.showTermsOfServicePage      ?? true,
     };
   } catch {
     return defaultSettings();
@@ -200,5 +207,12 @@ function defaultSettings() {
     twitterUrl:           'https://twitter.com',
     facebookUrl:          '',
     contactEmail:         '',
+    showAboutUsPage:            true,
+    showContactUsPage:          true,
+    showPrivacyPolicyPage:      true,
+    showDisclaimerPage:         true,
+    showDmcaPage:                true,
+    showEditorialGuidelinesPage: true,
+    showTermsOfServicePage:      true,
   };
 }
