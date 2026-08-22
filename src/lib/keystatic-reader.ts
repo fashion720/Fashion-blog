@@ -28,6 +28,17 @@ export async function getPostBySlug(slug: string) {
   return { slug, entry: post };
 }
 
+// ⚡ NEW: Fetches posts that share at least one tag with the given tag list.
+// Used for cross-category related-content linking (a post's tags can span
+// multiple categories, unlike getPostsByCategory which is limited to one).
+export async function getPostsByTag(tags: string[] = []) {
+  if (!tags || tags.length === 0) return [];
+  const posts = await getAllPosts();
+  return posts.filter((post) =>
+    (post.entry.tags || []).some((tag: string) => tags.includes(tag))
+  );
+}
+
 // ─── PAGES (STATIC & LEGAL) ──────────────────────────────────────────────────
 // ⚡ FIX: Added the missing function that was crashing Footer and [slug].astro
 
