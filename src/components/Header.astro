@@ -10,195 +10,351 @@ const { currentPath = '/' } = Astro.props;
 const settings = await getSiteSettings();
 const allCategories = await getAllCategories() || [];
 
-// ⚡ SAFE & ROBUST FILTER: Handles empty strings, null, and undefined gracefully from Keystatic Cloud
-const parentCategories = allCategories.filter((cat) => {
-  const p = cat.entry.parentCategory;
-  return !p || p === '' || p === null || p === undefined;
-});
+// ─── PRIMARY NAV STRUCTURE ──────────────────────────────────────────────────
+// This is the editorial IA for Step 2 — a curated grouping, not the raw
+// Keystatic parent/child tree (that flat tree is what the OLD header used,
+// and it's what made the header feel like a category archive).
+//
+// Every slug below is a REAL, existing category — nothing invented, nothing
+// deleted. Where the brief asked for a subcategory that doesn't exist yet
+// (e.g. "Men → Casual Style"), it's left out rather than linked to a URL
+// that doesn't exist, so nothing in the mega-menu ever 404s.
+//
+// Category display names still come from Keystatic at request time, so if
+// a name is edited in the CMS, the header stays in sync automatically —
+// only the grouping/order below is hardcoded.
 
-// 🧭 CUSTOM SORTING: Trends slug ko list mein sabsay pehle (Home ke right side par) force karne ke liye
-const sortedParentCategories = [...parentCategories].sort((a, b) => {
-  if (a.slug === 'trends') return -1;
-  if (b.slug === 'trends') return 1;
-  return 0;
-});
+const NAV_GROUPS = [
+  {
+    label: 'Men',
+    href: '/category/men-s-fall-wardrobe',
+    slugs: ['men-s-fall-wardrobe'],
+  },
+  {
+    label: 'Women',
+    href: '/category/women-s-fall-wardrobe',
+    slugs: ['women-s-fall-wardrobe'],
+  },
+  {
+    label: 'Trends',
+    href: '/category/trends',
+    slugs: [
+      'trends',
+      'pop-culture-and-aesthetics',
+      'viral-footwear',
+      'seasonal-fashion',
+      'aesthetic-and-lifestyle-visuals',
+    ],
+  },
+  {
+    label: 'Style Guides',
+    href: '/categories',
+    slugs: [
+      'denim-and-basics-trends',
+      'basics-layering',
+      'jeans-styles',
+      'back-to-school',
+      'campus-style',
+      'school-gear-and-essentials',
+      'diy-and-custom',
+      'custom-apparel',
+    ],
+  },
+  {
+    label: 'Accessories',
+    href: '/category/trending-accessories',
+    slugs: ['trending-accessories', 'bags', 'jewelry-and-layering'],
+  },
+];
 
-const categoryTree = sortedParentCategories.map((parent) => ({
-  ...parent,
-  children: allCategories.filter((cat) => cat.entry.parentCategory === parent.slug),
-}));
+// Resolve each slug to its live category entry; drop any slug that no
+// longer exists in Keystatic instead of rendering a dead link.
+const resolvedNavGroups = NAV_GROUPS.map((group) => ({
+  ...group,
+  items: group.slugs
+    .map((slug) => allCategories.find((c) => c.slug === slug))
+    .filter((c): c is NonNullable<typeof c> => Boolean(c))
+    .map((c) => ({ slug: c.slug, name: c.entry.name })),
+})).filter((group) => group.items.length > 0);
+
+function isGroupActive(group: (typeof resolvedNavGroups)[number]) {
+  return (
+    currentPath === group.href ||
+    group.items.some((item) => currentPath === `/category/${item.slug}`)
+  );
+}
 ---
 
-<header class="bg-white border-b border-neutral-200/80 sticky top-0 z-50 antialiased font-sans w-full max-w-full block">
+<header id="site-header" class="bg-white/95 backdrop-blur border-b border-neutral-200/70 sticky top-0 z-50 antialiased font-sans w-full max-w-full block transition-[padding] duration-300 ease-out">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-    {/* 🧭 TOP BRAND IDENTITY LAYER */}
-    <div class="grid grid-cols-3 items-center py-6 border-b border-neutral-100 relative w-full">
-      
-      {/* 🔍 LEFT SIDE: POLISHED EMBEDDED SEARCH SWITCH */}
-      <div class="flex items-center justify-start h-8 relative">
-        <input type="checkbox" id="header-search-toggle" class="peer hidden" />
-        
-        <label for="header-search-toggle" class="cursor-pointer text-neutral-600 hover:text-black transition-all duration-300 peer-checked:opacity-0 peer-checked:pointer-events-none p-1.5 z-10 block">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-        </label>
+    {/* ══════════════════════════════════════════════════════════════════
+        DESKTOP + SHARED TOP ROW: logo left, nav center, search right
+        ══════════════════════════════════════════════════════════════════ */}
+    <div id="header-inner" class="grid grid-cols-[auto_1fr_auto] md:grid-cols-3 items-center gap-4 py-5 transition-[padding] duration-300 ease-out w-full">
 
-        <form action="/search" method="GET" class="absolute left-0 top-1/2 -translate-y-1/2 h-full flex items-center border-b border-neutral-950 bg-white transform -translate-x-4 opacity-0 pointer-events-none peer-checked:translate-x-0 peer-checked:opacity-100 peer-checked:pointer-events-auto transition-all duration-300 ease-out w-40 sm:w-56 py-0.5 z-20">
-          <button type="submit" class="text-neutral-500 hover:text-black transition p-1 mr-1" aria-label="Submit Search">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-          </button>
-          <input 
-            type="text" 
-            name="q" 
-            placeholder="Search trends..." 
-            class="w-full bg-transparent text-[11px] font-light tracking-wide focus:outline-none placeholder-neutral-400 text-neutral-800 pr-1"
-            required
-          />
-          <label for="header-search-toggle" class="cursor-pointer text-neutral-400 hover:text-black text-[10px] font-light pl-2 pr-1 border-l border-neutral-200">
-            ✕
-          </label>
-        </form>
-      </div>
-
-      {/* 👑 CENTER SIDE: LUXURY HIGH-TRACKING BRAND IDENTITY LOGO */}
-      <div class="text-center w-full min-w-0">
+      {/* LEFT: LOGO */}
+      <div class="flex items-center justify-start min-w-0">
         <a href="/" class="inline-block no-underline max-w-full">
           {settings.logoImage ? (
-            <img src={settings.logoImage} alt={settings.siteName} class="h-6 sm:h-8 max-h-9 mx-auto object-contain" />
+            <img src={settings.logoImage} alt={settings.siteName} class="h-6 sm:h-7 md:h-8 max-h-9 object-contain" />
           ) : (
-            <span class="text-[11px] xs:text-xs sm:text-lg md:text-2xl lg:text-3xl font-serif uppercase text-neutral-950 hover:text-neutral-700 transition duration-300 block font-light tracking-[0.08em] xs:tracking-[0.15em] sm:tracking-[0.25em] md:tracking-[0.35em] whitespace-normal sm:whitespace-nowrap leading-tight px-1 max-w-full">
-              {settings.siteName || "FASHION EDITORIAL"}
+            <span class="text-[13px] sm:text-base md:text-xl font-serif uppercase text-neutral-950 hover:text-neutral-700 transition duration-300 block font-light tracking-[0.12em] sm:tracking-[0.2em] md:tracking-[0.3em] whitespace-nowrap leading-tight">
+              {settings.siteName || 'OUTFIT EDITS'}
             </span>
           )}
         </a>
       </div>
 
-      {/* 📱 RIGHT SIDE: RESPONSIVE ACTIONS BAR */}
-      <div class="flex items-center justify-end h-8">
-        <button id="mobile-menu-button" class="md:hidden p-2 text-neutral-700 hover:text-neutral-950 transition shrink-0" aria-label="Toggle Navigation Menu">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
-        </button>
-        <div class="hidden md:block w-8 h-8"></div>
-      </div>
+      {/* CENTER: DESKTOP PRIMARY NAV */}
+      <nav aria-label="Primary" class="hidden md:flex items-center justify-center flex-wrap gap-x-8 lg:gap-x-10">
+        <a
+          href="/"
+          class={`text-[11px] tracking-[0.2em] uppercase font-semibold transition-colors duration-200 pb-1 border-b ${currentPath === '/' ? 'text-neutral-950 border-neutral-950' : 'text-neutral-500 border-transparent hover:text-neutral-950'}`}
+        >
+          Home
+        </a>
 
-    </div>
-
-    {/* 🧷 DESKTOP NAVIGATION ROW */}
-    <div class="hidden md:flex items-center justify-center flex-wrap gap-x-9 gap-y-2 py-4">
-      <a href="/" class={`text-[10.5px] tracking-[0.25em] uppercase font-bold transition duration-200 pb-1 shrink-0 ${currentPath === '/' ? 'text-neutral-950 border-b border-neutral-950' : 'text-neutral-400 hover:text-neutral-950'}`}>
-        Home
-      </a>
-
-      {categoryTree.map((parent) => (
-        <div class="relative group shrink-0">
-          <a
-            href={`/category/${parent.slug}`}
-            class={`flex items-center gap-1 text-[10.5px] tracking-[0.25em] uppercase font-bold transition duration-200 pb-1 ${currentPath === `/category/${parent.slug}` ? 'text-neutral-950 border-b border-neutral-950' : 'text-neutral-400 hover:text-neutral-950'}`}>
-            {parent.entry.name}
-            {parent.children.length > 0 && (
-              <svg class="w-2.5 h-2.5 text-neutral-400 group-hover:text-neutral-950 transition-transform duration-300 group-hover:rotate-180" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        {resolvedNavGroups.map((group) => (
+          <div class="relative group/nav shrink-0">
+            <a
+              href={group.href}
+              class={`flex items-center gap-1 text-[11px] tracking-[0.2em] uppercase font-semibold transition-colors duration-200 pb-1 border-b ${isGroupActive(group) ? 'text-neutral-950 border-neutral-950' : 'text-neutral-500 border-transparent hover:text-neutral-950'}`}
+              aria-haspopup="true"
+            >
+              {group.label}
+              <svg class="w-2.5 h-2.5 transition-transform duration-300 group-hover/nav:rotate-180" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
               </svg>
-            )}
-          </a>
+            </a>
 
-          {/* Dynamic Cascading Dropdown List Container */}
-          {parent.children.length > 0 && (
-            <div class="invisible group-hover:visible opacity-0 group-hover:opacity-100 absolute left-1/2 -translate-x-1/2 top-full pt-3 transition-all duration-300 z-[100]">
-              <div class="bg-white border border-neutral-200/60 shadow-xl py-2 min-w-[210px] rounded-sm">
-                {parent.children.map((child) => (
+            {/* Editorial mega-menu panel */}
+            <div class="invisible opacity-0 translate-y-1 group-hover/nav:visible group-hover/nav:opacity-100 group-hover/nav:translate-y-0 group-focus-within/nav:visible group-focus-within/nav:opacity-100 group-focus-within/nav:translate-y-0 absolute left-1/2 -translate-x-1/2 top-full pt-3 transition-all duration-200 ease-out z-[100]">
+              <div class="bg-white border border-neutral-200/70 shadow-[0_18px_40px_-12px_rgba(0,0,0,0.12)] py-3 min-w-[240px] max-w-[calc(100vw-2rem)]">
+                <p class="px-6 pb-2 mb-1 text-[9px] tracking-[0.3em] uppercase text-neutral-400 border-b border-neutral-100">
+                  {group.label}
+                </p>
+                {group.items.map((item) => (
                   <a
-                    href={`/category/${child.slug}`}
-                    class="block px-5 py-2.5 text-[11px] tracking-widest uppercase text-neutral-500 hover:bg-neutral-50 hover:text-neutral-950 font-medium transition duration-150">
-                    {child.entry.name}
+                    href={`/category/${item.slug}`}
+                    class={`block px-6 py-2.5 text-[11px] tracking-wide uppercase font-medium transition-colors duration-150 whitespace-nowrap ${currentPath === `/category/${item.slug}` ? 'text-neutral-950 bg-neutral-50' : 'text-neutral-500 hover:bg-neutral-50 hover:text-neutral-950'}`}
+                  >
+                    {item.name}
                   </a>
                 ))}
               </div>
             </div>
-          )}
+          </div>
+        ))}
+
+        <a
+          href="/about"
+          class={`text-[11px] tracking-[0.2em] uppercase font-semibold transition-colors duration-200 pb-1 border-b ${currentPath === '/about' ? 'text-neutral-950 border-neutral-950' : 'text-neutral-500 border-transparent hover:text-neutral-950'}`}
+        >
+          About
+        </a>
+      </nav>
+
+      {/* RIGHT: SEARCH (desktop) + SEARCH & HAMBURGER (mobile) */}
+      <div class="flex items-center justify-end gap-1 h-8">
+
+        {/* Desktop search toggle */}
+        <div class="hidden md:flex items-center relative h-8">
+          <input type="checkbox" id="header-search-toggle" class="peer hidden" />
+
+          <label for="header-search-toggle" class="cursor-pointer text-neutral-600 hover:text-black transition-all duration-300 peer-checked:opacity-0 peer-checked:pointer-events-none p-1.5 z-10 block" aria-label="Open search">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </label>
+
+          <form action="/search" method="GET" class="absolute right-0 top-1/2 -translate-y-1/2 h-full flex items-center border-b border-neutral-950 bg-white transform translate-x-4 opacity-0 pointer-events-none peer-checked:translate-x-0 peer-checked:opacity-100 peer-checked:pointer-events-auto transition-all duration-300 ease-out w-56 lg:w-72 py-0.5 z-20">
+            <button type="submit" class="text-neutral-500 hover:text-black transition p-1 mr-1" aria-label="Submit search">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </button>
+            <input
+              type="text"
+              name="q"
+              placeholder="Search outfit ideas, trends, and style guides..."
+              class="w-full bg-transparent text-[11px] font-light tracking-wide focus:outline-none placeholder-neutral-400 text-neutral-800 pr-1"
+              required
+            />
+            <label for="header-search-toggle" class="cursor-pointer text-neutral-400 hover:text-black text-[10px] font-light pl-2 pr-1 border-l border-neutral-200" aria-label="Close search">
+              ✕
+            </label>
+          </form>
         </div>
-      ))}
 
-      <a href="/about" class={`text-[10.5px] tracking-[0.25em] uppercase font-bold transition duration-200 pb-1 shrink-0 ${currentPath === '/about' ? 'text-neutral-950 border-b border-neutral-950' : 'text-neutral-400 hover:text-neutral-950'}`}>
-        About Us
-      </a>
+        {/* Mobile search button */}
+        <button id="mobile-search-button" class="md:hidden p-2 text-neutral-700 hover:text-neutral-950 transition shrink-0" aria-label="Open search" aria-expanded="false" aria-controls="mobile-search-bar">
+          <svg class="w-[18px] h-[18px]" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </button>
 
-      <a href="/contact" class={`text-[10.5px] tracking-[0.25em] uppercase font-bold transition duration-200 pb-1 shrink-0 ${currentPath === '/contact' ? 'text-neutral-950 border-b border-neutral-950' : 'text-neutral-400 hover:text-neutral-950'}`}>
-        Contact Us
-      </a>
+        {/* Mobile hamburger */}
+        <button id="mobile-menu-button" class="md:hidden p-2 text-neutral-700 hover:text-neutral-950 transition shrink-0" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu">
+          <svg id="mobile-menu-icon-open" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+          <svg id="mobile-menu-icon-close" class="w-5 h-5 hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
     </div>
 
-  </div>
-
-  <div id="mobile-menu" class="hidden md:hidden border-t border-neutral-200 bg-white w-full">
-    <div class="max-w-7xl mx-auto px-6 py-4 space-y-3">
-      
-      <form action="/search" method="GET" class="relative flex items-center border border-neutral-200 rounded-sm bg-neutral-50 px-3 py-2 my-2">
-        <input 
-          type="text" 
-          name="q" 
-          placeholder="Search fashion trends..." 
+    {/* MOBILE SEARCH BAR (collapsible, under the top row) */}
+    <form id="mobile-search-bar" action="/search" method="GET" class="hidden md:hidden pb-4">
+      <div class="flex items-center border border-neutral-200 bg-neutral-50 px-3 py-2.5">
+        <input
+          type="text"
+          name="q"
+          placeholder="Search outfit ideas, trends, and style guides..."
           class="w-full bg-transparent text-xs font-light focus:outline-none placeholder-neutral-400"
           required
         />
-        <button type="submit" class="text-neutral-500" aria-label="Execute Search">
+        <button type="submit" class="text-neutral-500 shrink-0" aria-label="Submit search">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
         </button>
-      </form>
+      </div>
+    </form>
 
-      <a href="/" class="block py-2 text-xs font-bold uppercase tracking-wider text-neutral-700 hover:text-neutral-950 transition border-b border-neutral-50 pb-1">Home</a>
+  </div>
 
-      {categoryTree.map((parent) => (
-        <div class="mobile-category-group border-b border-neutral-50 pb-1">
+  {/* ══════════════════════════════════════════════════════════════════
+      MOBILE MENU (hamburger flyout)
+      ══════════════════════════════════════════════════════════════════ */}
+  <div id="mobile-menu" class="hidden md:hidden border-t border-neutral-200 bg-white w-full max-h-[calc(100vh-4rem)] overflow-y-auto">
+    <nav aria-label="Mobile primary" class="max-w-7xl mx-auto px-6 py-4 space-y-1">
+
+      <a href="/" class="block py-2.5 text-xs font-bold uppercase tracking-wider text-neutral-700 hover:text-neutral-950 transition border-b border-neutral-50">
+        Home
+      </a>
+
+      {resolvedNavGroups.map((group) => (
+        <div class="mobile-nav-group border-b border-neutral-50">
           <div class="flex items-center justify-between">
-            <a href={`/category/${parent.slug}`} class="block py-2 text-xs font-bold uppercase tracking-wider text-neutral-700 hover:text-neutral-950 transition flex-1">
-              {parent.entry.name}
+            <a href={group.href} class="block py-2.5 text-xs font-bold uppercase tracking-wider text-neutral-700 hover:text-neutral-950 transition flex-1">
+              {group.label}
             </a>
-            {parent.children.length > 0 && (
-              <button class="mobile-category-toggle p-2 text-neutral-400" aria-label="Expand Subcategories Tree">
-                <svg class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-            )}
+            <button class="mobile-nav-toggle p-2 text-neutral-400" aria-label={`Toggle ${group.label} submenu`} aria-expanded="false">
+              <svg class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
           </div>
-          {parent.children.length > 0 && (
-            <div class="mobile-category-children hidden pl-4 border-l border-neutral-100 ml-1 space-y-1">
-              {parent.children.map((child) => (
-                <a href={`/category/${child.slug}`} class="block py-1.5 text-xs text-neutral-500 hover:text-neutral-950 transition">
-                  {child.entry.name}
-                </a>
-              ))}
-            </div>
-          )}
+          <div class="mobile-nav-children hidden pl-4 pb-3 border-l border-neutral-100 ml-1 space-y-1">
+            {group.items.map((item) => (
+              <a href={`/category/${item.slug}`} class="block py-1.5 text-xs text-neutral-500 hover:text-neutral-950 transition">
+                {item.name}
+              </a>
+            ))}
+          </div>
         </div>
       ))}
 
-      <a href="/about" class="block py-2 text-xs font-bold uppercase tracking-wider text-neutral-700 hover:text-neutral-950 transition border-b border-neutral-50 pb-1">About Us</a>
-      <a href="/contact" class="block py-2 text-xs font-bold uppercase tracking-wider text-neutral-700 hover:text-neutral-950 transition border-b border-neutral-50 pb-1">Contact Us</a>
-    </div>
+      <a href="/about" class="block py-2.5 text-xs font-bold uppercase tracking-wider text-neutral-700 hover:text-neutral-950 transition border-b border-neutral-50">
+        About
+      </a>
+      <a href="/contact" class="block py-2.5 text-xs font-bold uppercase tracking-wider text-neutral-700 hover:text-neutral-950 transition">
+        Contact Us
+      </a>
+    </nav>
   </div>
 </header>
 
 <script>
-  document.getElementById('mobile-menu-button')?.addEventListener('click', () => {
-    document.getElementById('mobile-menu')?.classList.toggle('hidden');
+  const header = document.getElementById('site-header');
+  const headerInner = document.getElementById('header-inner');
+
+  // Compact the header on scroll — smaller vertical padding, logo/nav/search
+  // all stay visible, just tighter. No huge sticky bar.
+  function updateHeaderScrollState() {
+    if (!headerInner) return;
+    if (window.scrollY > 24) {
+      headerInner.classList.remove('py-5');
+      headerInner.classList.add('py-3');
+      header?.classList.add('shadow-sm');
+    } else {
+      headerInner.classList.remove('py-3');
+      headerInner.classList.add('py-5');
+      header?.classList.remove('shadow-sm');
+    }
+  }
+  updateHeaderScrollState();
+  window.addEventListener('scroll', updateHeaderScrollState, { passive: true });
+
+  // Mobile hamburger menu
+  const menuButton = document.getElementById('mobile-menu-button');
+  const menu = document.getElementById('mobile-menu');
+  const iconOpen = document.getElementById('mobile-menu-icon-open');
+  const iconClose = document.getElementById('mobile-menu-icon-close');
+
+  function closeMobileMenu() {
+    menu?.classList.add('hidden');
+    iconOpen?.classList.remove('hidden');
+    iconClose?.classList.add('hidden');
+    menuButton?.setAttribute('aria-expanded', 'false');
+  }
+
+  function openMobileMenu() {
+    menu?.classList.remove('hidden');
+    iconOpen?.classList.add('hidden');
+    iconClose?.classList.remove('hidden');
+    menuButton?.setAttribute('aria-expanded', 'true');
+    closeMobileSearch();
+  }
+
+  menuButton?.addEventListener('click', () => {
+    const isOpen = menu && !menu.classList.contains('hidden');
+    if (isOpen) closeMobileMenu();
+    else openMobileMenu();
   });
 
-  document.querySelectorAll('.mobile-category-toggle').forEach((btn) => {
+  // Mobile search bar
+  const searchButton = document.getElementById('mobile-search-button');
+  const searchBar = document.getElementById('mobile-search-bar');
+
+  function closeMobileSearch() {
+    searchBar?.classList.add('hidden');
+    searchButton?.setAttribute('aria-expanded', 'false');
+  }
+
+  function openMobileSearch() {
+    searchBar?.classList.remove('hidden');
+    searchButton?.setAttribute('aria-expanded', 'true');
+    closeMobileMenu();
+    (searchBar?.querySelector('input') as HTMLInputElement | null)?.focus();
+  }
+
+  searchButton?.addEventListener('click', () => {
+    const isOpen = searchBar && !searchBar.classList.contains('hidden');
+    if (isOpen) closeMobileSearch();
+    else openMobileSearch();
+  });
+
+  // Expandable subcategories inside the mobile menu
+  document.querySelectorAll('.mobile-nav-toggle').forEach((btn) => {
     btn.addEventListener('click', (e) => {
       e.preventDefault();
-      const group = btn.closest('.mobile-category-group');
-      group?.querySelector('.mobile-category-children')?.classList.toggle('hidden');
+      const group = btn.closest('.mobile-nav-group');
+      const children = group?.querySelector('.mobile-nav-children');
+      const nowHidden = children?.classList.toggle('hidden');
       btn.querySelector('svg')?.classList.toggle('rotate-180');
+      btn.setAttribute('aria-expanded', nowHidden ? 'false' : 'true');
     });
+  });
+
+  // Escape closes whichever mobile panel is open
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      closeMobileMenu();
+      closeMobileSearch();
+    }
   });
 </script>
