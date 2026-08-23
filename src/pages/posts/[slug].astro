@@ -533,41 +533,92 @@ const trendingPosts = await getFeaturedPosts(5);
     });
 
     // ── FAQ → accordion ────────────────────────────────────────────────
-    // Finds an existing "FAQ" heading and progressively enhances the
-    // Q/A paragraphs beneath it into native <details>/<summary> accordion
-    // items. Content and copy are untouched — this only restructures how
-    // the same Q1:/A1: text already in the article is presented.
+    // Finds an existing "FAQ" heading and progressively enhances the Q/A
+    // content beneath it into native <details>/<summary> accordion items.
+    // Handles whichever way the question/answer pair happens to be
+    // written in the source article, so individual posts never need to be
+    // reformatted by hand:
+    //   1) "Q1: ...<br>A1: ..." inside a single <p>
+    //   2) "**Q1: ...?**" as its own <p>, followed by a separate <p> "A1: ..."
+    //   3) a fully-bold question <p> followed by a plain answer <p>
+    //      (no "Q"/"A" labels at all)
     const headings = contentDiv.querySelectorAll('h2');
     let faqHeading = null;
     headings.forEach((h) => {
       if (!faqHeading && /faq|frequently asked/i.test(h.textContent || '')) faqHeading = h;
     });
 
+    function stripLabel(html, letter) {
+      // Removes a leading "Q1:", "Q:", "A2." style label and any wrapping
+      // <strong>/<em> tags left dangling around it, without touching the
+      // rest of the markup.
+      return html
+        .replace(new RegExp(`^\\s*(?:<strong>|<em>)?\\s*${letter}\\d*[:.]?\\s*(?:</strong>|</em>)?\\s*`, 'i'), '')
+        .trim();
+    }
+
+    function isBlankNode(node) {
+      return !node.textContent || !node.textContent.trim();
+    }
+
+    function buildAccordion(questionHtml, answerHtml) {
+      const details = document.createElement('details');
+      details.className = 'faq-item not-prose';
+
+      const summary = document.createElement('summary');
+      summary.className = 'faq-question';
+      summary.innerHTML = `<span>${questionHtml}</span><svg class="faq-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><line x1="10" y1="4" x2="10" y2="16"/><line x1="4" y1="10" x2="16" y2="10"/></svg>`;
+
+      const answerDiv = document.createElement('div');
+      answerDiv.className = 'faq-answer';
+      answerDiv.innerHTML = answerHtml;
+
+      details.appendChild(summary);
+      details.appendChild(answerDiv);
+      return details;
+    }
+
     if (faqHeading) {
       let node = faqHeading.nextElementSibling;
+
       while (node && node.tagName !== 'H2') {
         const next = node.nextElementSibling;
 
+        // Case 1: "Q1: ...<br>A1: ..." inside one <p>
         if (node.tagName === 'P' && /<br\s*\/?>/i.test(node.innerHTML)) {
           const [rawQ, rawA] = node.innerHTML.split(/<br\s*\/?>/i);
           if (rawQ && rawA) {
-            const question = rawQ.replace(/^\s*Q\d*[:.]?\s*/i, '').trim();
-            const answer = rawA.replace(/^\s*A\d*[:.]?\s*/i, '').trim();
+            const question = stripLabel(rawQ, 'Q');
+            const answer = stripLabel(rawA, 'A');
+            node.replaceWith(buildAccordion(question, answer));
+          }
+          node = next;
+          continue;
+        }
 
-            const details = document.createElement('details');
-            details.className = 'faq-item not-prose';
+        // Case 2 & 3: a question <p> (labeled "Q1:" and/or fully bold),
+        // immediately followed by a separate answer <p>.
+        if (node.tagName === 'P') {
+          const innerTrimmed = node.innerHTML.trim();
+          const looksLikeLabeledQuestion = /^\s*(?:<strong>|<em>)?\s*Q\d*[:.]?/i.test(innerTrimmed);
+          const looksFullyBold = /^<strong>[\s\S]*<\/strong>\s*(?:&#x20;|&nbsp;)?$/i.test(innerTrimmed);
 
-            const summary = document.createElement('summary');
-            summary.className = 'faq-question';
-            summary.innerHTML = `<span>${question}</span><svg class="faq-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><line x1="10" y1="4" x2="10" y2="16"/><line x1="4" y1="10" x2="16" y2="10"/></svg>`;
+          if (looksLikeLabeledQuestion || looksFullyBold) {
+            // Find the next non-blank element sibling to use as the answer.
+            let answerNode = next;
+            while (answerNode && isBlankNode(answerNode)) {
+              answerNode = answerNode.nextElementSibling;
+            }
 
-            const answerDiv = document.createElement('div');
-            answerDiv.className = 'faq-answer';
-            answerDiv.innerHTML = answer;
-
-            details.appendChild(summary);
-            details.appendChild(answerDiv);
-            node.replaceWith(details);
+            if (answerNode && answerNode.tagName === 'P') {
+              const question = stripLabel(innerTrimmed, 'Q').replace(/^<strong>([\s\S]*)<\/strong>$/i, '$1').trim();
+              const answer = stripLabel(answerNode.innerHTML.trim(), 'A');
+              const accordion = buildAccordion(question, answer);
+              node.replaceWith(accordion);
+              answerNode.remove();
+              node = answerNode.nextElementSibling;
+              continue;
+            }
           }
         }
 
