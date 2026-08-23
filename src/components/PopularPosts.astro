@@ -21,47 +21,40 @@ const popularPosts = await Promise.all(
 ---
 
 {popularPosts.length > 0 && (
-  <aside class="popular-posts bg-gray-50 rounded-xl p-5 border border-gray-200">
-    <h3 class="text-sm font-bold uppercase tracking-wide text-gray-500 mb-4">
-      Popular Posts
-    </h3>
-    <div class="flex flex-col gap-4">
-      {popularPosts.map((post, index) => (
-        <a
-          href={`/posts/${post.slug}/`}
-          class="flex items-center gap-3 group"
-        >
-          <span class="text-2xl font-extrabold text-gray-200 group-hover:text-gray-400 transition leading-none">
-            {String(index + 1).padStart(2, '0')}
-          </span>
-          <div class="w-14 h-14 shrink-0 rounded-lg overflow-hidden bg-gray-200">
-            {post.image ? (
-              <img
-                src={post.image}
-                alt={post.entry.title}
-                width="56"
-                height="56"
-                loading="lazy"
-                class="w-full h-full object-cover"
-              />
-            ) : (
-              <img
-                src="/images/og/default.jpg"
-                alt={post.entry.title}
-                width="56"
-                height="56"
-                loading="lazy"
-                class="w-full h-full object-cover"
-              />
-            )}
-          </div>
-          <div>
-            <p class="font-semibold text-sm leading-snug group-hover:underline">
-              {post.entry.title}
-            </p>
-          </div>
-        </a>
-      ))}
-    </div>
-  </aside>
+  <div class="flex flex-col divide-y divide-neutral-200/40 bg-white border border-neutral-200/30 shadow-sm/5 rounded-sm">
+    {popularPosts.map((post, index) => (
+      <a
+        href={`/posts/${post.slug}/`}
+        class="flex items-center gap-4 p-4 sm:p-5 group"
+      >
+        <span class="font-serif text-xl font-light text-[#bba15c] shrink-0 leading-none w-8 text-center">
+          {String(index + 1).padStart(2, '0')}
+        </span>
+        <div class="w-14 h-14 shrink-0 rounded-sm overflow-hidden bg-neutral-100">
+          {post.image ? (
+            <img
+              src={post.image}
+              alt={post.entry.title}
+              width="56"
+              height="56"
+              loading="lazy"
+              class="w-full h-full object-cover"
+            />
+          ) : (
+            <img
+              src="/images/og/default.jpg"
+              alt={post.entry.title}
+              width="56"
+              height="56"
+              loading="lazy"
+              class="w-full h-full object-cover"
+            />
+          )}
+        </div>
+        <p class="font-serif text-sm text-neutral-800 leading-snug group-hover:text-[#bba15c] transition">
+          {post.entry.title}
+        </p>
+      </a>
+    ))}
+  </div>
 )}
