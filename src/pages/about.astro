@@ -1,215 +1,357 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { getPostsByCategory, getAuthorBySlug } from '../lib/keystatic-reader';
 
-const pageTitle = "About Us | Outfit Edits";
+const pageTitle = 'About Outfit Edits | Fashion & Style Inspiration';
 const pageDescription =
-  "Learn about Outfit Edits, an independent fashion and style publication focused on practical outfit ideas, styling guides, seasonal fashion, and DIY inspiration.";
+  'Outfit Edits is a fashion and style publication covering outfit ideas, seasonal trends, and practical style guides for everyday wardrobes.';
+
+// ─── PILLAR IMAGERY ──────────────────────────────────────────────────────────
+// Same "first post image in category" pattern the homepage discovery cards
+// use, so every image here is real, current site content — nothing stock,
+// nothing invented. Falls back to the shared placeholder if a category is
+// briefly empty.
+async function getPostImage(post: any) {
+  const rawContent = (await post.entry.content()) as string;
+  if (!rawContent) return '/images/placeholder.jpg';
+
+  if (post.entry.sections && post.entry.sections[0]?.image) {
+    const img = post.entry.sections[0].image;
+    return img.startsWith('/') ? img : `/images/posts/${img}`;
+  }
+
+  const match = rawContent.match(/!\[.*?\]\((.*?)\)/);
+  if (match && match[1]) {
+    return match[1].trim();
+  }
+
+  return '/images/placeholder.jpg';
+}
+
+async function pillarImage(categorySlug: string) {
+  const posts = await getPostsByCategory(categorySlug);
+  return posts[0] ? await getPostImage(posts[0]) : '/images/placeholder.jpg';
+}
+
+const [menImg, womenImg, trendsImg, styleGuideImg] = await Promise.all([
+  pillarImage('men-s-fall-wardrobe'),
+  pillarImage('women-s-fall-wardrobe'),
+  pillarImage('trends'),
+  pillarImage('jeans-styles'),
+]);
+
+const pillars = [
+  {
+    label: "Men's Style",
+    description: 'Outfit ideas, seasonal dressing, shoes, denim, and everyday wardrobe inspiration.',
+    href: '/category/men-s-fall-wardrobe',
+    img: menImg,
+  },
+  {
+    label: "Women's Style",
+    description: 'Outfit inspiration, dresses, casual looks, workwear, seasonal fashion, and accessories.',
+    href: '/category/women-s-fall-wardrobe',
+    img: womenImg,
+  },
+  {
+    label: 'Fashion Trends',
+    description: 'Current trends, aesthetics, viral fashion moments, and seasonal style ideas.',
+    href: '/category/trends',
+    img: trendsImg,
+  },
+  {
+    label: 'Style Guides',
+    description: 'Practical styling advice, wardrobe guidance, outfit combinations, and fashion how-tos.',
+    href: '/categories',
+    img: styleGuideImg,
+  },
+];
+
+// ─── EDITOR ───────────────────────────────────────────────────────────────
+// Pulled live from the existing Keystatic author record rather than
+// hardcoded, so this section always matches the CMS. No fabricated bio,
+// credentials, or team members — this is the one real author already on
+// the site.
+const editor = await getAuthorBySlug('sara-khan');
+const editorAvatar = editor?.avatar
+  ? `/images/authors/${editor.avatar}`
+  : '/images/authors/sara-profile.png';
+
+const approach = [
+  {
+    title: 'Useful over complicated',
+    description: 'Fashion advice should be practical and understandable.',
+  },
+  {
+    title: 'Inspiration with context',
+    description: 'Trends should be presented in a way readers can actually use.',
+  },
+  {
+    title: 'Visual storytelling',
+    description: 'Images and outfit examples should help readers understand the idea quickly.',
+  },
+  {
+    title: 'Reader-first content',
+    description: "Articles should answer the reader's search intent clearly and efficiently.",
+  },
+];
+
+const audience = [
+  'Easy outfit inspiration',
+  'Practical styling ideas',
+  'Current fashion trends',
+  'Seasonal outfit ideas',
+  'Fashion guidance that is easy to understand',
+];
 ---
 
 <Layout title={pageTitle} description={pageDescription}>
-  <main class="max-w-4xl mx-auto px-4 sm:px-6 py-12 md:py-16">
+  <Header currentPath="/about" />
 
-    <!-- Header -->
-    <header class="mb-10 md:mb-14">
-      <p class="text-xs font-semibold tracking-[0.2em] uppercase text-neutral-500 mb-4">
-        ABOUT OUTFIT EDITS
-      </p>
+  <main class="bg-[#F8F6F2] min-h-screen font-sans antialiased text-neutral-900 w-full overflow-x-hidden">
 
-      <h1 class="text-3xl md:text-5xl font-bold tracking-tight mb-6">
-        Practical fashion ideas for everyday wardrobes.
-      </h1>
+    {/* ══════════════════════════════════════════════════════════════════
+        1. HERO
+        ══════════════════════════════════════════════════════════════════ */}
+    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 md:pt-12 pb-12 md:pb-16">
+      <div class="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-8 lg:gap-10 min-[1440px]:gap-14 items-center">
+        <div class="order-2 lg:order-1 text-left space-y-6 md:space-y-7">
+          <span class="inline-block text-[10px] font-bold uppercase tracking-[0.35em] text-[#bba15c]">
+            About Outfit Edits
+          </span>
+          <h1 class="text-4xl sm:text-5xl md:text-6xl font-serif font-light tracking-tight text-neutral-950 leading-[1.05]">
+            About Outfit Edits
+          </h1>
+          <p class="text-neutral-500 text-base md:text-lg leading-relaxed max-w-md font-light">
+            Making fashion easier to understand, easier to wear, and more useful in everyday life.
+          </p>
+        </div>
 
-      <p class="text-lg md:text-xl text-neutral-600 leading-relaxed max-w-3xl">
-        Outfit Edits is a fashion and style publication focused on making
-        everyday dressing easier to understand, experiment with, and enjoy.
-        We create practical styling guides, outfit inspiration, seasonal
-        fashion content, and DIY ideas designed around real wardrobes.
-      </p>
-    </header>
+        <div class="order-1 lg:order-2 w-full aspect-[4/5] bg-white p-2 md:p-3 border border-neutral-200/30 shadow-sm relative overflow-hidden">
+          <img
+            src="/images/content/10-old-money-aesthetic-outfits-that-look-expensive/pinterest-optimized-1784105319212.webp"
+            alt="Editorial outfit styling from Outfit Edits"
+            loading="eager"
+            fetchpriority="high"
+            class="w-full h-full object-cover object-center"
+            onerror="this.onerror=null; this.src='/images/placeholder.jpg';"
+          />
+        </div>
+      </div>
+    </section>
 
-    <!-- Meet the Editor -->
-    <div class="flex flex-col md:flex-row items-center gap-8 md:gap-12 mb-14 md:mb-16 bg-neutral-50 rounded-lg p-6 md:p-10">
-      <img
-        src="/images/authors/sara-profile.png"
-        alt="Sara Khan"
-        class="w-32 h-32 md:w-44 md:h-44 rounded-full object-cover shrink-0"
-      />
-      <div>
-        <p class="text-xs font-semibold tracking-[0.2em] uppercase text-neutral-500 mb-3">
-          MEET SARA
-        </p>
-        <h2 class="text-2xl md:text-3xl font-bold tracking-tight mb-4">
-          Well, hello!
+    {/* ══════════════════════════════════════════════════════════════════
+        2. OUR STORY
+        ══════════════════════════════════════════════════════════════════ */}
+    <section class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 pb-16 md:pb-24">
+      <div class="mb-8 md:mb-10 space-y-2">
+        <h2 class="text-2xl md:text-3xl font-serif font-light tracking-tight text-neutral-950">
+          Our Story
         </h2>
-        <p class="text-neutral-700 leading-relaxed mb-3">
-          I'm <strong>Sara Khan</strong>, Lead Fashion Writer and Style Editor
-          at Outfit Edits. My days are spent testing outfit combinations,
-          breaking down seasonal trends, and figuring out what actually
-          works when you're standing in front of your own closet.
+        <div class="w-12 h-[1px] bg-[#bba15c]"></div>
+      </div>
+
+      <div class="space-y-5 text-neutral-600 text-base md:text-lg leading-relaxed font-light">
+        <p>
+          Outfit Edits is a fashion and style publication built around one idea: getting dressed
+          shouldn't require an entirely new wardrobe. Often, the most useful style advice is
+          simply knowing how to combine the pieces you already own in new ways.
         </p>
-        <p class="text-neutral-700 leading-relaxed">
-          I started Outfit Edits because most style advice online felt
-          disconnected from real wardrobes. So this is the site I wanted to
-          find: practical outfit ideas built around pieces people already
-          own, explained in a way you can actually use. Glad you're here.
+        <p>
+          The site exists to make everyday dressing easier to understand, easier to experiment
+          with, and more enjoyable. We publish outfit ideas, seasonal styling guides, trend
+          breakdowns, and practical how-tos — content built around real wardrobes rather than
+          runway pieces.
+        </p>
+        <p>
+          Rather than chasing every trend for its own sake, we focus on ideas readers can actually
+          adapt to their own style, budget, occasion, and closet — so every guide has a practical
+          starting point, not just inspiration to scroll past.
         </p>
       </div>
-    </div>
+    </section>
 
-    <div class="prose prose-lg max-w-none">
+    {/* ══════════════════════════════════════════════════════════════════
+        3. WHAT WE COVER
+        ══════════════════════════════════════════════════════════════════ */}
+    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16 md:pb-24">
+      <div class="text-center mb-8 md:mb-12 space-y-2">
+        <h2 class="text-2xl md:text-3xl font-serif font-light tracking-tight text-neutral-950">
+          What We Cover
+        </h2>
+        <div class="w-12 h-[1px] bg-[#bba15c] mx-auto"></div>
+      </div>
 
-      <!-- What We Do -->
-      <h2>What is Outfit Edits?</h2>
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+        {pillars.map((pillar) => (
+          <a href={pillar.href} class="group relative block w-full aspect-[4/5] overflow-hidden no-underline bg-neutral-900">
+            <img
+              src={pillar.img}
+              alt={pillar.label}
+              loading="lazy"
+              data-pin-nopin="true"
+              class="w-full h-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-105"
+              onerror="this.onerror=null; this.src='/images/placeholder.jpg';"
+            />
+            <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/15 to-transparent"></div>
+            <div class="absolute inset-x-0 bottom-0 p-4 md:p-6 text-left">
+              <h3 class="text-white text-base md:text-lg font-serif font-light tracking-tight mb-1 group-hover:text-[#e8d5a3] transition-colors duration-300">
+                {pillar.label}
+              </h3>
+              <p class="text-white/70 text-[10px] md:text-[11px] font-light leading-relaxed hidden sm:block">
+                {pillar.description}
+              </p>
+              <span class="inline-block mt-2 text-[9px] md:text-[10px] uppercase tracking-[0.25em] text-white/90 border-b border-white/40 pb-0.5 group-hover:border-[#bba15c] group-hover:text-[#e8d5a3] transition-colors duration-300">
+                Explore
+              </span>
+            </div>
+          </a>
+        ))}
+      </div>
+    </section>
 
-      <p>
-        Getting dressed does not always require a completely new wardrobe.
-        Often, the most useful style advice is simply knowing how to combine
-        the pieces you already have in different ways.
+    {/* ══════════════════════════════════════════════════════════════════
+        4. WHO WE WRITE FOR
+        ══════════════════════════════════════════════════════════════════ */}
+    <section class="max-w-3xl mx-auto px-4 sm:px-6 text-center pb-16 md:pb-24">
+      <p class="text-[10px] font-bold uppercase tracking-[0.35em] text-[#bba15c] mb-4">
+        Who We Write For
       </p>
-
-      <p>
-        Outfit Edits was created around that idea. Our goal is to provide
-        straightforward fashion guidance that helps readers understand
-        how individual clothing items, shoes, accessories, colors, and
-        seasonal pieces can work together.
+      <p class="text-lg md:text-2xl font-serif font-light text-neutral-800 leading-relaxed mb-8">
+        Outfit Edits is written for anyone who wants fashion inspiration that's easy to use —
+        whether you're building a capsule wardrobe or just figuring out what to wear this weekend.
       </p>
-
-      <p>
-        Instead of focusing only on what is trending, we aim to provide
-        ideas that readers can actually adapt to their own personal style,
-        budget, occasion, and existing wardrobe.
-      </p>
-
-      <!-- What We Cover -->
-      <h2>What We Cover</h2>
-
-      <p>
-        Our content covers different parts of everyday fashion and styling,
-        including:
-      </p>
-
-      <ul>
-        <li>
-          <strong>Outfit styling:</strong>
-          practical combinations for everyday situations, school, work,
-          weekends, and social occasions.
-        </li>
-
-        <li>
-          <strong>Seasonal fashion:</strong>
-          outfit ideas and styling approaches for different seasons,
-          weather conditions, and seasonal trends.
-        </li>
-
-        <li>
-          <strong>Denim and wardrobe basics:</strong>
-          ways to style jeans, shirts, jackets, tanks, trousers, and
-          other versatile wardrobe staples.
-        </li>
-
-        <li>
-          <strong>Footwear:</strong>
-          styling ideas for sneakers, boots, loafers, and other everyday
-          shoes.
-        </li>
-
-        <li>
-          <strong>Accessories:</strong>
-          practical ways to incorporate bags, jewelry, and other
-          accessories into an outfit.
-        </li>
-
-        <li>
-          <strong>DIY and customization:</strong>
-          creative ideas for refreshing, customizing, or reusing
-          existing clothing and accessories.
-        </li>
+      <ul class="flex flex-wrap justify-center gap-x-8 gap-y-3 text-xs md:text-sm uppercase tracking-[0.15em] text-neutral-500 font-medium">
+        {audience.map((item) => (
+          <li class="flex items-center gap-2">
+            <span class="w-3 h-[1px] bg-[#bba15c]"></span>
+            {item}
+          </li>
+        ))}
       </ul>
+    </section>
 
-      <!-- Editorial Approach -->
-      <h2>Our Editorial Approach</h2>
+    {/* ══════════════════════════════════════════════════════════════════
+        5. OUR EDITORIAL APPROACH
+        ══════════════════════════════════════════════════════════════════ */}
+    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16 md:pb-24">
+      <div class="text-center mb-8 md:mb-12 space-y-2">
+        <h2 class="text-2xl md:text-3xl font-serif font-light tracking-tight text-neutral-950">
+          Our Editorial Approach
+        </h2>
+        <div class="w-12 h-[1px] bg-[#bba15c] mx-auto"></div>
+      </div>
 
-      <p>
-        We aim to make every guide useful beyond simply listing outfit
-        combinations. When a topic allows it, we explain why a particular
-        combination works, how it can be adapted, what pieces complement
-        it, and which situations it may be suitable for.
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-8 md:gap-10 max-w-3xl mx-auto">
+        {approach.map((item) => (
+          <div class="border-t border-neutral-200 pt-5">
+            <h3 class="font-serif text-lg md:text-xl font-light text-neutral-950 mb-2">
+              {item.title}
+            </h3>
+            <p class="text-neutral-500 text-sm leading-relaxed font-light">
+              {item.description}
+            </p>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    {/* ══════════════════════════════════════════════════════════════════
+        6. CONTENT & UPDATES
+        ══════════════════════════════════════════════════════════════════ */}
+    <section class="max-w-3xl mx-auto px-4 sm:px-6 pb-16 md:pb-24">
+      <div class="border border-neutral-200/70 bg-white p-6 md:p-10">
+        <h2 class="font-serif text-xl md:text-2xl font-light text-neutral-950 mb-3">
+          Content & Updates
+        </h2>
+        <p class="text-neutral-500 text-sm md:text-base leading-relaxed font-light">
+          Fashion and trends change with the seasons, so articles on Outfit Edits are reviewed
+          and updated when needed to keep outfit ideas and styling advice current and useful.
+        </p>
+      </div>
+    </section>
+
+    {/* ══════════════════════════════════════════════════════════════════
+        7. BEHIND OUTFIT EDITS / MEET THE EDITOR
+        ══════════════════════════════════════════════════════════════════ */}
+    <section class="max-w-4xl mx-auto px-4 sm:px-6 pb-16 md:pb-24">
+      {editor ? (
+        <div class="flex flex-col md:flex-row items-center gap-8 md:gap-12 bg-white border border-neutral-200/70 p-6 md:p-10">
+          <img
+            src={editorAvatar}
+            alt={editor.name}
+            class="w-28 h-28 md:w-36 md:h-36 rounded-full object-cover shrink-0"
+            onerror="this.onerror=null; this.src='/images/placeholder.jpg';"
+          />
+          <div>
+            <p class="text-[10px] font-bold uppercase tracking-[0.35em] text-[#bba15c] mb-3">
+              Behind Outfit Edits
+            </p>
+            <h2 class="font-serif text-2xl md:text-3xl font-light text-neutral-950 mb-4">
+              Meet the Editor
+            </h2>
+            <p class="text-neutral-600 leading-relaxed font-light">
+              {editor.bio}
+            </p>
+          </div>
+        </div>
+      ) : (
+        <div class="bg-white border border-neutral-200/70 p-6 md:p-10 text-center">
+          <p class="text-[10px] font-bold uppercase tracking-[0.35em] text-[#bba15c] mb-3">
+            Behind Outfit Edits
+          </p>
+          <h2 class="font-serif text-2xl md:text-3xl font-light text-neutral-950 mb-4">
+            Behind Outfit Edits
+          </h2>
+          <p class="text-neutral-600 leading-relaxed font-light max-w-2xl mx-auto">
+            Outfit Edits is written and edited with one goal in mind: turning everyday wardrobes
+            into practical, wearable outfit ideas — without unnecessary complication.
+          </p>
+        </div>
+      )}
+    </section>
+
+    {/* ══════════════════════════════════════════════════════════════════
+        8. FIND YOUR NEXT LOOK — CTA
+        ══════════════════════════════════════════════════════════════════ */}
+    <section class="max-w-2xl mx-auto px-4 sm:px-6 text-center pb-16 md:pb-24">
+      <h2 class="text-3xl md:text-4xl font-serif font-light tracking-tight text-neutral-950 mb-4">
+        Find Your Next Look
+      </h2>
+      <p class="text-neutral-500 text-base md:text-lg leading-relaxed font-light mb-8">
+        Explore outfit ideas, style guides, and the latest fashion trends from Outfit Edits.
       </p>
-
-      <p>
-        Our articles are written with practical questions in mind. For
-        example, a reader looking for ways to style a particular pair of
-        shoes should be able to understand not only what to wear with them,
-        but also how color, proportions, layers, and occasion can affect
-        the overall outfit.
-      </p>
-
-      <p>
-        We also try to keep our recommendations approachable. Fashion is
-        personal, so our goal is not to suggest that there is only one
-        correct way to wear something. Instead, our guides provide starting
-        points that readers can adapt to their own preferences.
-      </p>
-
-      <!-- Reader First -->
-      <h2>Made for Real Wardrobes</h2>
-
-      <p>
-        Outfit inspiration is most useful when it can be translated into
-        real life. That is why we focus on combinations that can be adapted
-        using common wardrobe staples and pieces that readers may already
-        own.
-      </p>
-
-      <p>
-        Whether you are looking for a different way to wear your favorite
-        jeans, deciding what shoes work with an outfit, preparing for a
-        new season, or looking for a simple DIY project, our aim is to
-        give you ideas that are practical enough to try.
-      </p>
-
-      <!-- Categories -->
-      <h2>Explore Outfit Edits</h2>
-
-      <p>
-        You can explore our content through different fashion categories
-        and discover guides based on the type of clothing, occasion,
-        season, or styling question you are interested in.
-      </p>
-
-      <p>
-        <a href="/categories" class="underline">
-          Browse all fashion categories
+      <div class="flex flex-wrap items-center justify-center gap-4 md:gap-6">
+        <a href="/posts" class="inline-block bg-neutral-950 text-white text-[11px] uppercase tracking-[0.2em] font-medium px-7 py-4 hover:bg-[#bba15c] transition-colors duration-300 no-underline">
+          Explore Outfit Ideas
         </a>
-        to find more styling guides and outfit ideas.
-      </p>
+        <a href="/category/trends" class="inline-block text-[11px] uppercase tracking-[0.2em] font-medium text-neutral-950 border-b border-neutral-950/30 pb-1 hover:text-[#bba15c] hover:border-[#bba15c] transition-colors duration-300 no-underline">
+          Latest Trends →
+        </a>
+      </div>
+    </section>
 
-      <!-- Contact -->
-      <h2>Get in Touch</h2>
-
-      <p>
-        We welcome questions, feedback, corrections, and relevant
-        collaboration inquiries. If you would like to contact Outfit Edits,
-        please visit our
-        <a href="/contact" class="underline">Contact page</a>.
-      </p>
-
-      <p>
-        We value reader feedback because it helps us understand which
-        styling questions and fashion topics are most useful to cover.
-      </p>
-
-    </div>
-
-    <!-- Final note -->
-    <div class="mt-12 pt-8 border-t border-neutral-200">
-      <p class="text-sm text-neutral-500 leading-relaxed">
-        Outfit Edits is focused on practical fashion education and
-        inspiration. Individual style choices are personal, and our guides
-        are intended as ideas that readers can adapt to their own
-        preferences and circumstances.
-      </p>
-    </div>
+    {/* ══════════════════════════════════════════════════════════════════
+        9. GET IN TOUCH
+        ══════════════════════════════════════════════════════════════════ */}
+    <section class="max-w-3xl mx-auto px-4 sm:px-6 text-center pb-16 md:pb-24">
+      <div class="border-t border-neutral-200 pt-10 md:pt-14">
+        <h2 class="font-serif text-xl md:text-2xl font-light text-neutral-950 mb-3">
+          Get in Touch
+        </h2>
+        <p class="text-neutral-500 text-sm md:text-base leading-relaxed font-light mb-5 max-w-xl mx-auto">
+          Questions, feedback, corrections, or collaboration inquiries — we'd like to hear from
+          you.
+        </p>
+        <a href="/contact" class="inline-block text-[11px] uppercase tracking-[0.2em] font-medium text-neutral-950 border-b border-neutral-950/30 pb-1 hover:text-[#bba15c] hover:border-[#bba15c] transition-colors duration-300 no-underline">
+          Visit Our Contact Page →
+        </a>
+      </div>
+    </section>
 
   </main>
+
+  <Footer />
 </Layout>
