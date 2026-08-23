@@ -18,6 +18,7 @@ import {
   getPostsByTag,
   getCategoryBreadcrumb,
   getAllCategories,
+  getFeaturedPosts,
 } from '../../lib/keystatic-reader';
 
 export async function getStaticPaths() {
@@ -116,6 +117,19 @@ const showToc = tocItems.length >= 5;
 
 // Drop the final closing/wrap-up heading from the TOC (not useful to jump to)
 const tocDisplayItems = showToc ? tocItems.slice(0, -1) : [];
+
+// Tag each numbered idea/outfit section heading with its ordinal position
+// (same numbering already shown in the TOC above) so the article body can
+// give it an elegant number treatment — purely a data attribute, the
+// heading text itself is untouched.
+if (showToc) {
+  const numberedItems = tocDisplayItems.filter((item) => !/faq|frequently asked/i.test(item.text));
+  const idxById = new Map(numberedItems.map((item, i) => [item.id, i + 1]));
+  renderedContent = renderedContent.replace(
+    /<h2 id="([^"]+)">/g,
+    (match, id) => (idxById.has(id) ? `<h2 id="${id}" data-idx="${idxById.get(id)}">` : match)
+  );
+}
 
 // Build TOC HTML and inject it right before the first H2 (i.e. after the intro paragraph)
 if (showToc) {
@@ -265,6 +279,10 @@ const relatedPosts = await Promise.all(
     };
   })
 );
+
+// Used only to decide whether the "Trending Now" heading should render —
+// PopularPosts fetches and displays this same data itself.
+const trendingPosts = await getFeaturedPosts(5);
 ---
 
 <Layout
@@ -358,27 +376,9 @@ const relatedPosts = await Promise.all(
           />
         </div>
 
-        {/* ✍️ AUTHOR PROFILE EDITORIAL MODULE CARD */}
-        {author && (
-          <div class="mt-12 p-6 bg-white border border-neutral-200/30 shadow-sm/5 rounded-sm flex flex-col sm:flex-row items-center sm:items-start gap-5 text-center sm:text-left w-full block">
-            {author.avatar && (
-              <img
-                src={`/images/authors/${author.avatar}`}
-                alt={author.name}
-                width="64"
-                height="64"
-                loading="lazy"
-                decoding="async"
-                class="w-14 h-14 rounded-full object-cover border border-neutral-100 shrink-0 select-none pointer-events-none"
-              />
-            )}
-            <div class="space-y-1.5 w-full">
-              <p class="text-[10px] font-sans font-bold uppercase tracking-[0.25em] text-[#bba15c]">About the Author</p>
-              <p class="font-serif text-base font-light text-neutral-950">{author.name}</p>
-              <p class="text-xs text-neutral-500 font-light leading-relaxed max-w-xl break-words">{author.bio}</p>
-            </div>
-          </div>
-        )}
+        {/* Author info now lives in one place — the sidebar "Meet the
+            Author" card — so it isn't duplicated at the end of the
+            article. See the <aside> after </article> below. */}
       </div>
 
     </article>
@@ -459,13 +459,15 @@ const relatedPosts = await Promise.all(
       </section>
     )}
 
-    <section class="mt-16 pt-12 border-t border-neutral-200/40 max-w-7xl mx-auto w-full block">
-      <div class="text-center mb-10 md:mb-14 space-y-2">
-        <h3 class="text-[11px] font-sans tracking-[0.35em] uppercase text-neutral-950 font-bold">Trending Now</h3>
-        <div class="w-12 h-[1px] bg-[#bba15c] mx-auto"></div>
-      </div>
-      <PopularPosts />
-    </section>
+    {trendingPosts.length > 0 && (
+      <section class="mt-16 pt-12 border-t border-neutral-200/40 max-w-2xl mx-auto w-full block">
+        <div class="text-center mb-10 md:mb-14 space-y-2">
+          <h3 class="text-[11px] font-sans tracking-[0.35em] uppercase text-neutral-950 font-bold">Trending Now</h3>
+          <div class="w-12 h-[1px] bg-[#bba15c] mx-auto"></div>
+        </div>
+        <PopularPosts />
+      </section>
+    )}
 
   </main>
 
@@ -538,7 +540,7 @@ const relatedPosts = await Promise.all(
     const headings = contentDiv.querySelectorAll('h2');
     let faqHeading = null;
     headings.forEach((h) => {
-      if (!faqHeading && /faq/i.test(h.textContent || '')) faqHeading = h;
+      if (!faqHeading && /faq|frequently asked/i.test(h.textContent || '')) faqHeading = h;
     });
 
     if (faqHeading) {
@@ -644,16 +646,49 @@ const relatedPosts = await Promise.all(
   }
 
   /* ── Numbered idea/outfit sections ──────────────────────────────────────
-     Existing H2s already carry their own numbering in the text (e.g.
-     "Look 1: ..."). We add a subtle rule above each one so multi-idea
-     articles read as clearly separated sections without touching content. */
+     Headings tagged with data-idx (same ordinal already shown in the TOC)
+     get an elegant number treatment — a large outline numeral beside the
+     heading plus a stronger rule above each section. Purely decorative;
+     the heading text itself is untouched. */
   .fashion-prose-content h2 {
     position: relative;
   }
-  .fashion-prose-content h2:not(:first-child) {
+  .fashion-prose-content h2[data-idx] {
+    padding-top: 2.75rem !important;
+    margin-top: 3.5rem !important;
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+  }
+  .fashion-prose-content h2[data-idx]::before {
+    content: attr(data-idx);
+    flex-shrink: 0;
+    font-family: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif !important;
+    font-size: 1.15rem;
+    font-weight: 400;
+    line-height: 1;
+    color: #bba15c;
+    border: 1px solid #bba15c;
+    border-radius: 999px;
+    width: 2.25rem;
+    height: 2.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .fashion-prose-content h2[data-idx]::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 3rem;
+    height: 1px;
+    background: rgba(187, 161, 92, 0.35);
+  }
+  .fashion-prose-content h2:not([data-idx]):not(:first-child) {
     padding-top: 2.25rem !important;
   }
-  .fashion-prose-content h2:not(:first-child)::before {
+  .fashion-prose-content h2:not([data-idx]):not(:first-child)::before {
     content: '';
     position: absolute;
     top: 0;
@@ -661,6 +696,12 @@ const relatedPosts = await Promise.all(
     width: 2.5rem;
     height: 2px;
     background: #bba15c;
+  }
+  /* keep in-content images and their Pinterest-save frame evenly spaced
+     beneath each numbered heading */
+  .fashion-prose-content h2[data-idx] + .img-pin-wrapper,
+  .fashion-prose-content h2[data-idx] + p + .img-pin-wrapper {
+    margin-top: 1.5rem !important;
   }
 
   /* ── Tables ──────────────────────────────────────────────────────────── */
