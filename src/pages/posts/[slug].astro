@@ -554,11 +554,14 @@ const trendingPosts = await getFeaturedPosts(5);
     });
 
     function stripLabel(html, letter) {
-      // Removes a leading "Q1:", "Q:", "A2." style label and any wrapping
-      // <strong>/<em> tags left dangling around it, without touching the
-      // rest of the markup.
+      // Removes a leading "Q1:", "Q:", "A2." style label, tolerating any
+      // leading HTML whitespace entities (&#x20;, &nbsp;, &#32;) that
+      // sometimes precede the label, plus any wrapping <strong>/<em> tags.
+      const leadingWhitespace = /^(?:\s|&nbsp;|&#x20;|&#32;)+/i;
       return html
-        .replace(new RegExp(`^\\s*(?:<strong>|<em>)?\\s*${letter}\\d*[:.]?\\s*(?:</strong>|</em>)?\\s*`, 'i'), '')
+        .replace(leadingWhitespace, '')
+        .replace(new RegExp(`^(?:<strong>|<em>)?\\s*${letter}\\d*[:.]?\\s*(?:</strong>|</em>)?\\s*`, 'i'), '')
+        .replace(leadingWhitespace, '')
         .trim();
     }
 
@@ -616,12 +619,16 @@ const trendingPosts = await getFeaturedPosts(5);
             }
 
             if (answerNode && answerNode.tagName === 'P') {
-              const question = stripLabel(innerTrimmed, 'Q').replace(/^<strong>([\s\S]*)<\/strong>$/i, '$1').trim();
+              // Capture the sibling to resume from BEFORE removing answerNode —
+              // once a node is detached, .nextElementSibling is always null,
+              // which was silently truncating the loop after the first Q/A.
+              const afterAnswer = answerNode.nextElementSibling;
+              const question = node.textContent.replace(/^\s*Q\d*[:.]?\s*/i, '').trim();
               const answer = stripLabel(answerNode.innerHTML.trim(), 'A');
               const accordion = buildAccordion(question, answer);
               node.replaceWith(accordion);
               answerNode.remove();
-              node = answerNode.nextElementSibling;
+              node = afterAnswer;
               continue;
             }
           }
