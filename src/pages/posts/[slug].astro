@@ -123,7 +123,7 @@ const tocDisplayItems = showToc ? tocItems.slice(0, -1) : [];
 // give it an elegant number treatment — purely a data attribute, the
 // heading text itself is untouched.
 if (showToc) {
-  const numberedItems = tocDisplayItems.filter((item) => !/faq|frequently asked/i.test(item.text));
+  const numberedItems = tocDisplayItems.filter((item) => !/faq|frequently asked|question/i.test(item.text));
   const idxById = new Map(numberedItems.map((item, i) => [item.id, i + 1]));
   renderedContent = renderedContent.replace(
     /<h2 id="([^"]+)">/g,
@@ -545,7 +545,12 @@ const trendingPosts = await getFeaturedPosts(5);
     const headings = contentDiv.querySelectorAll('h2');
     let faqHeading = null;
     headings.forEach((h) => {
-      if (!faqHeading && /faq|frequently asked/i.test(h.textContent || '')) faqHeading = h;
+      // Matches "FAQ", "Frequently Asked Questions", and every real-world
+      // variant already used across articles — "...Questions, Answered",
+      // "Common Questions About...", "...Questions People Actually Ask",
+      // "...Questions Every Woman Asks", etc. — since "question" reliably
+      // signals this is the FAQ section regardless of exact phrasing.
+      if (!faqHeading && /faq|frequently asked|question/i.test(h.textContent || '')) faqHeading = h;
     });
 
     function stripLabel(html, letter) {
