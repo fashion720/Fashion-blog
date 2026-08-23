@@ -178,6 +178,17 @@ const formattedDate = entry.publishedDate
     })
   : '';
 
+// Only show an "Updated" date when one exists AND it actually differs from
+// the published date — otherwise it's just noise repeating the same date.
+const formattedUpdatedDate =
+  entry.updatedDate && entry.updatedDate !== entry.publishedDate
+    ? new Date(entry.updatedDate).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      })
+    : '';
+
 // 👑 UPGRADED METADATA PARSER: Direct content analysis loop (no duplicate variables)
 function getPostDescription(rawContent: string, length = 160) {
   if (!rawContent) return "Explore contemporary style and curated fashion insights inside this editorial.";
@@ -276,7 +287,7 @@ const relatedPosts = await Promise.all(
     <article class="w-full block">
       
       {/* 📋 NARROW STRUCTURE WRAPPER: Title Header block */}
-      <header class="text-center mb-10 md:mb-14 space-y-4 max-w-3xl mx-auto block">
+      <header class="text-center mb-8 md:mb-10 space-y-4 max-w-[720px] mx-auto block">
         {entry.categories && entry.categories.length > 0 && (
           <div class="flex justify-center gap-x-4 gap-y-1 items-center flex-wrap">
             {entry.categories.map((cat: string) => (
@@ -290,18 +301,40 @@ const relatedPosts = await Promise.all(
         <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-5.5xl font-serif font-light tracking-tight text-neutral-950 leading-[1.15] max-w-2xl mx-auto break-words">
           {entry.title}
         </h1>
-        
-        <div class="flex items-center justify-center gap-3 text-[10px] uppercase tracking-[0.2em] text-neutral-400 font-sans pt-2">
+
+        <div class="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[10px] uppercase tracking-[0.2em] text-neutral-400 font-sans pt-2">
           {author && <span class="font-bold text-neutral-800 tracking-widest">{author.name}</span>}
           {author && <span class="text-neutral-300">•</span>}
           <time datetime={entry.publishedDate}>{formattedDate}</time>
+          {formattedUpdatedDate && (
+            <>
+              <span class="text-neutral-300">•</span>
+              <span class="text-neutral-400 normal-case tracking-normal">Updated {formattedUpdatedDate}</span>
+            </>
+          )}
         </div>
         
         <div class="w-16 h-[1px] bg-[#bba15c] mx-auto pt-4"></div>
       </header>
 
-      {/* 📖 ARTICLE BODY: Standard narrow reading width (strict boundary framework) */}
-      <div class="max-w-2xl sm:max-w-3xl mx-auto block overflow-hidden w-full">
+      {/* 🖼️ FEATURED IMAGE: large editorial hero, framed to match in-article image treatment */}
+      {featuredImage && (
+        <div class="max-w-4xl mx-auto mb-10 md:mb-14 block w-full overflow-hidden border border-neutral-200/20 shadow-sm rounded-sm bg-white">
+          <img
+            src={featuredImage}
+            alt={entry.title}
+            width="1200"
+            height="800"
+            loading="eager"
+            decoding="async"
+            fetchpriority="high"
+            class="w-full h-auto object-cover block"
+          />
+        </div>
+      )}
+
+      {/* 📖 ARTICLE BODY: Standard narrow reading width (editorial column, ~720px) */}
+      <div class="max-w-[720px] mx-auto block overflow-hidden w-full">
         <div class="prose prose-neutral max-w-none fashion-prose-content block w-full break-words" set:html={renderedContent} />
 
         {/* 💸 IN-CONTENT SPONSORED PANEL BUFFER MAP */}
@@ -337,7 +370,8 @@ const relatedPosts = await Promise.all(
                 class="w-14 h-14 rounded-full object-cover border border-neutral-100 shrink-0 select-none pointer-events-none"
               />
             )}
-            <div class="space-y-1 w-full">
+            <div class="space-y-1.5 w-full">
+              <p class="text-[10px] font-sans font-bold uppercase tracking-[0.25em] text-[#bba15c]">About the Author</p>
               <p class="font-serif text-base font-light text-neutral-950">{author.name}</p>
               <p class="text-xs text-neutral-500 font-light leading-relaxed max-w-xl break-words">{author.bio}</p>
             </div>
@@ -446,6 +480,49 @@ const relatedPosts = await Promise.all(
 
       wrapper.appendChild(pinBtn);
     });
+
+    // ── FAQ → accordion ────────────────────────────────────────────────
+    // Finds an existing "FAQ" heading and progressively enhances the
+    // Q/A paragraphs beneath it into native <details>/<summary> accordion
+    // items. Content and copy are untouched — this only restructures how
+    // the same Q1:/A1: text already in the article is presented.
+    const headings = contentDiv.querySelectorAll('h2');
+    let faqHeading = null;
+    headings.forEach((h) => {
+      if (!faqHeading && /faq/i.test(h.textContent || '')) faqHeading = h;
+    });
+
+    if (faqHeading) {
+      let node = faqHeading.nextElementSibling;
+      while (node && node.tagName !== 'H2') {
+        const next = node.nextElementSibling;
+
+        if (node.tagName === 'P' && /<br\s*\/?>/i.test(node.innerHTML)) {
+          const [rawQ, rawA] = node.innerHTML.split(/<br\s*\/?>/i);
+          if (rawQ && rawA) {
+            const question = rawQ.replace(/^\s*Q\d*[:.]?\s*/i, '').trim();
+            const answer = rawA.replace(/^\s*A\d*[:.]?\s*/i, '').trim();
+
+            const details = document.createElement('details');
+            details.className = 'faq-item not-prose';
+
+            const summary = document.createElement('summary');
+            summary.className = 'faq-question';
+            summary.innerHTML = `<span>${question}</span><svg class="faq-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><line x1="10" y1="4" x2="10" y2="16"/><line x1="4" y1="10" x2="16" y2="10"/></svg>`;
+
+            const answerDiv = document.createElement('div');
+            answerDiv.className = 'faq-answer';
+            answerDiv.innerHTML = answer;
+
+            details.appendChild(summary);
+            details.appendChild(answerDiv);
+            node.replaceWith(details);
+          }
+        }
+
+        node = next;
+      }
+    }
   });
 </script>
 
@@ -515,5 +592,91 @@ const relatedPosts = await Promise.all(
     margin-bottom: 0.65rem !important;
     font-size: 15px !important;
     line-height: 1.8 !important;
+  }
+
+  /* ── Numbered idea/outfit sections ──────────────────────────────────────
+     Existing H2s already carry their own numbering in the text (e.g.
+     "Look 1: ..."). We add a subtle rule above each one so multi-idea
+     articles read as clearly separated sections without touching content. */
+  .fashion-prose-content h2 {
+    position: relative;
+  }
+  .fashion-prose-content h2:not(:first-child) {
+    padding-top: 2.25rem !important;
+  }
+  .fashion-prose-content h2:not(:first-child)::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 2.5rem;
+    height: 2px;
+    background: #bba15c;
+  }
+
+  /* ── Tables ──────────────────────────────────────────────────────────── */
+  .fashion-prose-content table {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    border-collapse: collapse !important;
+    font-size: 14px !important;
+    margin: 1.85rem 0 !important;
+  }
+  .fashion-prose-content th,
+  .fashion-prose-content td {
+    padding: 0.65rem 1rem !important;
+    border: 1px solid rgba(229, 231, 235, 0.7) !important;
+    text-align: left !important;
+    white-space: nowrap;
+  }
+  .fashion-prose-content th {
+    background: #F8F6F2 !important;
+    font-family: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif !important;
+    font-weight: 600 !important;
+    color: #0a0a0a !important;
+  }
+
+  /* ── FAQ accordion (progressively enhanced by script below) ────────────── */
+  .faq-item {
+    border-bottom: 1px solid rgba(229, 231, 235, 0.6);
+  }
+  .faq-item:first-child {
+    border-top: 1px solid rgba(229, 231, 235, 0.6);
+  }
+  .faq-question {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    text-align: left;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 1.1rem 0.15rem;
+    font-family: var(--font-sans, inherit);
+    font-size: 14.5px;
+    font-weight: 600;
+    color: #0a0a0a;
+  }
+  .faq-question .faq-icon {
+    flex-shrink: 0;
+    width: 18px;
+    height: 18px;
+    color: #bba15c;
+    transition: transform 0.25s ease;
+  }
+  .faq-item[open] .faq-question .faq-icon {
+    transform: rotate(45deg);
+  }
+  .faq-answer {
+    padding: 0 0.15rem 1.25rem;
+    font-size: 14.5px !important;
+    line-height: 1.85 !important;
+    color: #333333;
+    font-weight: 300;
   }
 </style>
