@@ -118,40 +118,47 @@ const showToc = tocItems.length >= 5;
 // Drop the final closing/wrap-up heading from the TOC (not useful to jump to)
 const tocDisplayItems = showToc ? tocItems.slice(0, -1) : [];
 
+// Strip a leading "Look 1:", "Outfit 2:", "14.", "Step 3:" style prefix so
+// neither the TOC nor the on-page heading shows double numbering
+// ("1. Look 1: ..." or a golden "14" badge next to a heading that already
+// says "14. Yearbook..."). The golden badge / <ol> already supplies the
+// number, so only the descriptive part of the title should remain.
+function stripLeadingNumberLabel(text: string) {
+  // Look for a short leading label (up to ~30 chars) ending in a colon/dash,
+  // e.g. "Look 1:", "Outfit 2:", "T Shirt 1:", "Item Name:", "Style #3 -",
+  // or a bare "14." / "14 -" numeral prefix.
+  const labelMatch = text.match(/^(.{1,30}?)[:.\-–—]\s*/);
+  if (!labelMatch) return text;
+  const label = labelMatch[1].trim();
+  const isGenericFiller = /^(item\s*name|item|look|outfit|idea|style|piece|design)$/i.test(label);
+  if (/\d/.test(label) || isGenericFiller) {
+    return text.slice(labelMatch[0].length).trim();
+  }
+  return text;
+}
+
 // Tag each numbered idea/outfit section heading with its ordinal position
 // (same numbering already shown in the TOC above) so the article body can
-// give it an elegant number treatment — purely a data attribute, the
-// heading text itself is untouched.
+// give it an elegant golden-number treatment, AND strip any leading
+// "14."/"Look 14:" style label from the heading text itself so the number
+// only appears once — in the golden badge — with the clean title name
+// right next to it.
 if (showToc) {
   const numberedItems = tocDisplayItems.filter((item) => !/faq|frequently asked|question/i.test(item.text));
   const idxById = new Map(numberedItems.map((item, i) => [item.id, i + 1]));
   renderedContent = renderedContent.replace(
-    /<h2 id="([^"]+)">/g,
-    (match, id) => (idxById.has(id) ? `<h2 id="${id}" data-idx="${idxById.get(id)}">` : match)
+    /<h2 id="([^"]+)">([\s\S]*?)<\/h2>/g,
+    (match, id, inner) => {
+      if (!idxById.has(id)) return match;
+      const idx = idxById.get(id);
+      const cleanedInner = stripLeadingNumberLabel(inner);
+      return `<h2 id="${id}" data-idx="${idx}">${cleanedInner}</h2>`;
+    }
   );
 }
 
 // Build TOC HTML and inject it right before the first H2 (i.e. after the intro paragraph)
 if (showToc) {
-  // Strip a leading "Look 1:", "Outfit 2:", "Step 3:" style prefix so the
-  // TOC doesn't show double numbering ("1. Look 1: ...") — the <ol> already
-  // supplies the number, so only the descriptive part of the title is kept.
-  function stripLeadingNumberLabel(text: string) {
-    // Look for a short leading label (up to ~30 chars) ending in a colon/dash,
-    // e.g. "Look 1:", "Outfit 2:", "T Shirt 1:", "Item Name:", "Style #3 -".
-    // Strip it when it either contains a digit (redundant with the <ol>
-    // number) OR is one of a handful of known filler labels that carry no
-    // real information ("Item Name:" repeated identically on every heading).
-    const labelMatch = text.match(/^(.{1,30}?)[:.\-–—]\s*/);
-    if (!labelMatch) return text;
-    const label = labelMatch[1].trim();
-    const isGenericFiller = /^(item\s*name|item|look|outfit|idea|style|piece|design)$/i.test(label);
-    if (/\d/.test(label) || isGenericFiller) {
-      return text.slice(labelMatch[0].length).trim();
-    }
-    return text;
-  }
-
   const tocListItems = tocDisplayItems
     .map(
       (item) =>
