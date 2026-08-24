@@ -1,55 +1,31 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
 
-const pageTitle = "Contact Us | Outfit Edits";
-const pageDescription = "Get in touch with the Outfit Edits team for collaborations, questions, or feedback.";
-const lastUpdated = "July 1, 2026";
+const pageTitle = 'Contact Us | Outfit Edits';
+const pageDescription = 'Contact Outfit Edits for general questions, editorial feedback, corrections, and partnerships.';
+const lastUpdated = 'July 1, 2026';
+const email = 'contact@outfitedits.com';
 ---
 
 <Layout title={pageTitle} description={pageDescription}>
-  <main class="max-w-3xl mx-auto px-4 py-12">
-    <h1 class="text-3xl md:text-4xl font-bold mb-2">Contact Us</h1>
-    <p class="text-sm text-gray-600 mb-6">Last updated: {lastUpdated}</p>
+  <Header currentPath="/contact" />
+  <main class="min-h-screen overflow-x-hidden bg-[#F8F6F2] px-4 pb-20 text-neutral-900 sm:px-6 lg:px-8">
+    <div class="mx-auto max-w-4xl">
+      <header class="border-b border-neutral-200/70 py-12 md:py-20"><p class="mb-4 text-[10px] font-bold uppercase tracking-[0.3em] text-[#bba15c]">Outfit Edits / Contact</p><h1 class="font-serif text-4xl font-light leading-tight text-neutral-950 md:text-6xl">Contact Us</h1><p class="mt-6 max-w-2xl text-base font-light leading-relaxed text-neutral-600">Questions, editorial feedback, corrections, and partnership enquiries are welcome.</p><p class="mt-5 text-xs uppercase tracking-[0.15em] text-neutral-400">Last updated: {lastUpdated}</p></header>
 
-    <div class="prose prose-lg max-w-none">
-      <p>
-        We would love to hear from you. Whether you have a question about
-        one of our posts, a collaboration or partnership idea, or general
-        feedback about Outfit Edits, reach out using the details below.
-      </p>
+      <section class="border-b border-neutral-200/70 py-10 md:py-14"><p class="max-w-2xl text-lg font-light leading-relaxed text-neutral-700">For all enquiries, email the Outfit Edits team at <a href={`mailto:${email}`} class="border-b border-neutral-950/30 font-medium text-neutral-950 hover:text-[#bba15c]">{email}</a>. This is the existing contact method for the publication.</p></section>
 
-      <h2 class="text-2xl font-semibold mt-8 mb-3">Email</h2>
-      <p>
-        For all inquiries, including collaborations, advertising, and
-        general questions, email us at:
-        <br />
-        <a href="mailto:contact@outfitedits.com" class="underline font-medium">
-          contact@outfitedits.com
-        </a>
-      </p>
+      <div class="divide-y divide-neutral-200/70">
+        <section class="grid gap-4 py-9 md:grid-cols-[0.8fr_1.2fr] md:gap-12 md:py-12"><h2 class="font-serif text-2xl font-light text-neutral-950 md:text-3xl">General Questions</h2><p class="text-base font-light leading-relaxed text-neutral-600">For general questions about Outfit Edits, our guides, or the topics we cover, please email <a href={`mailto:${email}`} class="underline underline-offset-4">{email}</a>.</p></section>
+        <section class="grid gap-4 py-9 md:grid-cols-[0.8fr_1.2fr] md:gap-12 md:py-12"><h2 class="font-serif text-2xl font-light text-neutral-950 md:text-3xl">Editorial / Content</h2><p class="text-base font-light leading-relaxed text-neutral-600">Questions about a specific article, a styling topic, or content you would like to see can be sent to the same editorial contact. Please include the relevant article URL when applicable.</p></section>
+        <section class="grid gap-4 py-9 md:grid-cols-[0.8fr_1.2fr] md:gap-12 md:py-12"><h2 class="font-serif text-2xl font-light text-neutral-950 md:text-3xl">Corrections</h2><p class="text-base font-light leading-relaxed text-neutral-600">If you notice an error in an article, email <a href={`mailto:${email}`} class="underline underline-offset-4">{email}</a> with the article URL and a description of the correction. This helps the editorial team review the issue.</p></section>
+        <section class="grid gap-4 py-9 md:grid-cols-[0.8fr_1.2fr] md:gap-12 md:py-12"><h2 class="font-serif text-2xl font-light text-neutral-950 md:text-3xl">Partnerships</h2><p class="text-base font-light leading-relaxed text-neutral-600">For collaboration, advertising, or sponsorship enquiries, please email <a href={`mailto:${email}`} class="underline underline-offset-4">{email}</a> and include as much relevant detail as possible.</p></section>
+      </div>
 
-      <h2 class="text-2xl font-semibold mt-8 mb-3">Editorial Team</h2>
-      <p>
-        Outfit Edits is edited by Sara Khan, our Lead Fashion Writer and
-        Style Editor. For questions about a specific article, a correction,
-        or a styling topic you'd like us to cover, the email above reaches
-        our editorial team directly.
-      </p>
-
-      <h2 class="text-2xl font-semibold mt-8 mb-3">Response Time</h2>
-      <p>
-        We try to respond to all messages within two to three business
-        days. For collaboration or sponsorship requests, please include
-        as much detail as possible so we can get back to you quickly.
-      </p>
-
-      <h2 class="text-2xl font-semibold mt-8 mb-3">Follow Along</h2>
-      <p>
-        You can also find our latest outfit ideas and updates on
-        Pinterest, and connect with us through the social links in our
-        footer. We regularly post new pins and updates linking back to
-        our guides and styling tips.
-      </p>
+      <section class="border-t border-neutral-200/70 py-10 md:py-14"><h2 class="font-serif text-2xl font-light text-neutral-950 md:text-3xl">Response Time</h2><p class="mt-4 max-w-2xl text-base font-light leading-relaxed text-neutral-600">We try to respond to messages within two to three business days. Response times may vary depending on the nature of the enquiry.</p></section>
     </div>
   </main>
+  <Footer />
 </Layout>
