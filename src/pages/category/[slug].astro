@@ -2,332 +2,175 @@
 import Layout from '../../layouts/Layout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
-import PostCard from '../../components/PostCard.astro';
-import CompactPostRow from '../../components/CompactPostRow.astro';
 import { getAllCategories, getPostsByCategory } from '../../lib/keystatic-reader';
 
 export async function getStaticPaths() {
   const categories = await getAllCategories();
-  return categories.map((cat) => ({
-    params: { slug: cat.slug },
-    props: { category: cat, allCategories: categories },
-  }));
+  return Promise.all(categories.map(async (category) => ({
+    params: { slug: category.slug },
+    props: { category, allCategories: categories, posts: await getPostsByCategory(category.slug) },
+  })));
 }
 
-const { category, allCategories = [] } = Astro.props;
-const posts = await getPostsByCategory(category.slug);
+const { category, allCategories = [], posts = [] } = Astro.props;
+const parent = category.entry.parentCategory
+  ? allCategories.find((item) => item.slug === category.entry.parentCategory)
+  : null;
+const children = allCategories.filter((item) => item.entry.parentCategory === category.slug);
 
-// 1. Identify Parent/Child relationships cleanly
-const isParentCategory = !category.entry.parentCategory;
-const childCategories = allCategories.filter(
-  (cat) => cat.entry.parentCategory === category.slug
-);
-
-// 👑 PURE TEXT IMAGE EXTRACTOR: MDX text se automatic pehli image ka src nikalega (Nayi + Purani sab k liye)
 async function getPostImage(post: any) {
-  const rawContent = (await post.entry.content()) as string;
-  if (!rawContent) return '/images/placeholder.jpg';
-
-  // Fallback 1: Agar sections matrix bana ho
-  if (post.entry.sections && post.entry.sections[0]?.image) {
-    const img = post.entry.sections[0].image;
-    return img.startsWith('/') ? img : `/images/posts/${img}`;
-  }
-
-  // Fallback 2: Pure Markdown image syntax check karo -> ![alt](url)
-  const match = rawContent.match(/!\[.*?\]\((.*?)\)/);
-  if (match && match[1]) {
-    return match[1].trim();
-  }
-
-  return '/images/placeholder.jpg';
+  const content = (await post.entry.content()) as string;
+  const match = content?.match(/!\[.*?\]\((.*?)\)/);
+  return match?.[1]?.trim() || '/images/placeholder.jpg';
 }
 
-// 👑 AUTOMATIC TEXT EXTRACTOR: Strips markdown syntax and slices the first sentences as description overview
-async function getPostDescription(post: any, length = 120) {
-  const rawContent = (await post.entry.content()) as string;
-  if (!rawContent) return "Explore contemporary style and curated fashion insights inside this editorial.";
-  
-  const cleanText = rawContent
-    .replace(/[#*_`~]/g, '') // Remove formatting characters
-    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // Keep link text, remove URL formatting
-    .replace(/^[-\s]*\n/gm, '') // Remove linebreaks
+async function getPostDescription(post: any, length = 145) {
+  const content = (await post.entry.content()) as string;
+  const clean = (content || 'Explore contemporary style and curated fashion insights inside this editorial.')
+    .replace(/[#*_`~]/g, '')
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+    .replace(/^[-\s]*\n/gm, '')
     .trim();
-
-  return cleanText.length > length ? `${cleanText.substring(0, length)}...` : cleanText;
+  return clean.length > length ? `${clean.substring(0, length)}…` : clean;
 }
 
-// 👑 VISUAL RHYTHM SEGMENT 1: 45/55 EDITORIAL SPLIT HERO (Latest post inside this scope)
-const heroPost = isParentCategory && posts.length > 0 ? posts[0] : null;
-const heroSlug = heroPost ? [heroPost.slug] : [];
-const heroDesc = heroPost ? await getPostDescription(heroPost, 140) : '';
-const heroImg = heroPost ? await getPostImage(heroPost) : '/images/placeholder.jpg';
-
-// 2. Collect child posts mapping while executing zero-duplicate global filtration
-const childSections = isParentCategory
-  ? await Promise.all(
-      childCategories.map(async (child) => {
-        const childPosts = await getPostsByCategory(child.slug);
-        const filteredChildPosts = childPosts.filter((p) => !heroSlug.includes(p.slug));
-        
-        // Resolve dynamic descriptions AND images asynchronously inside the nested collection streams
-        const childPostsWithData = await Promise.all(
-          filteredChildPosts.map(async (p) => {
-            const desc = await getPostDescription(p, 120);
-            const img = await getPostImage(p);
-            return { ...p, dynamicDesc: desc, dynamicImg: img };
-          })
-        );
-
-        return { childCategory: child, posts: childPostsWithData };
-      })
-    )
-  : [];
-
-const activeChildSections = childSections.filter((sec) => sec.posts.length > 0);
-
-// Resolve direct standalone posts with descriptions AND images if user lands on a child category view leaf directly
-const directPostsWithData = !isParentCategory
-  ? await Promise.all(
-      posts.map(async (p) => {
-        const desc = await getPostDescription(p, 120);
-        const img = await getPostImage(p);
-        return { ...p, dynamicDesc: desc, dynamicImg: img };
-      })
-    )
-  : [];
+const enrichedPosts = await Promise.all(posts.map(async (post: any) => ({
+  ...post,
+  image: await getPostImage(post),
+  excerpt: await getPostDescription(post),
+})));
+const featured = enrichedPosts[0];
+const stories = enrichedPosts.slice(1);
+const baseUrl = `/category/${category.slug}`;
+const breadcrumb = [
+  { label: 'Home', href: '/' },
+  { label: 'Categories', href: '/categories/' },
+  ...(parent ? [{ label: parent.entry.name, href: `/category/${parent.slug}/` }] : []),
+  { label: category.entry.name, href: `${baseUrl}/` },
+];
 ---
 
 <Layout
   title={`${category.entry.name} — Fashion Editorial`}
   description={category.entry.description || `Explore contemporary styles inside ${category.entry.name}`}
 >
-  <Header currentPath={`/category/${category.slug}`} />
+  <Header currentPath={baseUrl} />
 
-  <main class="min-h-screen bg-[#F8F6F2] text-neutral-900 font-sans antialiased max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16 overflow-x-hidden w-full block">
-    
-    {/* 📋 ARCHIVE TYPE INTROHEADER HEADER */}
-    <header class="text-center py-10 md:py-14 border-b border-neutral-200/40">
-      <span class="text-[10px] tracking-[0.35em] uppercase text-neutral-400 block mb-2">Category Explore</span>
-      <h1 class="text-3xl md:text-5xl font-serif tracking-[0.15em] uppercase text-neutral-950 font-light">
-        {category.entry.name}
-      </h1>
-      {category.entry.description && (
-        <p class="text-neutral-500 max-w-xl mx-auto text-xs md:text-sm font-light leading-relaxed pt-2">
-          {category.entry.description}
-        </p>
+  <main class="min-h-screen overflow-x-hidden bg-[#F8F6F2] px-4 pb-20 text-neutral-900 sm:px-6 lg:px-8">
+    <div class="mx-auto max-w-7xl">
+      <nav aria-label="Breadcrumb" class="flex flex-wrap gap-2 pt-7 text-[10px] uppercase tracking-[0.16em] text-neutral-400">
+        {breadcrumb.map((item, index) => (
+          <span class="flex items-center gap-2">
+            {index > 0 && <span aria-hidden="true">/</span>}
+            {index === breadcrumb.length - 1 ? <span class="text-neutral-950">{item.label}</span> : <a href={item.href} class="transition-colors hover:text-neutral-950">{item.label}</a>}
+          </span>
+        ))}
+      </nav>
+
+      <header class="border-b border-neutral-200/70 py-10 text-center md:py-14">
+        <span class="mb-3 block text-[10px] uppercase tracking-[0.3em] text-neutral-400">Fashion Editorial / Archive</span>
+        <h1 class="font-serif text-3xl font-light uppercase tracking-[0.14em] text-neutral-950 md:text-5xl">{category.entry.name}</h1>
+        {category.entry.description && <p class="mx-auto max-w-2xl pt-4 text-sm font-light leading-relaxed text-neutral-500">{category.entry.description}</p>}
+        {children.length > 0 && (
+          <nav aria-label="Subcategories" class="mt-7 flex flex-wrap justify-center gap-x-5 gap-y-3 text-[10px] uppercase tracking-[0.18em]">
+            <a href={`${baseUrl}/`} class="border-b border-neutral-950 pb-1 text-neutral-950">All</a>
+            {children.map((child) => <a href={`/category/${child.slug}/`} class="pb-1 text-neutral-500 transition-colors hover:text-neutral-950">{child.entry.name}</a>)}
+          </nav>
+        )}
+      </header>
+
+      {featured ? (
+        <section class="grid items-center gap-8 border-b border-neutral-200/70 py-9 md:py-14 lg:grid-cols-[1.12fr_0.88fr] lg:gap-14">
+          <a href={`/posts/${featured.slug}/`} class="group relative block aspect-[4/3] overflow-hidden bg-neutral-200 no-underline md:aspect-[16/10]">
+            <img src={featured.image} alt={featured.entry.title} loading="eager" fetchpriority="high" class="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" onerror="this.onerror=null; this.src='/images/placeholder.jpg';" />
+          </a>
+          <div class="max-w-xl">
+            <span class="mb-3 block text-[10px] font-bold uppercase tracking-[0.24em] text-[#bba15c]">Featured Story</span>
+            <h2 class="font-serif text-3xl font-light leading-tight text-neutral-950 md:text-5xl">{featured.entry.title}</h2>
+            <p class="mt-5 text-sm font-light leading-relaxed text-neutral-500">{featured.excerpt}</p>
+            <a href={`/posts/${featured.slug}/`} class="mt-6 inline-block border-b border-neutral-950/30 pb-1 text-[10px] font-medium uppercase tracking-[0.2em] text-neutral-950 transition-colors hover:border-[#bba15c] hover:text-[#bba15c]">Read Story →</a>
+          </div>
+        </section>
+      ) : (
+        <section class="border-b border-neutral-200/70 py-20 text-center text-sm font-light text-neutral-500">No stories published in this collection yet.</section>
       )}
-      <div class="w-16 h-[1px] bg-[#bba15c] mx-auto mt-4"></div>
-    </header>
 
-    {isParentCategory ? (
-      <div class="pb-16 w-full block">
-        
-        {/* 👑 VISUAL RHYTHM SEGMENT 1: OPTIMIZED 45/55 EDITORIAL SPLIT HERO */}
-        {heroPost && (
-          <section class="py-8 md:py-16 border-b border-neutral-200/40 w-full max-w-full block overflow-hidden">
-            <div class="grid grid-cols-1 lg:grid-cols-[45fr_55fr] gap-x-12 lg:gap-x-20 gap-y-6 items-center w-full">
-              
-              {/* 🔥 FIXED HERO COVER FRAME: Stretch rule kills lat white zones */}
-              <div class="overflow-hidden w-full aspect-[4/5] bg-white p-2 md:p-3 border border-neutral-200/20 shadow-sm rounded-sm relative containment-layout group block select-none shrink-0">
-                <a href={`/posts/${heroPost.slug}/`} class="absolute inset-0 w-full h-full pointer-events-auto block">
-                  <img
-                    src={heroImg}
-                    alt={heroPost.entry.title}
-                    data-pin-nopin="true"
-                    data-pin-nohover="true"
-                    loading="eager"
-                    fetchpriority="high"
-                    class="w-full h-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-103 block select-none z-10 absolute inset-0 min-w-full min-h-full"
-                    onerror="this.onerror=null; this.src='/images/placeholder.jpg';"
-                  />
-                </a>
-              </div>
-
-              <div class="space-y-3 md:space-y-4 text-left w-full block overflow-hidden">
-                <span class="block text-[10px] font-bold uppercase tracking-[0.3em] text-[#bba15c]">
-                  Latest Feature
-                </span>
-                <a href={`/posts/${heroPost.slug}/`} class="block no-underline group max-w-full">
-                  <h2 class="text-2xl sm:text-3xl md:text-4xl font-serif font-light tracking-tight text-neutral-950 leading-tight group-hover:text-neutral-700 transition-colors duration-300 line-clamp-2">
-                    {heroPost.entry.title}
-                  </h2>
-                </a>
-                <p class="text-neutral-500 text-xs md:text-[15px] leading-relaxed font-light line-clamp-3 w-full">
-                  {heroDesc}
-                </p>
-                <div class="pt-2">
-                  <a href={`/posts/${heroPost.slug}/`} class="inline-block text-xs uppercase tracking-[0.2em] font-medium border-b border-neutral-950/20 pb-1 text-neutral-950 hover:text-[#bba15c] hover:border-[#bba15c] transition-all duration-300 no-underline group">
-                    Read Article <span class="inline-block transition-transform duration-300 group-hover:translate-x-1">→</span>
-                  </a>
-                </div>
-              </div>
-
-            </div>
-          </section>
-        )}
-
-        {/* 🎨 CHILD CATEGORIES LOOP WITH THEME INTERCHANGES */}
-        {activeChildSections.length > 0 ? (
-          activeChildSections.map(({ childCategory, posts: childPosts }, index) => {
-            const isFirstChild = index === 0;
-            const displayPosts = isFirstChild ? childPosts.slice(0, 2) : childPosts.slice(0, 4);
-
-            if (displayPosts.length === 0) return null;
-
-            return (
-              <section class="py-10 md:py-20 border-b border-neutral-200/40 last:border-0 w-full max-w-full block overflow-hidden">
-                <div class="text-center mb-8 md:mb-16 space-y-2">
-                  <h3 class="text-[11px] font-sans tracking-[0.35em] uppercase text-neutral-950 font-bold">
-                    {childCategory.entry.name}
-                  </h3>
-                  <div class="w-12 h-[1px] bg-[#bba15c] mx-auto"></div>
-                </div>
-
-                {isFirstChild ? (
-                  /* 🎭 RHYTHM STYLE A: 2 Large Cards Editorial Grid Layout */
-                  <div class="w-full">
-                    <div class="hidden md:grid grid-cols-2 gap-10 max-w-5xl mx-auto w-full">
-                      {displayPosts.map((post) => (
-                        <a href={`/posts/${post.slug}/`} class="block no-underline group bg-white p-4 border border-neutral-200/30 shadow-sm transition-all duration-300 hover:shadow rounded-sm space-y-4 w-full box-border overflow-hidden flex flex-col">
-                          {/* 🔥 FIXED ROW FRAME: Absolute crop system system */}
-                          <div class="overflow-hidden w-full aspect-[4/5] bg-neutral-100 rounded-[1px] relative containment-layout shrink-0 select-none">
-                            <img
-                              src={post.dynamicImg}
-                              alt={post.entry.title}
-                              data-pin-nopin="true"
-                              data-pin-nohover="true"
-                              loading="lazy"
-                              class="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-102 absolute inset-0 min-w-full min-h-full"
-                              onerror="this.onerror=null; this.src='/images/placeholder.jpg';"
-                            />
-                          </div>
-                          <div class="space-y-1.5 text-left pt-1 w-full flex-1">
-                            <span class="block text-[9px] font-bold uppercase tracking-[0.2em] text-[#bba15c]">
-                              {childCategory.entry.name}
-                            </span>
-                            <h4 class="text-lg md:text-xl font-serif font-light text-neutral-950 leading-tight group-hover:text-neutral-700 transition-colors line-clamp-2">
-                              {post.entry.title}
-                            </h4>
-                            <p class="text-neutral-500 text-xs leading-relaxed line-clamp-2 font-light break-words">
-                              {post.dynamicDesc}
-                            </p>
-                          </div>
-                        </a>
-                      ))}
-                    </div>
-
-                    <div class="block md:hidden space-y-6 w-full max-w-full overflow-hidden">
-                      {displayPosts.map((post) => (
-                        <CompactPostRow
-                          title={post.entry.title}
-                          slug={post.slug}
-                          description={post.dynamicDesc}
-                          featuredImage={post.dynamicImg}
-                          categories={post.entry.categories}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                ) : (
-                  /* 🎭 RHYTHM STYLE B: Self Balancing Secure Column Grid Framework */
-                  <div class="w-full">
-                    <div class={`hidden md:grid gap-6 w-full ${displayPosts.length === 1 ? 'grid-cols-1 max-w-xl mx-auto' : displayPosts.length === 2 ? 'grid-cols-2 max-w-4xl mx-auto' : displayPosts.length === 3 ? 'grid-cols-3 max-w-6xl mx-auto' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'}`}>
-                      {displayPosts.map((post) => (
-                        <PostCard
-                          title={post.entry.title}
-                          slug={post.slug}
-                          description={post.dynamicDesc}
-                          featuredImage={post.dynamicImg}
-                          publishedDate={post.entry.publishedDate}
-                          categories={post.entry.categories}
-                        />
-                      ))}
-                    </div>
-
-                    <div class="block md:hidden space-y-6 w-full max-w-full overflow-hidden">
-                      {displayPosts.map((post) => (
-                        <CompactPostRow
-                          title={post.entry.title}
-                          slug={post.slug}
-                          description={post.dynamicDesc}
-                          featuredImage={post.dynamicImg}
-                          categories={post.entry.categories}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </section>
-            );
-          })
-        ) : (
-          /* FALLBACK SEGMENT */
-          <section class="py-10 md:py-16 w-full max-w-full block overflow-hidden">
-            <div class="hidden md:grid grid-cols-3 gap-8 w-full">
-              {posts.slice(1).map(async (post) => (
-                <PostCard
-                  title={post.entry.title}
-                  slug={post.slug}
-                  description="Explore contemporary style and curated fashion insights inside this editorial."
-                  featuredImage={await getPostImage(post)}
-                  publishedDate={post.entry.publishedDate}
-                  categories={post.entry.categories}
-                />
-              ))}
-            </div>
-          </section>
-        )}
-
-      </div>
-    ) : (
-      /* 📂 CHILD CATEGORY LEAF STREAM DIRECTORY VIEW */
-      <div class="py-10 md:py-16 w-full block">
-        {directPostsWithData.length > 0 ? (
-          <div class="w-full">
-            <div class="hidden md:grid grid-cols-3 gap-8 w-full">
-              {directPostsWithData.map((post) => (
-                <PostCard
-                  title={post.entry.title}
-                  slug={post.slug}
-                  description={post.dynamicDesc}
-                  featuredImage={post.dynamicImg}
-                  publishedDate={post.entry.publishedDate}
-                  categories={post.entry.categories}
-                />
-              ))}
-            </div>
-
-            <div class="block md:hidden space-y-6 w-full max-w-full overflow-hidden">
-              {directPostsWithData.map((post) => (
-                <CompactPostRow
-                  title={post.entry.title}
-                  slug={post.slug}
-                  description={post.dynamicDesc}
-                  featuredImage={post.dynamicImg}
-                  categories={post.entry.categories}
-                />
-              ))}
-            </div>
+      {stories.length > 0 && (
+        <section class="pt-10">
+          <div class="mb-7 flex items-end justify-between border-b border-neutral-200/70 pb-3">
+            <h2 class="font-serif text-2xl font-light text-neutral-950">Latest in the Collection</h2>
+            <span class="text-[10px] uppercase tracking-[0.16em] text-neutral-400">{posts.length} {posts.length === 1 ? 'Story' : 'Stories'}</span>
           </div>
-        ) : (
-          <div class="text-center py-24 text-neutral-400 font-light text-sm tracking-wide">
-            <p>No posts published inside this collection stream yet.</p>
+
+          <div id="category-story-grid" class="grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
+            {stories.map((post: any, index: number) => (
+              <article data-story-index={index} class="group flex min-w-0 flex-col overflow-hidden border border-neutral-200/60 bg-white p-4 transition-shadow duration-300 hover:shadow-sm">
+                <a href={`/posts/${post.slug}/`} class="relative block aspect-[4/5] overflow-hidden bg-neutral-100 no-underline">
+                  <img src={post.image} alt={post.entry.title} loading="lazy" decoding="async" class="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" onerror="this.onerror=null; this.src='/images/placeholder.jpg';" />
+                </a>
+                <div class="flex flex-1 flex-col pt-5">
+                  {post.entry.categories?.length > 0 && <span class="mb-2 block text-[10px] font-bold uppercase tracking-[0.2em] text-[#bba15c]">{post.entry.categories[0].replace(/-/g, ' ')}</span>}
+                  <a href={`/posts/${post.slug}/`} class="no-underline"><h3 class="line-clamp-2 min-h-[3.2rem] font-serif text-xl font-light leading-tight text-neutral-950 transition-colors group-hover:text-neutral-600">{post.entry.title}</h3></a>
+                  <p class="mt-3 line-clamp-2 text-xs font-light leading-relaxed text-neutral-500">{post.excerpt}</p>
+                  <div class="mt-auto flex items-center justify-between border-t border-neutral-100 pt-4">
+                    <time datetime={post.entry.publishedDate} class="text-[10px] uppercase tracking-[0.14em] text-neutral-400">{new Date(post.entry.publishedDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</time>
+                    <a href={`/posts/${post.slug}/`} class="text-[10px] uppercase tracking-[0.14em] text-neutral-700 transition-colors hover:text-[#bba15c]">Read Story →</a>
+                  </div>
+                </div>
+              </article>
+            ))}
           </div>
-        )}
-      </div>
-    )}
+
+          <div id="category-pagination" class="mt-14 flex flex-wrap items-center justify-center gap-2 border-t border-neutral-200/60 pt-8 text-[10px] uppercase tracking-[0.16em]"></div>
+        </section>
+      )}
+    </div>
   </main>
 
   <Footer />
 </Layout>
 
-<style is:global>
-  html, body {
-    max-width: 100% !important;
-    overflow-x: hidden !important;
+<script>
+  const pageSize = 12;
+  const grid = document.querySelector<HTMLElement>('#category-story-grid');
+  const pagination = document.querySelector<HTMLElement>('#category-pagination');
+  const cards = grid ? Array.from(grid.querySelectorAll<HTMLElement>('[data-story-index]')) : [];
+  const totalPages = Math.max(1, Math.ceil(cards.length / pageSize));
+  const params = new URLSearchParams(window.location.search);
+  let currentPage = Math.min(Math.max(Number(params.get('page') || '1'), 1), totalPages);
+
+  function renderPage(page: number) {
+    currentPage = page;
+    cards.forEach((card, index) => {
+      card.hidden = index < (page - 1) * pageSize || index >= page * pageSize;
+    });
+    if (!pagination || totalPages <= 1) return;
+    pagination.innerHTML = '';
+    const addLink = (label: string, target: number, disabled = false) => {
+      const element = document.createElement(disabled ? 'span' : 'a');
+      element.textContent = label;
+      element.className = disabled ? 'px-3 py-2 text-neutral-300' : 'cursor-pointer px-3 py-2 text-neutral-500 transition-colors hover:text-neutral-950';
+      if (!disabled) {
+        element.setAttribute('href', `${window.location.pathname}?page=${target}`);
+        element.addEventListener('click', (event) => { event.preventDefault(); renderPage(target); history.pushState({}, '', `${window.location.pathname}?page=${target}`); window.scrollTo({ top: 0, behavior: 'smooth' }); });
+      }
+      pagination.appendChild(element);
+    };
+    addLink('Previous', page - 1, page === 1);
+    for (let number = 1; number <= totalPages; number += 1) {
+      const element = document.createElement(number === page ? 'span' : 'a');
+      element.textContent = String(number);
+      element.className = number === page ? 'min-w-8 border border-neutral-950 px-3 py-2 text-center text-neutral-950' : 'min-w-8 cursor-pointer border border-transparent px-3 py-2 text-center text-neutral-500 hover:border-neutral-200';
+      if (number !== page) element.addEventListener('click', () => { renderPage(number); history.pushState({}, '', `${window.location.pathname}?page=${number}`); window.scrollTo({ top: 0, behavior: 'smooth' }); });
+      pagination.appendChild(element);
+    }
+    addLink('Next', page + 1, page === totalPages);
   }
-  .containment-layout {
-    contain: paint !important;
-  }
+
+  renderPage(currentPage);
+  window.addEventListener('popstate', () => renderPage(Number(new URLSearchParams(window.location.search).get('page') || '1')));
+</script>
+
+<style>
+  [data-story-index][hidden] { display: none; }
 </style>
