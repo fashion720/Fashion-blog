@@ -345,6 +345,26 @@ function isGroupActive(group: (typeof resolvedNavGroups)[number]) {
     else openMobileSearch();
   });
 
+  // Desktop search: focus on open and close on outside click.
+  const desktopToggle = document.getElementById('header-search-toggle') as HTMLInputElement | null;
+  const desktopSearchForm = document.querySelector('form[action="/search"]');
+  desktopToggle?.addEventListener('change', () => {
+    if (desktopToggle.checked) {
+      window.setTimeout(() => desktopSearchForm?.querySelector('input')?.focus(), 50);
+      closeMobileMenu();
+      closeMobileSearch();
+    }
+  });
+  document.addEventListener('click', (event) => {
+    const target = event.target as Node;
+    if (desktopToggle?.checked && desktopSearchForm && !desktopSearchForm.contains(target) && !desktopToggle.parentElement?.contains(target)) {
+      desktopToggle.checked = false;
+    }
+    if (searchBar && !searchBar.classList.contains('hidden') && !searchBar.contains(target) && !searchButton?.contains(target)) {
+      closeMobileSearch();
+    }
+  });
+
   // Expandable subcategories inside the mobile menu
   document.querySelectorAll('.mobile-nav-toggle').forEach((btn) => {
     btn.addEventListener('click', (e) => {
@@ -357,11 +377,15 @@ function isGroupActive(group: (typeof resolvedNavGroups)[number]) {
     });
   });
 
-  // Escape closes whichever mobile panel is open
+  // Escape closes whichever search/menu panel is open.
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       closeMobileMenu();
       closeMobileSearch();
+      if (desktopToggle) {
+        desktopToggle.checked = false;
+        document.querySelector<HTMLInputElement>('form[action="/search"] input[name="q"]')?.blur();
+      }
     }
   });
 </script>
