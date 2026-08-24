@@ -1,4 +1,5 @@
 User-agent: *
 Allow: /
-
+Disallow: /search
+Disallow: /keystatic
 Sitemap: https://outfitedits.com/sitemap-index.xml
