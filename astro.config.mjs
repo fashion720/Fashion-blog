@@ -15,7 +15,10 @@ export default defineConfig({
   integrations: [
     react(),
     keystatic(), // HAMESHA on — sirf isi se /keystatic panel kaam karta hai
-    sitemap(),   // sitemap-index.xml generate karega Search Console ke liye
+    sitemap({
+      // Search results and the CMS are not public landing pages.
+      filter: (page) => !page.includes('/search') && !page.includes('/keystatic'),
+    }),
   ],
 
   // 'hybrid' = blog pages build time par static rahenge lekin /keystatic route server se chalega
