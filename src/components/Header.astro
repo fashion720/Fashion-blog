@@ -151,7 +151,14 @@ function isGroupActive(group: (typeof resolvedNavGroups)[number]) {
           href="/about"
           class={`shrink-0 whitespace-nowrap text-[11px] tracking-[0.15em] min-[1440px]:tracking-[0.2em] uppercase font-semibold transition-colors duration-200 pb-1 border-b ${currentPath === '/about' ? 'text-neutral-950 border-neutral-950' : 'text-neutral-500 border-transparent hover:text-neutral-950'}`}
         >
-          About
+          About Us
+        </a>
+
+        <a
+          href="/contact"
+          class={`shrink-0 whitespace-nowrap text-[11px] tracking-[0.15em] min-[1440px]:tracking-[0.2em] uppercase font-semibold transition-colors duration-200 pb-1 border-b ${currentPath === '/contact' ? 'text-neutral-950 border-neutral-950' : 'text-neutral-500 border-transparent hover:text-neutral-950'}`}
+        >
+          Contact Us
         </a>
       </nav>
 
@@ -259,7 +266,7 @@ function isGroupActive(group: (typeof resolvedNavGroups)[number]) {
       ))}
 
       <a href="/about" class="block py-2.5 text-xs font-bold uppercase tracking-wider text-neutral-700 hover:text-neutral-950 transition border-b border-neutral-50">
-        About
+        About Us
       </a>
       <a href="/contact" class="block py-2.5 text-xs font-bold uppercase tracking-wider text-neutral-700 hover:text-neutral-950 transition">
         Contact Us
