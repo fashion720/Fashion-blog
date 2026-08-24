@@ -22,7 +22,7 @@ const searchIndex = await Promise.all(allPosts.map(async (post) => {
 }));
 ---
 
-<Layout title="Search | Outfit Edits" description="Search outfit ideas, style guides, trends, and fashion inspiration on Outfit Edits.">
+<Layout title="Search | Outfit Edits" description="Search outfit ideas, style guides, trends, and fashion inspiration on Outfit Edits." noindex={true}>
   <Header currentPath="/search" />
   <main class="min-h-screen overflow-x-hidden bg-[#F8F6F2] px-4 pb-20 text-neutral-900 sm:px-6 lg:px-8">
     <div class="mx-auto max-w-7xl">
