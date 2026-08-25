@@ -117,8 +117,12 @@ renderedContent = autoLinkCategories(renderedContent, categoriesToLink);
 // Only show TOC on longer list-style articles
 const showToc = tocItems.length >= 5;
 
-// Drop the final closing/wrap-up heading from the TOC (not useful to jump to)
-const tocDisplayItems = showToc ? tocItems.slice(0, -1) : [];
+// Exclude FAQ/question and clearly named closing sections, but keep the final numbered idea/section.
+// The old slice(0, -1) rule incorrectly removed the final numbered section.
+function isExcludedTocHeading(text: string) {
+  return /faq|frequently asked|question|final thoughts|conclusion|wrap[- ]?up/i.test(text);
+}
+const tocDisplayItems = showToc ? tocItems.filter((item) => !isExcludedTocHeading(item.text)) : [];
 
 // Strip a leading "Look 1:", "Outfit 2:", "14.", "Step 3:" style prefix so
 // neither the TOC nor the on-page heading shows double numbering
@@ -146,7 +150,7 @@ function stripLeadingNumberLabel(text: string) {
 // only appears once — in the golden badge — with the clean title name
 // right next to it.
 if (showToc) {
-  const numberedItems = tocDisplayItems.filter((item) => !/faq|frequently asked|question/i.test(item.text));
+  const numberedItems = tocDisplayItems;
   const idxById = new Map(numberedItems.map((item, i) => [item.id, i + 1]));
   renderedContent = renderedContent.replace(
     /<h2 id="([^"]+)">([\s\S]*?)<\/h2>/g,
