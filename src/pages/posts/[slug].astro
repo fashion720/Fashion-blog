@@ -831,16 +831,49 @@ const trendingPosts = await getFeaturedPosts(5);
         return details;
       };
 
-      const faqParagraphs = [...content.querySelectorAll('p')];
-      for (let index = 0; index < faqParagraphs.length - 1; index += 1) {
-        const questionNode = faqParagraphs[index];
-        const answerNode = faqParagraphs[index + 1];
-        if (!questionNode.isConnected || !answerNode.isConnected) continue;
-        if (/^\s*Q\d*\s*[:.]/i.test(questionNode.textContent || '') && /^\s*A\d*\s*[:.]/i.test(answerNode.textContent || '')) {
-          const accordion = makeAccordion(stripLabel(questionNode.innerHTML, 'Q'), stripLabel(answerNode.innerHTML, 'A'));
-          questionNode.replaceWith(accordion);
-          answerNode.remove();
+      const isQuestionNode = (node) => {
+        if (!node || !['P', 'H3', 'H4', 'LI'].includes(node.tagName)) return false;
+        const text = (node.textContent || '').replace(/\u00a0/g, ' ').trim();
+        return /^Q\d*\s*[:.]/i.test(text) || /\?$/.test(text);
+      };
+      const isAnswerNode = (node) => node && ['P', 'UL', 'OL', 'BLOCKQUOTE', 'LI'].includes(node.tagName) && !isQuestionNode(node);
+      const questionText = (node) => {
+        const text = (node.textContent || '').replace(/\u00a0/g, ' ').trim();
+        return text.replace(/^Q\d*\s*[:.]\s*/i, '').trim();
+      };
+      const faqNodes = [];
+      let faqNode = faqHeading.nextElementSibling;
+      while (faqNode && faqNode.tagName !== 'H2') {
+        faqNodes.push(faqNode);
+        faqNode = faqNode.nextElementSibling;
+      }
+      for (let index = 0; index < faqNodes.length; index += 1) {
+        const questionNode = faqNodes[index];
+        if (!questionNode.isConnected) continue;
+        if (questionNode.tagName === 'P' && /<br\s*\/?\s*>/i.test(questionNode.innerHTML)) {
+          const parts = questionNode.innerHTML.split(/<br\s*\/?\s*>/i).map((part) => part.trim()).filter(Boolean);
+          const accordions = [];
+          for (let partIndex = 0; partIndex < parts.length - 1; partIndex += 2) {
+            const qPart = parts[partIndex];
+            const aPart = parts[partIndex + 1];
+            const qText = qPart.replace(/<[^>]+>/g, '').replace(/\u00a0/g, ' ').trim();
+            const aText = aPart.replace(/<[^>]+>/g, '').replace(/\u00a0/g, ' ').trim();
+            if ((/^Q\d*\s*[:.]/i.test(qText) || /\?$/.test(qText)) && (/^A\d*\s*[:.]/i.test(aText) || aText.length > 0)) {
+              accordions.push(makeAccordion(qText.replace(/^Q\d*\s*[:.]\s*/i, '').trim(), stripLabel(aPart, 'A')));
+            }
+          }
+          if (accordions.length) {
+            const fragment = document.createDocumentFragment();
+            accordions.forEach((accordion) => fragment.appendChild(accordion));
+            questionNode.replaceWith(fragment);
+            continue;
+          }
         }
+        const answerNode = faqNodes[index + 1];
+        if (!answerNode || !answerNode.isConnected || !isQuestionNode(questionNode) || !isAnswerNode(answerNode)) continue;
+        const accordion = makeAccordion(questionText(questionNode), stripLabel(answerNode.innerHTML, 'A'));
+        questionNode.replaceWith(accordion);
+        answerNode.remove();
       }
     };
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', enhanceFaqAccordions, { once: true });
