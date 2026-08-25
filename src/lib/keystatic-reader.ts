@@ -153,7 +153,7 @@ export async function getSiteSettings() {
     if (!s) return defaultSettings();
 
     return {
-      siteName:             s.siteName             || 'FASHION EDITORIAL',
+      siteName:             s.siteName             || 'OUTFIT EDITS',
       tagline:              s.tagline              || 'CURATED STYLE & FASHION INSIGHTS',
       logoImage:            s.logoImage            ? `/images/brand/${s.logoImage}` : '',
       
@@ -189,7 +189,7 @@ export async function getSiteSettings() {
 
 function defaultSettings() {
   return {
-    siteName:             'FASHION EDITORIAL',
+    siteName:             'OUTFIT EDITS',
     tagline:              'CURATED STYLE & FASHION INSIGHTS',
     logoImage:            '',
     footerDescription:    'Premium editorial content exploring contemporary fashion, timeless style, and cultural trends. Curated for the discerning reader.',

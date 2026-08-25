@@ -8,11 +8,11 @@ import { getAllPages } from '../lib/keystatic-reader';
 
 export async function getStaticPaths() {
   const pages = await getAllPages();
-  
+
   if (!pages || pages.length === 0) {
     return [];
   }
-  
+
   return pages.map((page) => ({
     params: { slug: page.slug },
     props: { page },
@@ -31,8 +31,8 @@ const { entry } = page;
 const rawContent = await entry.content();
 ---
 
-<Layout 
-  title={`${entry?.title || 'Page'} - Fashion Editorial`} 
+<Layout
+  title={`${entry?.title || 'Page'} - Outfit Edits`}
   description={entry?.description || ''}
 >
   <Header currentPath={`/${page.slug}`} />

@@ -34,7 +34,7 @@ export async function GET(context) {
   );
 
   return rss({
-    title: settings.siteName || 'Fashion Editorial',
+    title: settings.siteName || 'Outfit Edits',
     description: settings.tagline || 'Curated Style & Fashion Insights',
     site: context.site || 'https://fashioneditorial.pages.dev',
     items: rssItems,
