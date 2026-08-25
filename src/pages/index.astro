@@ -16,7 +16,7 @@ const settings = await getSiteSettings();
 const allCategories = await getAllCategories();
 
 // 💸 MONETIZATION CONFIGURATION
-const isMonetized = false;
+const isMonetized = settings.adsenseEnabled === true && Boolean(settings.adSlotHeader || settings.adSlotContent || settings.adSlotFooter);
 
 // ─── SHARED CONTENT HELPERS (unchanged extraction logic) ───────────────────
 

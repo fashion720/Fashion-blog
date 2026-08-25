@@ -12,7 +12,7 @@ export default config({
   singletons: {
     siteSettings: singleton({
       label: 'Site Settings',
-      path: 'src/content/siteSettings',
+      path: 'src/content/settings/site',
       schema: {
         siteName: fields.text({ label: 'Site Name', defaultValue: 'FASHION EDITORIAL' }),
         tagline: fields.text({ label: 'Tagline', defaultValue: 'CURATED STYLE & FASHION INSIGHTS' }),
@@ -70,9 +70,9 @@ export default config({
       schema: {
         title: fields.slug({ name: { label: 'Title' } }),
         
-        // ⚡ VALIDATION SHIELD: Registers existing data without breaking the layout or showing on UI
-        description: fields.empty(), 
-        featuredImage: fields.empty(),
+        // Editorial metadata is intentionally explicit so search/social snippets are curated per article.
+        description: fields.text({ label: 'SEO Description' }),
+        featuredImage: fields.image({ label: 'Featured Image', directory: 'public/images/content', publicPath: '/images/content/' }),
         
         publishedDate: fields.date({ label: 'Published Date' }),
         updatedDate: fields.date({ label: 'Updated Date', defaultValue: { kind: 'today' } }),

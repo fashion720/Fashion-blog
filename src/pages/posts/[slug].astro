@@ -19,6 +19,7 @@ import {
   getCategoryBreadcrumb,
   getAllCategories,
   getFeaturedPosts,
+  getSiteSettings,
 } from '../../lib/keystatic-reader';
 
 export async function getStaticPaths() {
@@ -31,6 +32,7 @@ export async function getStaticPaths() {
 
 const { post } = Astro.props;
 const { entry } = post;
+const siteSettings = await getSiteSettings();
 
 const rawContent = (await entry.content()) as string;
 
@@ -221,8 +223,8 @@ function getPostDescription(rawContent: string, length = 160) {
   return cleanText.length > length ? `${cleanText.substring(0, length)}...` : cleanText;
 }
 
-const seoDescription = getPostDescription(rawContent, 160);
-const isMonetized = false;
+const seoDescription = entry.description || getPostDescription(rawContent, 160);
+const isMonetized = siteSettings.adsenseEnabled === true && Boolean(siteSettings.adSlotContent);
 
 // ─── BREADCRUMBS ─────────────────────────────────────────────────────────────
 const primaryCategorySlug = entry.categories?.[0];
