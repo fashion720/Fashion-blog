@@ -38,11 +38,11 @@ const formattedDate = new Date(publishedDate).toLocaleDateString('en-US', {
 });
 ---
 
-<article class="post-card group w-full bg-white p-4 border border-neutral-200/30 rounded-sm flex flex-col transition-all duration-300 hover:shadow-sm box-border overflow-hidden">
+<article class="post-card card-3d group w-full bg-white p-4 border border-neutral-200/30 rounded-sm flex flex-col transition-all duration-300 hover:shadow-sm box-border overflow-hidden" data-tilt-card>
   
   {/* 🔒 Strict 4:5 Aspect Boundary Frame matching our single source canvas architecture */}
   {/* ⚡ CROP LOCK: relative + flex properties make sure image fills the box and hides the whitespace underneath */}
-  <div class="w-full aspect-[4/5] relative block bg-neutral-100 rounded-[1px] containment-layout overflow-hidden select-none shrink-0">
+  <div class="card-img w-full aspect-[4/5] relative block bg-neutral-100 rounded-[1px] containment-layout overflow-hidden select-none shrink-0">
     <a href={`/posts/${slug}/`} class="absolute inset-0 w-full h-full no-underline pointer-events-auto block">
       <img
         src={imgSrc}
@@ -101,3 +101,25 @@ const formattedDate = new Date(publishedDate).toLocaleDateString('en-US', {
     height: 0 !important;
   }
 </style>
+
+<script>
+  const cards = document.querySelectorAll<HTMLElement>('[data-tilt-card]');
+  const finePointer = window.matchMedia('(pointer: fine)');
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+  if (finePointer.matches && !reducedMotion.matches) {
+    cards.forEach((card) => {
+      card.addEventListener('pointermove', (event) => {
+        const rect = card.getBoundingClientRect();
+        const x = (event.clientX - rect.left) / rect.width - 0.5;
+        const y = (event.clientY - rect.top) / rect.height - 0.5;
+        card.classList.add('is-tilting');
+        card.style.transform = `perspective(1000px) rotateX(${(-y * 5).toFixed(2)}deg) rotateY(${(x * 5).toFixed(2)}deg) translateY(-8px)`;
+      });
+      card.addEventListener('pointerleave', () => {
+        card.classList.remove('is-tilting');
+        card.style.transform = '';
+      });
+    });
+  }
+</script>

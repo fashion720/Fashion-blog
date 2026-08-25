@@ -67,6 +67,8 @@ img { max-width: 100%; height: auto; display: block; }
   pointer-events: none;
 }
 
+.card-3d.is-tilting { transition: none; }
+
 .card-3d:hover {
   transform: perspective(1000px) rotateX(4deg) rotateY(-4deg) translateY(-8px);
   box-shadow:
@@ -164,13 +166,17 @@ img { max-width: 100%; height: auto; display: block; }
 }
 .hero-image-wrap img {
   width: 100%;
-  height: 520px;
+  height: 100%;
+  min-height: 0;
   object-fit: cover;
   object-position: top;
   transition: transform 0.8s cubic-bezier(0.23, 1, 0.32, 1);
 }
 .hero-image-wrap:hover img {
   transform: scale(1.03);
+}
+@media (min-width: 1024px) {
+  .hero-image-wrap img { min-height: 520px; }
 }
 
 /* ══════════════════════════════════════════════════════

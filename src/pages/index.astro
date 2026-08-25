@@ -152,9 +152,9 @@ const discoveryCards = await Promise.all([
     {/* ══════════════════════════════════════════════════════════════════
         1. HERO — editorial thesis, not a SaaS banner
         ══════════════════════════════════════════════════════════════════ */}
-    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 md:pt-12 pb-12 md:pb-16">
+    <section class="hero-section max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 md:pt-12 pb-12 md:pb-16" data-hero-parallax>
       <div class="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-8 lg:gap-10 min-[1440px]:gap-14 items-center">
-        <div class="order-2 lg:order-1 text-left space-y-6 md:space-y-7">
+        <div class="order-2 lg:order-1 text-left space-y-6 md:space-y-7" data-hero-copy>
           <span class="inline-block text-[10px] font-bold uppercase tracking-[0.35em] text-[#bba15c]">
             Outfit Edits — New Season Edit
           </span>
@@ -175,7 +175,7 @@ const discoveryCards = await Promise.all([
         </div>
 
         {flagshipResolved && (
-          <div class="order-1 lg:order-2 w-full aspect-[4/5] bg-white p-2 md:p-3 border border-neutral-200/30 shadow-sm relative overflow-hidden group">
+          <div class="hero-image-wrap order-1 lg:order-2 w-full aspect-[4/5] bg-white p-2 md:p-3 border border-neutral-200/30 shadow-sm relative overflow-hidden group" data-hero-image>
             <a href={`/posts/${flagshipResolved.slug}/`} class="absolute inset-0 w-full h-full block">
               <img
                 src={flagshipResolved.dynamicImg}
@@ -526,6 +526,36 @@ const discoveryCards = await Promise.all([
 
   <Footer />
 </Layout>
+
+<script>
+  const hero = document.querySelector<HTMLElement>('[data-hero-parallax]');
+  const heroImage = document.querySelector<HTMLElement>('[data-hero-image]');
+  const heroCopy = document.querySelector<HTMLElement>('[data-hero-copy]');
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const finePointer = window.matchMedia('(pointer: fine)');
+
+  if (hero && heroImage && heroCopy && finePointer.matches && !reducedMotion.matches) {
+    let frame = 0;
+    let pointerX = 0;
+    let pointerY = 0;
+    hero.addEventListener('pointermove', (event) => {
+      const rect = hero.getBoundingClientRect();
+      pointerX = (event.clientX - rect.left) / rect.width - 0.5;
+      pointerY = (event.clientY - rect.top) / rect.height - 0.5;
+      if (!frame) {
+        frame = requestAnimationFrame(() => {
+          heroImage.style.transform = `translate3d(${(pointerX * 10).toFixed(2)}px, ${(pointerY * 8).toFixed(2)}px, 0)`;
+          heroCopy.style.transform = `translate3d(${(-pointerX * 4).toFixed(2)}px, ${(-pointerY * 3).toFixed(2)}px, 0)`;
+          frame = 0;
+        });
+      }
+    });
+    hero.addEventListener('pointerleave', () => {
+      heroImage.style.transform = '';
+      heroCopy.style.transform = '';
+    });
+  }
+</script>
 
 <style is:global>
   html, body {

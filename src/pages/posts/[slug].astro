@@ -172,7 +172,7 @@ if (showToc) {
     )
     .join('');
 
-  const tocHtml = `<nav class="not-prose my-10 p-6 bg-white border border-neutral-200/30 shadow-sm/5 rounded-sm block w-full" aria-label="Table of Contents"><p class="text-[11px] font-sans tracking-[0.35em] uppercase text-neutral-950 font-bold mb-4">Table of Contents</p><ol class="space-y-2.5 list-decimal list-inside marker:text-neutral-950 marker:font-bold pl-0">${tocListItems}</ol></nav>`;
+  const tocHtml = `<nav class="article-toc not-prose my-10 p-6 bg-white border border-neutral-200/30 shadow-sm/5 rounded-sm block w-full" aria-label="Table of Contents"><p class="text-[11px] font-sans tracking-[0.35em] uppercase text-neutral-950 font-bold mb-4">Table of Contents</p><ol class="space-y-2.5 list-decimal list-inside marker:text-neutral-950 marker:font-bold pl-0">${tocListItems}</ol></nav>`;
 
   renderedContent = renderedContent.replace('<h2', `${tocHtml}<h2`);
 }
@@ -682,6 +682,55 @@ const trendingPosts = await getFeaturedPosts(5);
         node = next;
       }
     }
+
+    // ── Scroll reveal + active TOC ────────────────────────────────────────
+    // Keep the motion progressive: content is fully visible when reduced
+    // motion is requested, while desktop readers get a restrained reveal.
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const revealTargets = contentDiv.querySelectorAll('h2, p, .img-pin-wrapper, ul, ol, blockquote, table');
+    revealTargets.forEach((element, index) => {
+      if (!reducedMotion) {
+        element.classList.add('article-reveal');
+        element.style.setProperty('--reveal-delay', `${Math.min(index % 4, 3) * 55}ms`);
+      }
+    });
+
+    if (!reducedMotion && 'IntersectionObserver' in window) {
+      const revealObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-visible');
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.08, rootMargin: '0px 0px -8% 0px' });
+      revealTargets.forEach((element) => revealObserver.observe(element));
+    } else {
+      revealTargets.forEach((element) => element.classList.add('is-visible'));
+    }
+
+    const toc = document.querySelector<HTMLElement>('.article-toc');
+    const tocLinks = toc ? Array.from(toc.querySelectorAll<HTMLAnchorElement>('a[href^="#"]')) : [];
+    const observedHeadings = tocLinks
+      .map((link) => document.getElementById(link.hash.slice(1)))
+      .filter((heading): heading is HTMLElement => Boolean(heading));
+
+    if (tocLinks.length && observedHeadings.length) {
+      const setActiveToc = (id: string) => {
+        tocLinks.forEach((link) => {
+          const active = link.hash === `#${id}`;
+          link.classList.toggle('is-active', active);
+          if (active) link.setAttribute('aria-current', 'location');
+          else link.removeAttribute('aria-current');
+        });
+      };
+      const tocObserver = new IntersectionObserver((entries) => {
+        const visible = entries.filter((entry) => entry.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+        if (visible[0]) setActiveToc((visible[0].target as HTMLElement).id);
+      }, { rootMargin: '-18% 0px -68% 0px', threshold: [0, 1] });
+      observedHeadings.forEach((heading) => tocObserver.observe(heading));
+      setActiveToc(observedHeadings[0].id);
+    }
   });
 </script>
 
@@ -812,6 +861,27 @@ const trendingPosts = await getFeaturedPosts(5);
     margin-top: 1.5rem !important;
   }
 
+  /* ── Article motion and active table of contents ─────────────────────── */
+  .article-reveal {
+    opacity: 0;
+    transform: translateY(18px);
+    transition: opacity 0.65s cubic-bezier(0.23, 1, 0.32, 1), transform 0.65s cubic-bezier(0.23, 1, 0.32, 1);
+    transition-delay: var(--reveal-delay, 0ms);
+  }
+  .article-reveal.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .article-toc a {
+    display: inline-block;
+    transition: color 0.25s ease, transform 0.25s ease;
+  }
+  .article-toc a.is-active {
+    color: #bba15c !important;
+    transform: translateX(4px);
+    font-weight: 600;
+  }
+
   /* ── Tables ──────────────────────────────────────────────────────────── */
   .fashion-prose-content table {
     display: block !important;
@@ -835,6 +905,11 @@ const trendingPosts = await getFeaturedPosts(5);
     font-family: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif !important;
     font-weight: 600 !important;
     color: #0a0a0a !important;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .article-reveal { opacity: 1; transform: none; transition: none; }
+    .article-toc a.is-active { transform: none; }
   }
 
   /* ── FAQ accordion (progressively enhanced by script below) ────────────── */
