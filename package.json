@@ -7,6 +7,7 @@
     "dev": "astro dev --host",
     "start": "astro dev --host",
     "build": "astro build",
+    "validate:content": "python3 scripts/validate_content.py",
     "preview": "astro preview",
     "astro": "astro"
   },

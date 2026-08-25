@@ -76,6 +76,10 @@ export default config({
         
         publishedDate: fields.date({ label: 'Published Date' }),
         updatedDate: fields.date({ label: 'Updated Date', defaultValue: { kind: 'today' } }),
+        reviewedDate: fields.date({ label: 'Last Reviewed Date' }),
+        editorNote: fields.text({ label: 'Editor Note', multiline: true }),
+        sources: fields.array(fields.text({ label: 'Source URL' }), { label: 'Sources' }),
+        disclosure: fields.text({ label: 'Disclosure', multiline: true }),
         author: fields.relationship({ label: 'Author', collection: 'authors' }),
         categories: fields.multiRelationship({ label: 'Categories', collection: 'categories' }),
         tags: fields.array(fields.text({ label: 'Tag' }), { label: 'Tags', itemLabel: (props) => props.value }),
