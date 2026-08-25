@@ -520,7 +520,7 @@ const trendingPosts = await getFeaturedPosts(5);
 </Layout>
 
 <script define:vars={{ postUrl, postTitle: entry.title }}>
-  document.addEventListener('DOMContentLoaded', () => {
+  const initializeArticleEnhancements = () => {
     const contentDiv = document.querySelector('.fashion-prose-content');
     if (!contentDiv) return;
 
@@ -731,7 +731,13 @@ const trendingPosts = await getFeaturedPosts(5);
       observedHeadings.forEach((heading) => tocObserver.observe(heading));
       setActiveToc(observedHeadings[0].id);
     }
-  });
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeArticleEnhancements, { once: true });
+  } else {
+    initializeArticleEnhancements();
+  }
 </script>
 
 <style is:global>
