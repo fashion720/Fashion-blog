@@ -520,9 +520,13 @@ const trendingPosts = await getFeaturedPosts(5);
 </Layout>
 
 <script define:vars={{ postUrl, postTitle: entry.title }}>
+  let initializationAttempts = 0;
   const initializeArticleEnhancements = () => {
     const contentDiv = document.querySelector('.fashion-prose-content');
-    if (!contentDiv) return;
+    if (!contentDiv) {
+      if (initializationAttempts++ < 20) window.setTimeout(initializeArticleEnhancements, 50);
+      return;
+    }
 
     const images = contentDiv.querySelectorAll('img');
 
@@ -683,6 +687,69 @@ const trendingPosts = await getFeaturedPosts(5);
       }
     }
 
+    // Fallback FAQ parser: some Markdown variants render Q/A pairs as
+    // separate paragraphs without the exact HTML shape handled above.
+    // Pair visible Q labels with the following A paragraph so every article
+    // gets the same native, keyboard-accessible accordion UI.
+    if (faqHeading) {
+      let sibling = faqHeading.nextElementSibling;
+      while (sibling && sibling.tagName !== 'H2') {
+        const next = sibling.nextElementSibling;
+        if (sibling.tagName === 'P' && /^\s*Q\d*\s*[:.]/i.test(sibling.textContent || '')) {
+          let answer = next;
+          while (answer && answer.tagName !== 'H2' && !answer.textContent?.trim()) answer = answer.nextElementSibling;
+          if (answer && answer.tagName === 'P' && /^\s*A\d*\s*[:.]/i.test(answer.textContent || '')) {
+            const questionHtml = sibling.innerHTML.replace(/^\s*(?:<strong>|<em>)?\s*Q\d*\s*[:.]?\s*(?:<\/strong>|<\/em>)?\s*/i, '');
+            const answerHtml = answer.innerHTML.replace(/^\s*(?:<strong>|<em>)?\s*A\d*\s*[:.]?\s*(?:<\/strong>|<\/em>)?\s*/i, '');
+            const accordion = buildAccordion(questionHtml, answerHtml);
+            sibling.replaceWith(accordion);
+            answer.remove();
+            sibling = accordion.nextElementSibling;
+            continue;
+          }
+        }
+        sibling = next;
+      }
+    }
+
+    // Deterministic second pass: walk a snapshot so DOM replacements from
+    // the legacy enhancer cannot interrupt conversion after the first item.
+    if (faqHeading) {
+      const faqParagraphs = [...contentDiv.querySelectorAll('p')];
+      for (let index = 0; index < faqParagraphs.length - 1; index += 1) {
+        const questionNode = faqParagraphs[index];
+        const answerNode = faqParagraphs[index + 1];
+        if (!questionNode.isConnected || !answerNode.isConnected) continue;
+        if (/^\s*Q\d*\s*[:.]/i.test(questionNode.textContent || '') && /^\s*A\d*\s*[:.]/i.test(answerNode.textContent || '')) {
+          const accordion = makeAccordion(stripLabel(questionNode.innerHTML, 'Q'), stripLabel(answerNode.innerHTML, 'A'));
+          questionNode.replaceWith(accordion);
+          answerNode.remove();
+        }
+      }
+    }
+
+    // Final completion pass: keep pairing the first remaining Q/A nodes until
+    // no labeled question remains. This is resilient to DOM replacements made
+    // by the earlier compatibility passes.
+    if (faqHeading) {
+      let pairFound = true;
+      while (pairFound) {
+        pairFound = false;
+        const questionNode = [...contentDiv.querySelectorAll('p')].find((paragraph) => /^\s*Q\d*\s*[:.]/i.test(paragraph.textContent || ''));
+        if (!questionNode) break;
+        let answerNode = questionNode.nextElementSibling;
+        while (answerNode && answerNode.tagName !== 'H2' && !answerNode.textContent?.trim()) answerNode = answerNode.nextElementSibling;
+        if (answerNode && answerNode.tagName === 'P' && /^\s*A\d*\s*[:.]/i.test(answerNode.textContent || '')) {
+          const accordion = makeAccordion(stripLabel(questionNode.innerHTML, 'Q'), stripLabel(answerNode.innerHTML, 'A'));
+          questionNode.replaceWith(accordion);
+          answerNode.remove();
+          pairFound = true;
+        } else {
+          break;
+        }
+      }
+    }
+
     // ── Scroll reveal + active TOC ────────────────────────────────────────
     // Keep the motion progressive: content is fully visible when reduced
     // motion is requested, while desktop readers get a restrained reveal.
@@ -738,6 +805,47 @@ const trendingPosts = await getFeaturedPosts(5);
   } else {
     initializeArticleEnhancements();
   }
+</script>
+
+<script is:inline>
+  (() => {
+    const enhanceFaqAccordions = () => {
+      const content = document.querySelector('.fashion-prose-content');
+      if (!content) return;
+      const faqHeading = [...content.querySelectorAll('h2')].find((heading) => /faq|frequently asked|question/i.test(heading.textContent || ''));
+      if (!faqHeading) return;
+
+      const stripLabel = (html, letter) => html
+        .replace(new RegExp(`^\\s*(?:<strong>|<em>)?\\s*${letter}\\d*\\s*[:.]?\\s*(?:<\\/strong>|<\\/em>)?\\s*`, 'i'), '')
+        .trim();
+      const makeAccordion = (question, answer) => {
+        const details = document.createElement('details');
+        details.className = 'faq-item not-prose';
+        const summary = document.createElement('summary');
+        summary.className = 'faq-question';
+        summary.innerHTML = '<span>' + question + '</span><svg class="faq-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="10" y1="4" x2="10" y2="16"></line><line x1="4" y1="10" x2="16" y2="10"></line></svg>';
+        const answerBox = document.createElement('div');
+        answerBox.className = 'faq-answer';
+        answerBox.innerHTML = answer;
+        details.append(summary, answerBox);
+        return details;
+      };
+
+      const faqParagraphs = [...content.querySelectorAll('p')];
+      for (let index = 0; index < faqParagraphs.length - 1; index += 1) {
+        const questionNode = faqParagraphs[index];
+        const answerNode = faqParagraphs[index + 1];
+        if (!questionNode.isConnected || !answerNode.isConnected) continue;
+        if (/^\s*Q\d*\s*[:.]/i.test(questionNode.textContent || '') && /^\s*A\d*\s*[:.]/i.test(answerNode.textContent || '')) {
+          const accordion = makeAccordion(stripLabel(questionNode.innerHTML, 'Q'), stripLabel(answerNode.innerHTML, 'A'));
+          questionNode.replaceWith(accordion);
+          answerNode.remove();
+        }
+      }
+    };
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', enhanceFaqAccordions, { once: true });
+    window.setTimeout(enhanceFaqAccordions, 0);
+  })();
 </script>
 
 <style is:global>
