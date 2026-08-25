@@ -172,7 +172,7 @@ if (showToc) {
     )
     .join('');
 
-  const tocHtml = `<nav class="article-toc not-prose my-10" aria-label="Table of Contents"><div class="article-toc-heading"><span class="article-toc-kicker">Navigate the edit</span><p class="article-toc-title">Table of Contents</p><span class="article-toc-rule" aria-hidden="true"></span></div><ol class="article-toc-list">${tocListItems}</ol></nav>`;
+  const tocHtml = `<nav class="article-toc not-prose my-10" aria-label="Table of Contents"><div class="article-toc-heading"><p class="article-toc-title">Table of Contents</p></div><ol class="article-toc-list">${tocListItems}</ol></nav>`;
 
   renderedContent = renderedContent.replace('<h2', `${tocHtml}<h2`);
 }
@@ -1041,17 +1041,15 @@ const trendingPosts = await getFeaturedPosts(5);
   }
   .article-toc {
     overflow: hidden;
-    border: 1px solid rgba(187, 161, 92, 0.3);
+    border: 1px solid rgba(229, 231, 235, 0.9);
     background: #fff;
     box-shadow: 0 16px 36px -28px rgba(30, 25, 15, 0.45);
   }
   .article-toc-heading {
     position: relative;
-    display: flex;
-    align-items: baseline;
-    gap: 0.75rem;
+    display: block;
     border-bottom: 1px solid rgba(229, 231, 235, 0.8);
-    padding: 1.2rem 1.35rem 1rem;
+    padding: 1.15rem 1.35rem 1rem;
   }
   .article-toc-kicker {
     color: #bba15c;
@@ -1104,7 +1102,7 @@ const trendingPosts = await getFeaturedPosts(5);
   .article-toc-link::before {
     content: counter(toc, decimal-leading-zero);
     flex: 0 0 1.55rem;
-    color: #bba15c;
+    color: #8a8a8a;
     font-size: 0.62rem;
     font-weight: 700;
     letter-spacing: 0.08em;
@@ -1165,8 +1163,6 @@ const trendingPosts = await getFeaturedPosts(5);
   @media (max-width: 640px) {
     .article-editorial-note { padding: 1.15rem 1rem 1.2rem; }
     .article-toc-heading { display: block; padding: 1.1rem 1rem 0.9rem; }
-    .article-toc-kicker { display: block; margin-bottom: 0.35rem; }
-    .article-toc-rule { display: block; margin: 0.8rem 0 0; }
     .article-toc-list { grid-template-columns: 1fr; padding: 0.25rem 1rem 0.8rem !important; }
     .article-toc-link { min-height: 2.8rem; padding-right: 0.2rem; }
   }
