@@ -168,11 +168,11 @@ if (showToc) {
   const tocListItems = tocDisplayItems
     .map(
       (item) =>
-        `<li><a href="#${item.id}" class="text-sm text-neutral-700 hover:text-[#bba15c] transition no-underline leading-snug">${stripLeadingNumberLabel(item.text)}</a></li>`
+        `<li class="article-toc-item"><a href="#${item.id}" class="article-toc-link text-sm text-neutral-700 hover:text-[#bba15c] transition no-underline leading-snug">${stripLeadingNumberLabel(item.text)}</a></li>`
     )
     .join('');
 
-  const tocHtml = `<nav class="article-toc not-prose my-10 p-6 bg-white border border-neutral-200/30 shadow-sm/5 rounded-sm block w-full" aria-label="Table of Contents"><p class="text-[11px] font-sans tracking-[0.35em] uppercase text-neutral-950 font-bold mb-4">Table of Contents</p><ol class="space-y-2.5 list-decimal list-inside marker:text-neutral-950 marker:font-bold pl-0">${tocListItems}</ol></nav>`;
+  const tocHtml = `<nav class="article-toc not-prose my-10" aria-label="Table of Contents"><div class="article-toc-heading"><span class="article-toc-kicker">Navigate the edit</span><p class="article-toc-title">Table of Contents</p><span class="article-toc-rule" aria-hidden="true"></span></div><ol class="article-toc-list">${tocListItems}</ol></nav>`;
 
   renderedContent = renderedContent.replace('<h2', `${tocHtml}<h2`);
 }
@@ -393,7 +393,7 @@ const trendingPosts = await getFeaturedPosts(5);
       )}
 
       {/* Editorial context adds transparent, practical guidance without claiming product testing. */}
-      <div class="max-w-[720px] mx-auto mb-8 border border-neutral-200/70 bg-white p-5 sm:p-6" aria-label="Editorial context">
+      <div class="article-editorial-note max-w-[720px] mx-auto mb-8" aria-label="Editorial context">
         <p class="text-[10px] font-bold uppercase tracking-[0.25em] text-[#bba15c]">{editorialContext.label}</p>
         <p class="mt-3 text-sm font-light leading-relaxed text-neutral-600">{editorialContext.text}</p>
       </div>
@@ -1008,6 +1008,114 @@ const trendingPosts = await getFeaturedPosts(5);
     margin-top: 1.5rem !important;
   }
 
+  /* ── Editorial note + Table of Contents ──────────────────────────────── */
+  .article-editorial-note {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(187, 161, 92, 0.28);
+    border-left: 3px solid #bba15c;
+    background: linear-gradient(135deg, #fff 0%, #fbfaf7 100%);
+    padding: 1.35rem 1.5rem 1.4rem;
+    box-shadow: 0 12px 30px -24px rgba(30, 25, 15, 0.4);
+  }
+  .article-editorial-note::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 1.5rem;
+    width: 3.5rem;
+    height: 1px;
+    background: #bba15c;
+    opacity: 0.75;
+  }
+  .article-editorial-note > p:first-child {
+    margin: 0 !important;
+    font-size: 0.62rem !important;
+    letter-spacing: 0.28em;
+    color: #a1874a !important;
+  }
+  .article-editorial-note > p:last-child {
+    margin: 0.65rem 0 0 !important;
+    color: #555 !important;
+    line-height: 1.75 !important;
+  }
+  .article-toc {
+    overflow: hidden;
+    border: 1px solid rgba(187, 161, 92, 0.3);
+    background: #fff;
+    box-shadow: 0 16px 36px -28px rgba(30, 25, 15, 0.45);
+  }
+  .article-toc-heading {
+    position: relative;
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    border-bottom: 1px solid rgba(229, 231, 235, 0.8);
+    padding: 1.2rem 1.35rem 1rem;
+  }
+  .article-toc-kicker {
+    color: #bba15c;
+    font-size: 0.58rem;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .article-toc-title {
+    margin: 0 !important;
+    color: #111 !important;
+    font-family: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif !important;
+    font-size: 1.15rem !important;
+    font-weight: 300 !important;
+    letter-spacing: -0.01em;
+  }
+  .article-toc-rule {
+    margin-left: auto;
+    width: 2.5rem;
+    height: 1px;
+    background: #bba15c;
+    opacity: 0.7;
+  }
+  .article-toc-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0;
+    margin: 0 !important;
+    padding: 0.35rem 1.35rem 1rem !important;
+    list-style: none !important;
+    counter-reset: toc;
+  }
+  .article-toc-item {
+    counter-increment: toc;
+    min-width: 0;
+    border-bottom: 1px solid rgba(229, 231, 235, 0.55);
+  }
+  .article-toc-link {
+    display: flex !important;
+    align-items: baseline;
+    gap: 0.7rem;
+    min-height: 3rem;
+    padding: 0.78rem 0.65rem 0.78rem 0.1rem;
+    color: #555 !important;
+    font-size: 0.8rem !important;
+    line-height: 1.4 !important;
+    transition: color 0.2s ease, transform 0.2s ease, background-color 0.2s ease;
+  }
+  .article-toc-link::before {
+    content: counter(toc, decimal-leading-zero);
+    flex: 0 0 1.55rem;
+    color: #bba15c;
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+  }
+  .article-toc-link:hover,
+  .article-toc-link:focus-visible {
+    color: #111 !important;
+    background: #fbfaf7;
+    transform: translateX(3px);
+  }
+
   /* ── Article motion and active table of contents ─────────────────────── */
   .article-reveal {
     opacity: 0;
@@ -1052,6 +1160,15 @@ const trendingPosts = await getFeaturedPosts(5);
     font-family: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif !important;
     font-weight: 600 !important;
     color: #0a0a0a !important;
+  }
+
+  @media (max-width: 640px) {
+    .article-editorial-note { padding: 1.15rem 1rem 1.2rem; }
+    .article-toc-heading { display: block; padding: 1.1rem 1rem 0.9rem; }
+    .article-toc-kicker { display: block; margin-bottom: 0.35rem; }
+    .article-toc-rule { display: block; margin: 0.8rem 0 0; }
+    .article-toc-list { grid-template-columns: 1fr; padding: 0.25rem 1rem 0.8rem !important; }
+    .article-toc-link { min-height: 2.8rem; padding-right: 0.2rem; }
   }
 
   @media (prefers-reduced-motion: reduce) {
