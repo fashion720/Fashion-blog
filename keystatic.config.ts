@@ -17,13 +17,13 @@ export default config({
         siteName: fields.text({ label: 'Site Name', defaultValue: 'FASHION EDITORIAL' }),
         tagline: fields.text({ label: 'Tagline', defaultValue: 'CURATED STYLE & FASHION INSIGHTS' }),
         logoImage: fields.image({ label: 'Logo Image', directory: 'public/images/brand', publicPath: '/images/brand/' }),
-        
-        footerDescription: fields.text({ 
-          label: 'Footer Description', 
+
+        footerDescription: fields.text({
+          label: 'Footer Description',
           defaultValue: 'Premium editorial content exploring contemporary fashion, timeless style, and cultural trends. Curated for the discerning reader.',
-          multiline: true 
+          multiline: true,
         }),
-        
+
         // Custom Navigation Toggle Fields
         showHomeLink: fields.checkbox({ label: 'Show Home Link', defaultValue: true }),
         showAllArticlesLink: fields.checkbox({ label: 'Show All Articles Link', defaultValue: true }),
@@ -42,7 +42,7 @@ export default config({
         twitterUrl: fields.text({ label: 'Twitter / X URL', defaultValue: 'https://twitter.com' }),
         facebookUrl: fields.text({ label: 'Facebook URL', defaultValue: '' }),
         contactEmail: fields.text({ label: 'Contact Email (for footer mail icon)', defaultValue: '' }),
-        
+
         showInstagram: fields.checkbox({ label: 'Show Instagram Icon', defaultValue: true }),
         showTwitter: fields.checkbox({ label: 'Show Twitter Icon', defaultValue: true }),
         showPinterest: fields.checkbox({ label: 'Show Pinterest Icon', defaultValue: true }),
@@ -67,13 +67,19 @@ export default config({
       slugField: 'title',
       path: 'src/content/posts/*',
       format: { contentField: 'content' },
+
+      // The Admin list always shows the title/slug. These are additional
+      // columns, so drafts are clearly identifiable without moving files
+      // or changing the existing published-post workflow.
+      columns: ['isDraft', 'publishedDate', 'updatedDate'],
+
       schema: {
         title: fields.slug({ name: { label: 'Title' } }),
-        
+
         // Editorial metadata is intentionally explicit so search/social snippets are curated per article.
         description: fields.text({ label: 'SEO Description' }),
         featuredImage: fields.image({ label: 'Featured Image', directory: 'public/images/content', publicPath: '/images/content/' }),
-        
+
         publishedDate: fields.date({ label: 'Published Date' }),
         updatedDate: fields.date({ label: 'Updated Date', defaultValue: { kind: 'today' } }),
         reviewedDate: fields.date({ label: 'Last Reviewed Date' }),
@@ -124,10 +130,10 @@ export default config({
       schema: {
         name: fields.slug({ name: { label: 'Category Name' } }),
         description: fields.text({ label: 'Description', multiline: true }),
-        parentCategory: fields.relationship({ 
-          label: 'Parent Category (Leave empty if this IS a Parent Category)', 
-          collection: 'categories', 
-          validation: { isRequired: false } 
+        parentCategory: fields.relationship({
+          label: 'Parent Category (Leave empty if this IS a Parent Category)',
+          collection: 'categories',
+          validation: { isRequired: false },
         }),
         color: fields.text({ label: 'Color (hex)', defaultValue: '#000000' }),
       },
