@@ -19,17 +19,17 @@ async function categoryImage(slug: string) {
 }
 
 const [menImage, womenImage, trendsImage] = await Promise.all([
-  categoryImage('men-s-fall-wardrobe'),
-  categoryImage('women-s-fall-wardrobe'),
-  categoryImage('trends'),
+  categoryImage('mens-fashion'),
+  categoryImage('womens-fashion'),
+  categoryImage('trends-and-aesthetics'),
 ]);
 const editor = await getAuthorBySlug('editorial-team');
 const editorAvatar = editor?.avatar ? `/images/authors/${editor.avatar}` : '/images/authors/sara-profile.png';
 
 const coverage = [
-  { title: "Men's Style", description: 'Outfit ideas, seasonal dressing, shoes, denim, and everyday wardrobe inspiration.', href: '/category/men-s-fall-wardrobe/', image: menImage },
-  { title: "Women's Style", description: 'Outfit inspiration, dresses, casual looks, workwear, and accessories.', href: '/category/women-s-fall-wardrobe/', image: womenImage },
-  { title: 'Fashion Trends', description: 'Current trends, aesthetics, viral fashion moments, and seasonal style ideas.', href: '/category/trends/', image: trendsImage },
+  { title: "Men's Style", description: 'Outfit ideas, seasonal dressing, shoes, denim, and everyday wardrobe inspiration.', href: '/category/mens-fashion/', image: menImage },
+  { title: "Women's Style", description: 'Outfit inspiration, dresses, casual looks, workwear, and accessories.', href: '/category/womens-fashion/', image: womenImage },
+  { title: 'Fashion Trends', description: 'Current trends, aesthetics, viral fashion moments, and seasonal style ideas.', href: '/category/trends-and-aesthetics/', image: trendsImage },
   { title: 'Style Guides', description: 'Practical styling advice, wardrobe guidance, outfit combinations, and fashion how-tos.', href: '/categories/', image: trendsImage },
 ];
 ---

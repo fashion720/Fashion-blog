@@ -105,15 +105,15 @@ const editorSupporting = await resolvePosts(editorSupportingRaw, 90);
 const latestPosts = await resolvePosts(take(allPosts, 6), 110);
 
 // 3️⃣ MEN'S STYLE
-const mensPostsRaw = await getPostsByCategory('men-s-fall-wardrobe');
+const mensPostsRaw = await getPostsByCategory('mens-fashion');
 const mensPosts = await resolvePosts(take(mensPostsRaw, 4), 100);
 
 // 4️⃣ WOMEN'S STYLE
-const womensPostsRaw = await getPostsByCategory('women-s-fall-wardrobe');
+const womensPostsRaw = await getPostsByCategory('womens-fashion');
 const womensPosts = await resolvePosts(take(womensPostsRaw, 4), 100);
 
 // 5️⃣ TRENDS & AESTHETICS
-const trendSlugs = ['trends', 'viral-footwear', 'pop-culture-and-aesthetics'];
+const trendSlugs = ['trends-and-aesthetics'];
 const trendPostsRaw = (
   await Promise.all(trendSlugs.map((s) => getPostsByCategory(s)))
 ).flat();
@@ -135,9 +135,9 @@ async function discoveryCard(categorySlug: string, label: string, description: s
 }
 
 const discoveryCards = await Promise.all([
-  discoveryCard('men-s-fall-wardrobe', "Men's Style", 'Outfit inspiration, wardrobe ideas, and style guides for men.', '/category/men-s-fall-wardrobe'),
-  discoveryCard('women-s-fall-wardrobe', "Women's Style", 'Easy outfit ideas, seasonal looks, and styling inspiration for women.', '/category/women-s-fall-wardrobe'),
-  discoveryCard('trends', 'Fashion Trends', 'Discover the aesthetics, pieces, and trends everyone is talking about.', '/category/trends'),
+  discoveryCard('mens-fashion', "Men's Style", 'Outfit inspiration, wardrobe ideas, and style guides for men.', '/category/mens-fashion'),
+  discoveryCard('womens-fashion', "Women's Style", 'Easy outfit ideas, seasonal looks, and styling inspiration for women.', '/category/womens-fashion'),
+  discoveryCard('trends-and-aesthetics', 'Fashion Trends', 'Discover the aesthetics, pieces, and trends everyone is talking about.', '/category/trends-and-aesthetics'),
 ]);
 ---
 
@@ -168,7 +168,7 @@ const discoveryCards = await Promise.all([
             <a href="/posts" class="inline-block bg-neutral-950 text-white text-[11px] uppercase tracking-[0.2em] font-medium px-7 py-4 hover:bg-[#bba15c] transition-colors duration-300 no-underline">
               Explore Outfit Ideas
             </a>
-            <a href="/category/trends" class="inline-block text-[11px] uppercase tracking-[0.2em] font-medium text-neutral-950 border-b border-neutral-950/30 pb-1 hover:text-[#bba15c] hover:border-[#bba15c] transition-colors duration-300 no-underline">
+            <a href="/category/trends-and-aesthetics" class="inline-block text-[11px] uppercase tracking-[0.2em] font-medium text-neutral-950 border-b border-neutral-950/30 pb-1 hover:text-[#bba15c] hover:border-[#bba15c] transition-colors duration-300 no-underline">
               Latest Trends →
             </a>
           </div>
@@ -374,9 +374,9 @@ const discoveryCards = await Promise.all([
           6 / 7 / 8 — MEN'S STYLE · WOMEN'S STYLE · TRENDS & AESTHETICS
           ════════════════════════════════════════════════════════════════ */}
       {[
-        { key: 'mens', title: "Men's Style", href: '/category/men-s-fall-wardrobe', cta: "View Men's Style →", posts: mensPosts },
-        { key: 'womens', title: "Women's Style", href: '/category/women-s-fall-wardrobe', cta: "View Women's Style →", posts: womensPosts },
-        { key: 'trends', title: 'Trends & Aesthetics', href: '/category/trends', cta: 'Explore Trends →', posts: trendPosts },
+        { key: 'mens', title: "Men's Style", href: '/category/mens-fashion', cta: "View Men's Style →", posts: mensPosts },
+        { key: 'womens', title: "Women's Style", href: '/category/womens-fashion', cta: "View Women's Style →", posts: womensPosts },
+        { key: 'trends-and-aesthetics', title: 'Trends & Aesthetics', href: '/category/trends-and-aesthetics', cta: 'Explore Trends →', posts: trendPosts },
       ].map(({ key, title, href, cta, posts }) => posts.length > 0 && (
         <section class="py-10 md:py-20 border-b border-neutral-200/40">
           <div class="flex items-center justify-between mb-8 md:mb-14 flex-wrap gap-3">
