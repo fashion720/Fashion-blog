@@ -57,6 +57,40 @@ function uniqueSlug(str: string) {
 
 let renderedContent = marked(rawContent ?? '') as string;
 
+// ─── FALLBACK ALT TEXT ──────────────────────────────────────────────────
+// Any <img> left with alt="" (empty) gets a readable alt. If the filename
+// itself is descriptive (e.g. "patch-pocket-denim-shorts.webp"), that's
+// used. If the filename is generic/meaningless (img1.jpg, a UUID, an
+// auto-tool export like "magic-erased-172...png"), it's skipped and the
+// post title is used alone instead — a real filename, if legible, always
+// beats a bare title.
+renderedContent = renderedContent.replace(/<img\b([^>]*)>/g, (match, attrs) => {
+  const altMatch = attrs.match(/alt="([^"]*)"/);
+  const srcMatch = attrs.match(/src="([^"]*)"/);
+  const currentAlt = altMatch ? altMatch[1].trim() : '';
+  if (currentAlt !== '' || !srcMatch) return match;
+
+  const rawName = decodeURIComponent(srcMatch[1].split('/').pop() || '')
+    .replace(/\.(webp|jpe?g|png)$/i, '')
+    .trim();
+
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(rawName);
+  const isGenericImgName = /^(img|image|photo|pic)[\s_-]*\d*$/i.test(rawName);
+  const isToolExport = /^(magic-erased|screenshot|untitled|download|export)[\s_-]*\d*$/i.test(rawName);
+  const isMostlyDigits = /^[\d\s_-]+$/.test(rawName);
+  const isUsableFilename =
+    rawName.length > 0 && !isUuid && !isGenericImgName && !isToolExport && !isMostlyDigits;
+
+  const cleanName = isUsableFilename ? rawName.replace(/[-_]/g, ' ').trim() : '';
+  const fallbackAlt = (cleanName ? `${cleanName} — ` : '') + entry.title;
+
+  const newAttrs = altMatch
+    ? attrs.replace(/alt="[^"]*"/, `alt="${fallbackAlt}"`)
+    : `${attrs} alt="${fallbackAlt}"`;
+
+  return `<img${newAttrs}>`;
+});
+
 // Add IDs to every H2 heading and collect them for the TOC
 renderedContent = renderedContent.replace(/<h2>(.*?)<\/h2>/gs, (_match, inner) => {
   const text = inner.replace(/<[^>]+>/g, '').trim();
