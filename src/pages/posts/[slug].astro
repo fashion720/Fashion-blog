@@ -356,6 +356,41 @@ const relatedPosts = await Promise.all(
 // Used only to decide whether the "Trending Now" heading should render —
 // PopularPosts fetches and displays this same data itself.
 const trendingPosts = await getFeaturedPosts(5);
+
+// ─── FAQPage STRUCTURED DATA ──────────────────────────────────────────────
+// Parses a "## Frequently Asked Questions" / "## FAQ" section (using ### for
+// each question, standardized sitewide) into schema.org FAQPage JSON-LD so
+// eligible posts can get FAQ rich results in Google Search.
+function extractFaqSchema(raw: string) {
+  const match = raw.match(/##\s*(?:Frequently Asked Questions|FAQ)[^\n]*\n([\s\S]*)/i);
+  if (!match) return null;
+
+  const section = match[1];
+  const blocks = section.split(/^###\s+/m).slice(1);
+  const mainEntity = blocks
+    .map((block) => {
+      const [rawQuestion, ...answerParts] = block.split('\n');
+      const question = rawQuestion.trim();
+      const answer = answerParts.join('\n').trim().replace(/\n{2,}/g, ' ').replace(/\s+/g, ' ');
+      if (!question || !answer) return null;
+      return {
+        '@type': 'Question',
+        name: question,
+        acceptedAnswer: { '@type': 'Answer', text: answer },
+      };
+    })
+    .filter(Boolean);
+
+  if (mainEntity.length === 0) return null;
+
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity,
+  };
+}
+
+const faqSchema = extractFaqSchema(rawContent ?? '');
 ---
 
 <Layout
@@ -551,6 +586,10 @@ const trendingPosts = await getFeaturedPosts(5);
   </main>
 
   <Footer />
+
+  {faqSchema && (
+    <script type="application/ld+json" set:html={JSON.stringify(faqSchema)} />
+  )}
 </Layout>
 
 <script define:vars={{ postUrl, postTitle: entry.title }}>
