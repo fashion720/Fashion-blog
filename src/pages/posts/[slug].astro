@@ -362,7 +362,7 @@ const trendingPosts = await getFeaturedPosts(5);
 // each question, standardized sitewide) into schema.org FAQPage JSON-LD so
 // eligible posts can get FAQ rich results in Google Search.
 function extractFaqSchema(raw: string) {
-  const match = raw.match(/##\s*(?:Frequently Asked Questions|FAQ)[^\n]*\n([\s\S]*)/i);
+  const match = raw.match(/##\s*.*(?:question|faq)[^\n]*\n([\s\S]*)/i);
   if (!match) return null;
 
   const section = match[1];
