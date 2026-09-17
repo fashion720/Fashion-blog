@@ -10,7 +10,7 @@ export default defineConfig({
   site: 'https://outfitedits.com',
 
   // ✅ Clean URLs configuration (bina .html extension ke)
-  trailingSlash: 'always',
+  trailingSlash: 'ignore',
 
   integrations: [
     react(),
