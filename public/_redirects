@@ -1,0 +1,65 @@
+# Legacy category aliases — send old taxonomy URLs directly to the current canonical category.
+/category/aesthetic-and-lifestyle-visuals.html /category/trends-and-aesthetics/ 301
+/category/aesthetic-and-lifestyle-visuals /category/trends-and-aesthetics/ 301
+/category/pop-culture-and-aesthetics.html /category/trends-and-aesthetics/ 301
+/category/pop-culture-and-aesthetics /category/trends-and-aesthetics/ 301
+/category/trends.html /category/trends-and-aesthetics/ 301
+/category/trends /category/trends-and-aesthetics/ 301
+/category/denim-and-basics-trends.html /category/denim-and-basics/ 301
+/category/denim-and-basics-trends /category/denim-and-basics/ 301
+/category/jeans-styles.html /category/denim-and-basics/ 301
+/category/jeans-styles /category/denim-and-basics/ 301
+/category/basics-layering.html /category/denim-and-basics/ 301
+/category/basics-layering /category/denim-and-basics/ 301
+/category/diy-and-custom.html /category/diy-and-upcycling/ 301
+/category/diy-and-custom /category/diy-and-upcycling/ 301
+/category/custom-apparel.html /category/diy-and-upcycling/ 301
+/category/custom-apparel /category/diy-and-upcycling/ 301
+/category/back-to-school.html /category/campus-style/ 301
+/category/back-to-school /category/campus-style/ 301
+/category/school-gear-and-essentials.html /category/campus-style/ 301
+/category/school-gear-and-essentials /category/campus-style/ 301
+/category/bags.html /category/accessories-and-footwear/ 301
+/category/bags /category/accessories-and-footwear/ 301
+/category/trending-accessories.html /category/accessories-and-footwear/ 301
+/category/trending-accessories /category/accessories-and-footwear/ 301
+/category/viral-footwear.html /category/accessories-and-footwear/ 301
+/category/viral-footwear /category/accessories-and-footwear/ 301
+/category/jewelry-and-layering.html /category/accessories-and-footwear/ 301
+/category/jewelry-and-layering /category/accessories-and-footwear/ 301
+/category/women-s-fall-wardrobe.html /category/womens-fashion/ 301
+/category/women-s-fall-wardrobe /category/womens-fashion/ 301
+/category/seasonal-fashion.html /category/womens-fashion/ 301
+/category/seasonal-fashion /category/womens-fashion/ 301
+/category/men-s-fall-wardrobe.html /category/mens-fashion/ 301
+/category/men-s-fall-wardrobe /category/mens-fashion/ 301
+
+# Legacy .html routes from the previous URL structure.
+/posts/:slug.html /posts/:slug/ 301
+/category/:slug.html /category/:slug/ 301
+/posts.html /posts/ 301
+/categories.html /categories/ 301
+/about.html /about/ 301
+/contact.html /contact/ 301
+/privacy-policy.html /privacy-policy/ 301
+/disclaimer.html /disclaimer/ 301
+/dmca.html /dmca/ 301
+/editorial-guidelines-policy.html /editorial-guidelines-policy/ 301
+/terms-of-service.html /terms-of-service/ 301
+/index.html / 301
+
+# Enforce the site's single trailing-slash URL format for current routes.
+/posts /posts/ 301
+/posts/:slug /posts/:slug/ 301
+/category/:slug /category/:slug/ 301
+/categories /categories/ 301
+/about /about/ 301
+/contact /contact/ 301
+/privacy-policy /privacy-policy/ 301
+/disclaimer /disclaimer/ 301
+/dmca /dmca/ 301
+/editorial-guidelines-policy /editorial-guidelines-policy/ 301
+/terms-of-service /terms-of-service/ 301
+
+# Preserve the existing sitemap index URL and support the older sitemap path.
+/sitemap.xml /sitemap-index.xml 301

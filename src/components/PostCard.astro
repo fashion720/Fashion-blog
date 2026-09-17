@@ -1,0 +1,125 @@
+---
+interface Props {
+  title: string;
+  slug: string;
+  description: string;
+  featuredImage?: string; // ⚡ Yahan ab direct scraped content image path aayega
+  author?: string;
+  publishedDate: string;
+  categories?: string[];
+  tags?: string[];
+}
+
+const {
+  title,
+  slug,
+  description,
+  featuredImage,
+  author,
+  publishedDate,
+  categories = [],
+  tags = [],
+} = Astro.props;
+
+// 👑 FIXED PARSER MAP: Ab automatic images bina kisi layout space broken glitch ke fully stretch cover karengi
+function resolveImage(img?: string) {
+  if (!img) return '/images/placeholder.jpg';
+  // Agar scraper se direct absolute path matching content body mile toh wahi use karo
+  if (img.startsWith('/') || img.startsWith('http')) return img;
+  return `/images/posts/${img}`;
+}
+
+const imgSrc = resolveImage(featuredImage);
+
+const formattedDate = new Date(publishedDate).toLocaleDateString('en-US', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+});
+---
+
+<article class="post-card card-3d group w-full bg-white p-4 border border-neutral-200/30 rounded-sm flex flex-col transition-all duration-300 hover:shadow-sm box-border overflow-hidden" data-tilt-card>
+  
+  {/* 🔒 Strict 4:5 Aspect Boundary Frame matching our single source canvas architecture */}
+  {/* ⚡ CROP LOCK: relative + flex properties make sure image fills the box and hides the whitespace underneath */}
+  <div class="card-img w-full aspect-[4/5] relative block bg-neutral-100 rounded-[1px] containment-layout overflow-hidden select-none shrink-0">
+    <a href={`/posts/${slug}/`} class="absolute inset-0 w-full h-full no-underline pointer-events-auto block">
+      <img
+        src={imgSrc}
+        alt={title}
+        width="600"
+        height="750"
+        loading="lazy"
+        decoding="async"
+        data-pin-nopin="true"
+        data-pin-nohover="true"
+        class="w-full h-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-103 block pointer-events-none select-none z-10 absolute inset-0 min-w-full min-h-full"
+        onerror="this.onerror=null; this.src='/images/placeholder.jpg';"
+      />
+    </a>
+  </div>
+
+  <div class="text-left pt-5 flex flex-col flex-1 min-w-0 w-full">
+    <a href={`/posts/${slug}/`} class="block no-underline flex-1 w-full">
+      {categories.length > 0 && (
+        <span class="block text-[10px] font-bold uppercase tracking-[0.2em] text-[#bba15c] mb-1.5">
+          {categories[0].replace(/-/g, ' ')}
+        </span>
+      )}
+      
+      {/* ⚡ HEIGHT SECURITY LAYER: Plays clean typography scales with strict line boundaries */}
+      <h3 class="text-base font-serif font-light tracking-tight text-neutral-950 mb-2 group-hover:text-neutral-700 transition-colors duration-200 leading-snug line-clamp-2 min-h-[44px] md:min-h-[48px]">
+        {title}
+      </h3>
+      
+      <p class="text-[12.5px] font-light text-neutral-500 leading-relaxed line-clamp-2 mb-4 break-words">
+        {description}
+      </p>
+    </a>
+    
+    {/* 👑 PREMIUM LABELS LAYER: Refined uppercase tracking sequence for high contrast editorial feel */}
+    <div class="text-[10px] uppercase tracking-[0.2em] text-neutral-400 mt-auto pt-2 border-t border-neutral-100/60 w-full block">
+      <time datetime={publishedDate}>{formattedDate}</time>
+    </div>
+  </div>
+</article>
+
+<style is:global>
+  /* 🔒 SECURE ANTI-INTERCEPTOR STYLES */
+  .containment-layout {
+    contain: paint !important;
+  }
+  .containment-layout span,
+  .containment-layout [class*="PIN_"],
+  .containment-layout [id*="PIN_"],
+  [data-pin-log="button_hover"] {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+</style>
+
+<script>
+  const cards = document.querySelectorAll<HTMLElement>('[data-tilt-card]');
+  const finePointer = window.matchMedia('(pointer: fine)');
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+  if (finePointer.matches && !reducedMotion.matches) {
+    cards.forEach((card) => {
+      card.addEventListener('pointermove', (event) => {
+        const rect = card.getBoundingClientRect();
+        const x = (event.clientX - rect.left) / rect.width - 0.5;
+        const y = (event.clientY - rect.top) / rect.height - 0.5;
+        card.classList.add('is-tilting');
+        card.style.transform = `perspective(1000px) rotateX(${(-y * 5).toFixed(2)}deg) rotateY(${(x * 5).toFixed(2)}deg) translateY(-8px)`;
+      });
+      card.addEventListener('pointerleave', () => {
+        card.classList.remove('is-tilting');
+        card.style.transform = '';
+      });
+    });
+  }
+</script>

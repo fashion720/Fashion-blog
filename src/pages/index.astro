@@ -1,0 +1,568 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import AdSlot from '../components/AdSlot.astro';
+import PostCard from '../components/PostCard.astro';
+import CompactPostRow from '../components/CompactPostRow.astro';
+import {
+  getAllPosts,
+  getAllCategories,
+  getPostsByCategory,
+  getSiteSettings,
+} from '../lib/keystatic-reader';
+
+const settings = await getSiteSettings();
+const allCategories = await getAllCategories();
+
+// 💸 MONETIZATION CONFIGURATION
+const isMonetized = settings.adsenseEnabled === true && Boolean(settings.adSlotHeader || settings.adSlotContent || settings.adSlotFooter);
+
+// ─── SHARED CONTENT HELPERS (unchanged extraction logic) ───────────────────
+
+async function getPostImage(post: any) {
+  const rawContent = (await post.entry.content()) as string;
+  if (!rawContent) return '/images/placeholder.jpg';
+
+  if (post.entry.sections && post.entry.sections[0]?.image) {
+    const img = post.entry.sections[0].image;
+    return img.startsWith('/') ? img : `/images/posts/${img}`;
+  }
+
+  const match = rawContent.match(/!\[.*?\]\((.*?)\)/);
+  if (match && match[1]) {
+    return match[1].trim();
+  }
+
+  return '/images/placeholder.jpg';
+}
+
+async function getPostDescription(post: any, length = 140) {
+  const rawContent = (await post.entry.content()) as string;
+  if (!rawContent) return 'Explore contemporary style and curated fashion insights inside this editorial.';
+
+  const cleanText = rawContent
+    .replace(/[#*_`~]/g, '')
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+    .replace(/^[-\s]*\n/gm, '')
+    .trim();
+
+  return cleanText.length > length ? `${cleanText.substring(0, length)}...` : cleanText;
+}
+
+async function resolvePosts(posts: any[], descLength = 120) {
+  return Promise.all(
+    posts.map(async (post) => {
+      const dynamicDesc = await getPostDescription(post, descLength);
+      const dynamicImg = await getPostImage(post);
+      return { ...post, dynamicDesc, dynamicImg };
+    })
+  );
+}
+
+const formatDate = (d: string) =>
+  new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+const categoryLabel = (slug: string) =>
+  allCategories.find((c) => c.slug === slug)?.entry.name || slug.replace(/-/g, ' ');
+
+// ─── BASE POOL ───────────────────────────────────────────────────────────
+// Every section below draws from this pool and removes what it uses, so no
+// article repeats twice on the homepage — even as new posts are published.
+
+const allPosts = await getAllPosts();
+const usedSlugs = new Set<string>();
+
+function take(posts: any[], count: number) {
+  const picked = posts.filter((p) => !usedSlugs.has(p.slug)).slice(0, count);
+  picked.forEach((p) => usedSlugs.add(p.slug));
+  return picked;
+}
+
+// 1️⃣ EDITOR'S PICKS — one flagship + three posts from different parent
+// categories, so the selection reads as curated rather than "latest 4".
+const flagship = take(allPosts, 1)[0];
+
+const editorSupportingRaw: any[] = [];
+const seenParents = new Set<string>();
+for (const post of allPosts) {
+  if (usedSlugs.has(post.slug) || editorSupportingRaw.length >= 3) continue;
+  const primaryCat = post.entry.categories?.[0];
+  const parentSlug =
+    allCategories.find((c) => c.slug === primaryCat)?.entry.parentCategory || primaryCat;
+  if (parentSlug && seenParents.has(parentSlug)) continue;
+  if (parentSlug) seenParents.add(parentSlug);
+  editorSupportingRaw.push(post);
+}
+editorSupportingRaw.forEach((p) => usedSlugs.add(p.slug));
+
+const flagshipResolved = flagship
+  ? { ...flagship, dynamicDesc: await getPostDescription(flagship, 160), dynamicImg: await getPostImage(flagship) }
+  : null;
+const editorSupporting = await resolvePosts(editorSupportingRaw, 90);
+
+// 2️⃣ LATEST POSTS — next 6 chronologically, untouched by curation above.
+const latestPosts = await resolvePosts(take(allPosts, 6), 110);
+
+// 3️⃣ MEN'S STYLE
+const mensPostsRaw = await getPostsByCategory('mens-fashion');
+const mensPosts = await resolvePosts(take(mensPostsRaw, 4), 100);
+
+// 4️⃣ WOMEN'S STYLE
+const womensPostsRaw = await getPostsByCategory('womens-fashion');
+const womensPosts = await resolvePosts(take(womensPostsRaw, 4), 100);
+
+// 5️⃣ TRENDS & AESTHETICS
+const trendSlugs = ['trends-and-aesthetics'];
+const trendPostsRaw = (
+  await Promise.all(trendSlugs.map((s) => getPostsByCategory(s)))
+).flat();
+const trendPostsDeduped = trendPostsRaw.filter(
+  (post, idx, arr) => arr.findIndex((p) => p.slug === post.slug) === idx
+);
+const trendPosts = await resolvePosts(take(trendPostsDeduped, 4), 100);
+
+// 6️⃣ READER FAVORITES — no view-tracking exists yet, so this is a curated
+// fallback (next strongest remaining posts) rather than invented stats.
+const readerFavorites = await resolvePosts(take(allPosts, 5), 90);
+
+// ─── "WHERE WOULD YOU LIKE TO START" DISCOVERY CARDS ───────────────────────
+
+async function discoveryCard(categorySlug: string, label: string, description: string, href: string) {
+  const posts = await getPostsByCategory(categorySlug);
+  const img = posts[0] ? await getPostImage(posts[0]) : '/images/placeholder.jpg';
+  return { label, description, href, img };
+}
+
+const discoveryCards = await Promise.all([
+  discoveryCard('mens-fashion', "Men's Style", 'Outfit inspiration, wardrobe ideas, and style guides for men.', '/category/mens-fashion/'),
+  discoveryCard('womens-fashion', "Women's Style", 'Easy outfit ideas, seasonal looks, and styling inspiration for women.', '/category/womens-fashion/'),
+  discoveryCard('trends-and-aesthetics', 'Fashion Trends', 'Discover the aesthetics, pieces, and trends everyone is talking about.', '/category/trends-and-aesthetics/'),
+]);
+---
+
+<Layout
+  title={`${settings.siteName} — Style That Fits Your Life`}
+  modifiedTime={flagship?.entry.updatedDate || new Date().toISOString()}
+>
+  <Header currentPath="/" />
+
+  <main class="bg-[#F8F6F2] min-h-screen font-sans antialiased text-neutral-900 w-full overflow-x-hidden">
+
+    {/* ══════════════════════════════════════════════════════════════════
+        1. HERO — editorial thesis, not a SaaS banner
+        ══════════════════════════════════════════════════════════════════ */}
+    <section class="hero-section max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 md:pt-12 pb-12 md:pb-16" data-hero-parallax>
+      <div class="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-8 lg:gap-10 min-[1440px]:gap-14 items-center">
+        <div class="order-2 lg:order-1 text-left space-y-6 md:space-y-7" data-hero-copy>
+          <span class="inline-block text-[10px] font-bold uppercase tracking-[0.35em] text-[#bba15c]">
+            Outfit Edits — New Season Edit
+          </span>
+          <h1 class="text-4xl sm:text-5xl md:text-6xl font-serif font-light tracking-tight text-neutral-950 leading-[1.05]">
+            Style That Fits Your Life.
+          </h1>
+          <p class="text-neutral-500 text-sm md:text-base leading-relaxed max-w-md font-light">
+            Discover outfit ideas, fashion trends, and practical style inspiration for every day, every season, and every occasion.
+          </p>
+          <div class="flex flex-wrap items-center gap-4 md:gap-6 pt-2">
+            <a href="/posts/" class="inline-block bg-neutral-950 text-white text-[11px] uppercase tracking-[0.2em] font-medium px-7 py-4 hover:bg-[#bba15c] transition-colors duration-300 no-underline">
+              Explore Outfit Ideas
+            </a>
+            <a href="/category/trends-and-aesthetics/" class="inline-block text-[11px] uppercase tracking-[0.2em] font-medium text-neutral-950 border-b border-neutral-950/30 pb-1 hover:text-[#bba15c] hover:border-[#bba15c] transition-colors duration-300 no-underline">
+              Latest Trends →
+            </a>
+          </div>
+        </div>
+
+        {flagshipResolved && (
+          <div class="hero-image-wrap order-1 lg:order-2 w-full aspect-[4/5] bg-white p-2 md:p-3 border border-neutral-200/30 shadow-sm relative overflow-hidden group" data-hero-image>
+            <a href={`/posts/${flagshipResolved.slug}/`} class="absolute inset-0 w-full h-full block">
+              <img
+                src={flagshipResolved.dynamicImg}
+                alt={flagshipResolved.entry.title}
+                data-pin-nopin="true"
+                loading="eager"
+                fetchpriority="high"
+                class="w-full h-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-103"
+                onerror="this.onerror=null; this.src='/images/placeholder.jpg';"
+              />
+            </a>
+          </div>
+        )}
+      </div>
+    </section>
+
+    {/* ══════════════════════════════════════════════════════════════════
+        2. WHERE WOULD YOU LIKE TO START — visual category discovery
+        ══════════════════════════════════════════════════════════════════ */}
+    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16 md:pb-24">
+      <div class="text-center mb-8 md:mb-12 space-y-2">
+        <h2 class="text-2xl md:text-3xl font-serif font-light tracking-tight text-neutral-950">
+          Where Would You Like to Start?
+        </h2>
+        <div class="w-12 h-[1px] bg-[#bba15c] mx-auto"></div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6">
+        {discoveryCards.map((card) => (
+          <a href={card.href} class="group relative block w-full aspect-[3/4] overflow-hidden no-underline bg-neutral-900">
+            <img
+              src={card.img}
+              alt={card.label}
+              loading="lazy"
+              data-pin-nopin="true"
+              class="w-full h-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-105"
+              onerror="this.onerror=null; this.src='/images/placeholder.jpg';"
+            />
+            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent"></div>
+            <div class="absolute inset-x-0 bottom-0 p-5 md:p-7 text-left">
+              <h3 class="text-white text-lg md:text-xl font-serif font-light tracking-tight mb-1.5 group-hover:text-[#e8d5a3] transition-colors duration-300">
+                {card.label}
+              </h3>
+              <p class="text-white/70 text-[11px] md:text-xs font-light leading-relaxed max-w-[220px]">
+                {card.description}
+              </p>
+              <span class="inline-block mt-3 text-[10px] uppercase tracking-[0.25em] text-white/90 border-b border-white/40 pb-0.5 group-hover:border-[#bba15c] group-hover:text-[#e8d5a3] transition-colors duration-300">
+                Discover
+              </span>
+            </div>
+          </a>
+        ))}
+      </div>
+    </section>
+
+    {/* ══════════════════════════════════════════════════════════════════
+        3. EDITORIAL BRAND STATEMENT
+        ══════════════════════════════════════════════════════════════════ */}
+    <section class="max-w-2xl mx-auto px-4 sm:px-6 text-center pb-16 md:pb-24">
+      <p class="text-[10px] font-bold uppercase tracking-[0.35em] text-[#bba15c] mb-4">
+        Make Getting Dressed Easier
+      </p>
+      <p class="text-lg md:text-2xl font-serif font-light text-neutral-800 leading-relaxed">
+        Outfit Edits brings together wearable outfit ideas, useful style guides, seasonal inspiration, and fashion trends — so you can spend less time wondering what to wear and more time feeling good in what you choose.
+      </p>
+    </section>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+      {/* ════════════════════════════════════════════════════════════════
+          4. EDITOR'S PICKS — 1 large + 3 supporting
+          ════════════════════════════════════════════════════════════════ */}
+      {flagshipResolved && (
+        <section class="py-10 md:py-20 border-b border-neutral-200/40">
+          <div class="text-center mb-8 md:mb-14 space-y-2">
+            <h2 class="text-[11px] font-sans tracking-[0.35em] uppercase text-neutral-950 font-bold">Editor's Picks</h2>
+            <div class="w-12 h-[1px] bg-[#bba15c] mx-auto"></div>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-8 lg:gap-12">
+            {/* Large featured pick */}
+            <a href={`/posts/${flagshipResolved.slug}/`} class="group block no-underline">
+              <div class="w-full aspect-[4/5] sm:aspect-[16/11] overflow-hidden bg-neutral-100 relative">
+                <img
+                  src={flagshipResolved.dynamicImg}
+                  alt={flagshipResolved.entry.title}
+                  loading="lazy"
+                  data-pin-nopin="true"
+                  class="w-full h-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-103"
+                  onerror="this.onerror=null; this.src='/images/placeholder.jpg';"
+                />
+              </div>
+              <div class="pt-5 space-y-2">
+                {flagshipResolved.entry.categories?.[0] && (
+                  <span class="block text-[10px] font-bold uppercase tracking-[0.2em] text-[#bba15c]">
+                    {categoryLabel(flagshipResolved.entry.categories[0])}
+                  </span>
+                )}
+                <h3 class="text-2xl md:text-3xl font-serif font-light text-neutral-950 leading-tight group-hover:text-neutral-700 transition-colors">
+                  {flagshipResolved.entry.title}
+                </h3>
+                <p class="text-neutral-500 text-sm font-light leading-relaxed max-w-lg">
+                  {flagshipResolved.dynamicDesc}
+                </p>
+                <span class="inline-block pt-1 text-[11px] uppercase tracking-[0.2em] font-medium text-neutral-950 border-b border-neutral-950/20 group-hover:text-[#bba15c] group-hover:border-[#bba15c] transition-colors">
+                  Read Story →
+                </span>
+              </div>
+            </a>
+
+            {/* Supporting picks */}
+            <div class="space-y-6 lg:space-y-7">
+              {editorSupporting.map((post) => (
+                <a href={`/posts/${post.slug}/`} class="group flex gap-4 items-start no-underline border-b border-neutral-200/40 pb-6 last:border-0 last:pb-0">
+                  <div class="w-24 h-24 md:w-28 md:h-28 shrink-0 overflow-hidden bg-neutral-100 relative">
+                    <img
+                      src={post.dynamicImg}
+                      alt={post.entry.title}
+                      loading="lazy"
+                      data-pin-nopin="true"
+                      class="w-full h-full object-cover object-center"
+                      onerror="this.onerror=null; this.src='/images/placeholder.jpg';"
+                    />
+                  </div>
+                  <div class="min-w-0 space-y-1">
+                    {post.entry.categories?.[0] && (
+                      <span class="block text-[9px] font-bold uppercase tracking-[0.2em] text-[#bba15c]">
+                        {categoryLabel(post.entry.categories[0])}
+                      </span>
+                    )}
+                    <h4 class="text-sm md:text-base font-serif font-light text-neutral-950 leading-snug line-clamp-2 group-hover:text-neutral-700 transition-colors">
+                      {post.entry.title}
+                    </h4>
+                    <time datetime={post.entry.publishedDate} class="block text-[10px] uppercase tracking-[0.15em] text-neutral-400 pt-0.5">
+                      {formatDate(post.entry.publishedDate)}
+                    </time>
+                  </div>
+                </a>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {isMonetized && (
+        <div class="my-12 p-6 bg-white border border-neutral-200/30 text-center relative max-w-5xl mx-auto">
+          <span class="absolute -top-2.5 left-4 bg-[#F8F6F2] px-2 text-[9px] font-bold uppercase tracking-widest text-neutral-400">Sponsored</span>
+          <AdSlot slot="header" format="horizontal" />
+        </div>
+      )}
+
+      {/* ════════════════════════════════════════════════════════════════
+          5. LATEST POSTS
+          ════════════════════════════════════════════════════════════════ */}
+      {latestPosts.length > 0 && (
+        <section class="py-10 md:py-20 border-b border-neutral-200/40">
+          <div class="text-center mb-8 md:mb-14 space-y-2">
+            <h2 class="text-[11px] font-sans tracking-[0.35em] uppercase text-neutral-950 font-bold">Latest Posts</h2>
+            <div class="w-12 h-[1px] bg-[#bba15c] mx-auto"></div>
+          </div>
+
+          <div class="hidden md:grid grid-cols-3 gap-8">
+            {latestPosts.map((post) => (
+              <PostCard
+                title={post.entry.title}
+                slug={post.slug}
+                description={post.dynamicDesc}
+                featuredImage={post.dynamicImg}
+                publishedDate={post.entry.publishedDate}
+                categories={post.entry.categories}
+              />
+            ))}
+          </div>
+
+          <div class="block md:hidden space-y-6">
+            {latestPosts.map((post) => (
+              <CompactPostRow
+                title={post.entry.title}
+                slug={post.slug}
+                description={post.dynamicDesc}
+                featuredImage={post.dynamicImg}
+                categories={post.entry.categories}
+              />
+            ))}
+          </div>
+
+          <div class="text-center mt-10 md:mt-14">
+            <a href="/posts/" class="inline-block text-[11px] uppercase tracking-[0.25em] font-medium text-neutral-950 border-b border-neutral-950/20 pb-1 hover:text-[#bba15c] hover:border-[#bba15c] transition-colors duration-300 no-underline">
+              View All Articles →
+            </a>
+          </div>
+        </section>
+      )}
+
+      {/* ════════════════════════════════════════════════════════════════
+          6 / 7 / 8 — MEN'S STYLE · WOMEN'S STYLE · TRENDS & AESTHETICS
+          ════════════════════════════════════════════════════════════════ */}
+      {[
+        { key: 'mens', title: "Men's Style", href: '/category/mens-fashion/', cta: "View Men's Style →", posts: mensPosts },
+        { key: 'womens', title: "Women's Style", href: '/category/womens-fashion/', cta: "View Women's Style →", posts: womensPosts },
+        { key: 'trends-and-aesthetics', title: 'Trends & Aesthetics', href: '/category/trends-and-aesthetics/', cta: 'Explore Trends →', posts: trendPosts },
+      ].map(({ key, title, href, cta, posts }) => posts.length > 0 && (
+        <section class="py-10 md:py-20 border-b border-neutral-200/40">
+          <div class="flex items-center justify-between mb-8 md:mb-14 flex-wrap gap-3">
+            <div class="space-y-2">
+              <h2 class="text-[11px] font-sans tracking-[0.35em] uppercase text-neutral-950 font-bold">{title}</h2>
+              <div class="w-12 h-[1px] bg-[#bba15c]"></div>
+            </div>
+            <a href={href} class="text-[11px] uppercase tracking-[0.2em] font-medium text-neutral-950 border-b border-neutral-950/20 pb-1 hover:text-[#bba15c] hover:border-[#bba15c] transition-colors duration-300 no-underline">
+              {cta}
+            </a>
+          </div>
+
+          <div class={`hidden md:grid gap-6 ${posts.length >= 4 ? 'grid-cols-4' : posts.length === 3 ? 'grid-cols-3 max-w-6xl mx-auto' : 'grid-cols-2 max-w-4xl mx-auto'}`}>
+            {posts.map((post) => (
+              <PostCard
+                title={post.entry.title}
+                slug={post.slug}
+                description={post.dynamicDesc}
+                featuredImage={post.dynamicImg}
+                publishedDate={post.entry.publishedDate}
+                categories={post.entry.categories}
+              />
+            ))}
+          </div>
+
+          <div class="block md:hidden space-y-6">
+            {posts.map((post) => (
+              <CompactPostRow
+                title={post.entry.title}
+                slug={post.slug}
+                description={post.dynamicDesc}
+                featuredImage={post.dynamicImg}
+                categories={post.entry.categories}
+              />
+            ))}
+          </div>
+        </section>
+      ))}
+
+      {isMonetized && (
+        <div class="my-14 p-6 bg-white border border-neutral-200/30 text-center relative max-w-5xl mx-auto">
+          <span class="absolute -top-2.5 left-4 bg-[#F8F6F2] px-2 text-[9px] font-bold uppercase tracking-widest text-neutral-400">Sponsored</span>
+          <AdSlot slot="footer" format="horizontal" />
+        </div>
+      )}
+
+      {/* ════════════════════════════════════════════════════════════════
+          9. READER FAVORITES
+          ════════════════════════════════════════════════════════════════ */}
+      {readerFavorites.length > 0 && (
+        <section class="py-10 md:py-20 border-b border-neutral-200/40">
+          <div class="text-center mb-8 md:mb-14 space-y-2">
+            <h2 class="text-[11px] font-sans tracking-[0.35em] uppercase text-neutral-950 font-bold">Reader Favorites</h2>
+            <div class="w-12 h-[1px] bg-[#bba15c] mx-auto"></div>
+          </div>
+
+          <div class="hidden md:grid grid-cols-5 gap-5">
+            {readerFavorites.map((post) => (
+              <a href={`/posts/${post.slug}/`} class="group block no-underline">
+                <div class="w-full aspect-[3/4] overflow-hidden bg-neutral-100 relative">
+                  <img
+                    src={post.dynamicImg}
+                    alt={post.entry.title}
+                    loading="lazy"
+                    data-pin-nopin="true"
+                    class="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
+                    onerror="this.onerror=null; this.src='/images/placeholder.jpg';"
+                  />
+                </div>
+                <h4 class="text-xs font-serif font-light text-neutral-950 leading-snug line-clamp-2 pt-3 group-hover:text-neutral-700 transition-colors">
+                  {post.entry.title}
+                </h4>
+              </a>
+            ))}
+          </div>
+
+          <div class="block md:hidden space-y-6">
+            {readerFavorites.map((post) => (
+              <CompactPostRow
+                title={post.entry.title}
+                slug={post.slug}
+                description={post.dynamicDesc}
+                featuredImage={post.dynamicImg}
+                categories={post.entry.categories}
+              />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* ════════════════════════════════════════════════════════════════
+          10. MEET OUTFIT EDITS
+          ════════════════════════════════════════════════════════════════ */}
+      <section class="py-14 md:py-24 border-b border-neutral-200/40">
+        <div class="max-w-4xl mx-auto flex flex-col md:flex-row items-center gap-8 md:gap-14 bg-white p-6 md:p-12 border border-neutral-200/30">
+          <img
+            src="/images/authors/sara-profile.webp"
+            alt="Outfit Edits Editorial Team, Outfit Edits"
+            class="w-28 h-28 md:w-40 md:h-40 rounded-full object-cover shrink-0"
+          />
+          <div class="text-center md:text-left space-y-3">
+            <span class="block text-[10px] font-bold uppercase tracking-[0.3em] text-[#bba15c]">
+              Meet Outfit Edits
+            </span>
+            <p class="text-neutral-700 text-sm md:text-base leading-relaxed font-light max-w-lg">
+              Outfit Edits is an independent fashion publication built around one idea: dressing well shouldn't take all morning. We create practical outfit ideas, seasonal style guides, and wearable trend breakdowns designed around real, everyday wardrobes — not runways.
+            </p>
+            <a href="/about/" class="inline-block pt-1 text-[11px] uppercase tracking-[0.2em] font-medium text-neutral-950 border-b border-neutral-950/20 hover:text-[#bba15c] hover:border-[#bba15c] transition-colors duration-300 no-underline">
+              Learn More About Us →
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {isMonetized && (
+        <div class="my-14 p-6 bg-white border border-neutral-200/30 text-center relative max-w-5xl mx-auto">
+          <AdSlot slot="content" format="horizontal" />
+        </div>
+      )}
+
+      {/* ════════════════════════════════════════════════════════════════
+          11. NEWSLETTER
+          ════════════════════════════════════════════════════════════════ */}
+      <section class="bg-neutral-950 text-white py-12 md:py-24 px-4 md:px-6 mt-8 mb-14 md:mb-24">
+        <div class="max-w-xl mx-auto text-center space-y-4">
+          <span class="text-[10px] tracking-[0.3em] uppercase text-[#bba15c] font-bold">Newsletter</span>
+          <h2 class="text-2xl md:text-4xl font-serif font-light tracking-tight">Stay in the Style Loop</h2>
+          <p class="text-xs md:text-sm text-neutral-400 font-light leading-relaxed max-w-xs mx-auto">
+            Get the latest outfit ideas, fashion trends, and useful style inspiration delivered straight to your inbox.
+          </p>
+          <form class="flex flex-col gap-2 max-w-md mx-auto pt-2">
+            <input
+              type="email"
+              placeholder="Your email address"
+              class="w-full bg-neutral-900 border border-neutral-800 text-xs px-4 py-3 text-white focus:outline-none focus:border-[#bba15c] transition-colors"
+              required
+            />
+            <button type="submit" class="w-full bg-white text-neutral-950 font-bold uppercase tracking-widest text-[10px] py-3 hover:bg-[#bba15c] hover:text-white transition duration-300">
+              Subscribe
+            </button>
+          </form>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <Footer />
+</Layout>
+
+<script>
+  const hero = document.querySelector<HTMLElement>('[data-hero-parallax]');
+  const heroImage = document.querySelector<HTMLElement>('[data-hero-image]');
+  const heroCopy = document.querySelector<HTMLElement>('[data-hero-copy]');
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const finePointer = window.matchMedia('(pointer: fine)');
+
+  if (hero && heroImage && heroCopy && finePointer.matches && !reducedMotion.matches) {
+    let frame = 0;
+    let pointerX = 0;
+    let pointerY = 0;
+    hero.addEventListener('pointermove', (event) => {
+      const rect = hero.getBoundingClientRect();
+      pointerX = (event.clientX - rect.left) / rect.width - 0.5;
+      pointerY = (event.clientY - rect.top) / rect.height - 0.5;
+      if (!frame) {
+        frame = requestAnimationFrame(() => {
+          heroImage.style.transform = `translate3d(${(pointerX * 10).toFixed(2)}px, ${(pointerY * 8).toFixed(2)}px, 0)`;
+          heroCopy.style.transform = `translate3d(${(-pointerX * 4).toFixed(2)}px, ${(-pointerY * 3).toFixed(2)}px, 0)`;
+          frame = 0;
+        });
+      }
+    });
+    hero.addEventListener('pointerleave', () => {
+      heroImage.style.transform = '';
+      heroCopy.style.transform = '';
+    });
+  }
+</script>
+
+<style is:global>
+  html, body {
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+  }
+  .containment-layout {
+    contain: paint !important;
+  }
+</style>

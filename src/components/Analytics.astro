@@ -1,0 +1,75 @@
+---
+/**
+ * Analytics Component
+ * Integrates Google Analytics 4, Pinterest Analytics, and Cloudflare Web Analytics
+ */
+
+const GA4_ID = import.meta.env.PUBLIC_GA4_ID;
+const PINTEREST_TAG = import.meta.env.PUBLIC_PINTEREST_TAG;
+const CLOUDFLARE_ANALYTICS = import.meta.env.PUBLIC_CLOUDFLARE_ANALYTICS;
+const ADSENSE_CLIENT = import.meta.env.PUBLIC_ADSENSE_CLIENT;
+const ADSENSE_ENABLED = import.meta.env.PUBLIC_ADSENSE_ENABLED === 'true';
+---
+
+<!-- Google AdSense loader (loaded ONCE here; AdSlot.astro only pushes its own slots) -->
+{ADSENSE_ENABLED && ADSENSE_CLIENT && (
+  <script
+    async
+    src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`}
+    crossorigin="anonymous"
+  ></script>
+)}
+
+<!-- Google Analytics 4 -->
+{GA4_ID && (
+  <>
+    <script async src={`https://www.googletagmanager.com/gtag/js?id=${GA4_ID}`}></script>
+    <script is:inline define:vars={{ GA4_ID }}>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', GA4_ID, {
+        page_path: window.location.pathname,
+        send_page_view: true
+      });
+    </script>
+  </>
+)}
+
+<!-- Pinterest Analytics -->
+{PINTEREST_TAG && (
+  <>
+    <script is:inline define:vars={{ PINTEREST_TAG }}>
+      !function(e){if(!window.pintrk){window.pintrk = function () {
+        window.pintrk.queue.push(Array.prototype.slice.call(arguments))};var
+        n=window.pintrk;n.queue=[],n.version="3.0";var
+        t=document.createElement("script");t.async=!0,t.src=e;var
+        r=document.getElementsByTagName("script")[0];
+        r.parentNode.insertBefore(t,r)}}("https://s.pinimg.com/ct/core.js");
+      pintrk('load', PINTEREST_TAG);
+      pintrk('page');
+    </script>
+    <noscript>
+      <img height="1" width="1" style="display:none;" alt=""
+        src={`https://ct.pinterest.com/v3/?tid=${PINTEREST_TAG}&noscript=1`} />
+    </noscript>
+  </>
+)}
+
+<!-- Cloudflare Web Analytics -->
+{CLOUDFLARE_ANALYTICS && (
+  <script 
+    defer 
+    src='https://static.cloudflareinsights.com/beacon.min.js' 
+    data-cf-beacon={`{"token": "${CLOUDFLARE_ANALYTICS}"}`}>
+  </script>
+)}
+
+<style>
+  /* Analytics placeholder styles */
+  noscript img {
+    position: absolute;
+    left: -9999px;
+  }
+</style>
+
