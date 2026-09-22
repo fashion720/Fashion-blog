@@ -1,0 +1,72 @@
+name: Auto-submit published articles to IndexNow
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/content/posts/**.mdx"
+
+jobs:
+  indexnow:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout with history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Find published articles in this push and submit to IndexNow
+        env:
+          INDEXNOW_KEY: ee96345fdfac4c7e8302d67749a47e34
+          SITE_HOST: outfitedits.com
+        run: |
+          set -e
+
+          # Files added or modified in this push, under src/content/posts, ending in .mdx
+          CHANGED_FILES=$(git diff --name-only --diff-filter=ACM HEAD^ HEAD -- 'src/content/posts/*.mdx' || true)
+
+          if [ -z "$CHANGED_FILES" ]; then
+            echo "No post files changed in this push. Nothing to do."
+            exit 0
+          fi
+
+          URLS_JSON="[]"
+
+          for FILE in $CHANGED_FILES; do
+            if [ -f "$FILE" ]; then
+              IS_DRAFT=$(grep -m1 "^isDraft:" "$FILE" | awk '{print $2}' | tr -d '\r')
+              if [ "$IS_DRAFT" = "false" ]; then
+                SLUG=$(basename "$FILE" .mdx)
+                URL="https://${SITE_HOST}/${SLUG}/"
+                echo "Publishing (isDraft: false): $URL"
+                URLS_JSON=$(python3 -c "import json,sys; a=json.loads('$URLS_JSON'); a.append('$URL'); print(json.dumps(a))")
+              else
+                echo "Skipping (still draft or unknown): $FILE"
+              fi
+            fi
+          done
+
+          COUNT=$(python3 -c "import json; print(len(json.loads('$URLS_JSON')))")
+
+          if [ "$COUNT" = "0" ]; then
+            echo "No newly published (isDraft:false) articles in this push. Nothing to submit."
+            exit 0
+          fi
+
+          PAYLOAD=$(python3 -c "
+import json
+urls = json.loads('$URLS_JSON')
+payload = {
+    'host': '${SITE_HOST}',
+    'key': '${INDEXNOW_KEY}',
+    'keyLocation': 'https://${SITE_HOST}/${INDEXNOW_KEY}.txt',
+    'urlList': urls
+}
+print(json.dumps(payload))
+")
+
+          echo "Submitting $COUNT URL(s) to IndexNow..."
+          curl -s -X POST "https://api.indexnow.org/IndexNow" \
+            -H "Content-Type: application/json; charset=utf-8" \
+            -d "$PAYLOAD" \
+            -w "\nHTTP Status: %{http_code}\n"
