@@ -1,6 +1,7 @@
 ---
 export const prerender = true;
 
+import { getRelatedPosts } from '../../lib/related';
 import Layout from '../../layouts/Layout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
@@ -309,33 +310,10 @@ const breadcrumbItems = [
 
 // ─── RELATED POSTS ────────────────────────────────────────────────────────────
 
-// Fisher-Yates shuffle so related posts rotate per build instead of always
-// showing the same fixed 3 articles for every post in a category.
-function shuffleArray<T>(arr: T[]): T[] {
-  const result = [...arr];
-  for (let i = result.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [result[i], result[j]] = [result[j], result[i]];
-  }
-  return result;
-}
-
-const categoryPoolForRelated = primaryCategorySlug
-  ? (await getPostsByCategory(primaryCategorySlug)).filter((p) => p.slug !== post.slug)
-  : [];
-
-// ⚡ Cross-category matches: posts that share a tag with this post, even if
-// they live in a different category. Widens the related-posts pool beyond
-// a single category so internal links reach across the site.
-const tagPoolForRelated = entry.tags && entry.tags.length > 0
-  ? (await getPostsByTag(entry.tags)).filter((p) => p.slug !== post.slug)
-  : [];
-
-const combinedPoolForRelated = [...categoryPoolForRelated, ...tagPoolForRelated].filter(
-  (p, index, arr) => arr.findIndex((x) => x.slug === p.slug) === index
-);
-
-const relatedPostsRaw = shuffleArray(combinedPoolForRelated).slice(0, 3);
+// Related posts are chosen automatically by src/lib/related.ts: closest topic
+// match first, and every post is guaranteed a few incoming links, so new
+// articles never end up orphaned. Deterministic — stable between builds.
+const relatedPostsRaw = await getRelatedPosts(post.slug, 6);
 
 const categoryNameForRelated = categoryBreadcrumb?.current?.name ?? null;
 
