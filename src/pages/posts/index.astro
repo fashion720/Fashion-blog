@@ -3,8 +3,9 @@ import Layout from '../../layouts/Layout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import PostCard from '../../components/PostCard.astro';
-import { getAllPosts } from '../../lib/keystatic-reader';
+import { getAllPosts, getAllCategories } from '../../lib/keystatic-reader';
 const posts = await getAllPosts();
+const allCategories = (await getAllCategories()) || [];
 
 // Same first-image extraction used on the homepage and category pages,
 // since `featuredImage` in the posts schema is a no-op field.
@@ -28,25 +29,91 @@ async function getPostImage(post: any) {
 const postsWithImages = await Promise.all(
   posts.map(async (post) => ({ ...post, dynamicImg: await getPostImage(post) }))
 );
+
+// Group every post under its primary category so this page works as a real
+// archive hub: each group links to its category page, and every post is
+// reachable from here with a normal <a> link.
+const CATEGORY_ORDER = [
+  'womens-fashion',
+  'mens-fashion',
+  'trends-and-aesthetics',
+  'denim-and-basics',
+  'campus-style',
+  'diy-and-upcycling',
+  'accessories-and-footwear',
+];
+
+const groups = CATEGORY_ORDER.map((slug) => ({
+  slug,
+  name: allCategories.find((c) => c.slug === slug)?.entry.name || slug.replace(/-/g, ' '),
+  posts: postsWithImages.filter((p) => p.entry.categories?.[0] === slug),
+})).filter((g) => g.posts.length > 0);
+
+const groupedSlugs = new Set(groups.flatMap((g) => g.posts.map((p) => p.slug)));
+const otherPosts = postsWithImages.filter((p) => !groupedSlugs.has(p.slug));
 ---
-<Layout title="All Outfit Ideas & Style Guides — Outfit Edits" description="Browse all outfit ideas, style guides, and fashion inspiration posts.">
+<Layout title="All Outfit Ideas & Style Guides — Outfit Edits" description="Browse every Outfit Edits outfit idea and style guide, organized by women's fashion, men's fashion, trends, denim, campus style, DIY upcycling, and accessories.">
   <Header currentPath="/posts" />
   <main class="min-h-screen container mx-auto px-4 py-12">
-    <h1 class="text-4xl font-extrabold mb-10">All Posts</h1>
-    {postsWithImages.length > 0 ? (
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {postsWithImages.map((post) => (
-          <PostCard
-            title={post.entry.title}
-            slug={post.slug}
-            description={post.entry.description}
-            featuredImage={post.dynamicImg}
-            publishedDate={post.entry.publishedDate}
-            categories={post.entry.categories}
-            tags={post.entry.tags}
-          />
+    <h1 class="text-4xl font-extrabold mb-4">All Outfit Ideas &amp; Style Guides</h1>
+    <p class="text-gray-600 max-w-3xl mb-6 leading-relaxed">
+      Every Outfit Edits guide in one place. Browse practical outfit ideas for women and men,
+      seasonal looks, trend breakdowns, denim and campus style, DIY upcycling projects, and
+      the sneakers, bags, and jewelry that finish an outfit.
+    </p>
+    {groups.length > 0 && (
+      <nav aria-label="Browse by category" class="flex flex-wrap gap-3 mb-12">
+        {groups.map((g) => (
+          <a href={`/category/${g.slug}/`} class="px-4 py-2 border border-neutral-300 text-xs uppercase tracking-wider text-neutral-700 hover:bg-neutral-900 hover:text-white transition no-underline">
+            {g.name}
+          </a>
         ))}
-      </div>
+      </nav>
+    )}
+    {postsWithImages.length > 0 ? (
+      <>
+        {groups.map((g) => (
+          <section class="mb-16">
+            <div class="flex items-baseline justify-between mb-6 border-b border-neutral-200 pb-3">
+              <h2 class="text-2xl font-bold">{g.name}</h2>
+              <a href={`/category/${g.slug}/`} class="text-xs uppercase tracking-wider text-neutral-600 hover:text-neutral-950 no-underline">
+                View all {g.name} →
+              </a>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {g.posts.map((post) => (
+                <PostCard
+                  title={post.entry.title}
+                  slug={post.slug}
+                  description={post.entry.description}
+                  featuredImage={post.dynamicImg}
+                  publishedDate={post.entry.publishedDate}
+                  categories={post.entry.categories}
+                  tags={post.entry.tags}
+                />
+              ))}
+            </div>
+          </section>
+        ))}
+        {otherPosts.length > 0 && (
+          <section class="mb-16">
+            <h2 class="text-2xl font-bold mb-6 border-b border-neutral-200 pb-3">More Style Guides</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {otherPosts.map((post) => (
+                <PostCard
+                  title={post.entry.title}
+                  slug={post.slug}
+                  description={post.entry.description}
+                  featuredImage={post.dynamicImg}
+                  publishedDate={post.entry.publishedDate}
+                  categories={post.entry.categories}
+                  tags={post.entry.tags}
+                />
+              ))}
+            </div>
+          </section>
+        )}
+      </>
     ) : (
       <p class="text-gray-600">No posts published yet.</p>
     )}
