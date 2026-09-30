@@ -29,7 +29,7 @@ const postsWithImages = await Promise.all(
   posts.map(async (post) => ({ ...post, dynamicImg: await getPostImage(post) }))
 );
 ---
-<Layout title="All Posts - Fashion Blog" description="Browse all outfit ideas, style guides, and fashion inspiration posts.">
+<Layout title="All Outfit Ideas & Style Guides — Outfit Edits" description="Browse all outfit ideas, style guides, and fashion inspiration posts.">
   <Header currentPath="/posts" />
   <main class="min-h-screen container mx-auto px-4 py-12">
     <h1 class="text-4xl font-extrabold mb-10">All Posts</h1>
