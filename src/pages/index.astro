@@ -138,6 +138,8 @@ const discoveryCards = await Promise.all([
   discoveryCard('mens-fashion', "Men's Style", 'Outfit inspiration, wardrobe ideas, and style guides for men.', '/category/mens-fashion/'),
   discoveryCard('womens-fashion', "Women's Style", 'Easy outfit ideas, seasonal looks, and styling inspiration for women.', '/category/womens-fashion/'),
   discoveryCard('trends-and-aesthetics', 'Fashion Trends', 'Discover the aesthetics, pieces, and trends everyone is talking about.', '/category/trends-and-aesthetics/'),
+  discoveryCard('diy-and-upcycling', 'DIY & Upcycling', 'Creative ways to restyle, customize, and give old clothes a second life.', '/category/diy-and-upcycling/'),
+  discoveryCard('accessories-and-footwear', 'Accessories & Footwear', 'Sneakers, bags, jewelry, and the finishing touches that complete a look.', '/category/accessories-and-footwear/'),
 ]);
 ---
 
@@ -203,7 +205,7 @@ const discoveryCards = await Promise.all([
         <div class="w-12 h-[1px] bg-[#bba15c] mx-auto"></div>
       </div>
 
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6">
+      <div class="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6">
         {discoveryCards.map((card) => (
           <a href={card.href} class="group relative block w-full aspect-[3/4] overflow-hidden no-underline bg-neutral-900">
             <img
