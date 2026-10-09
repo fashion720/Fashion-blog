@@ -150,3 +150,29 @@
 
 # Preserve the existing sitemap index URL and support the older sitemap path.
 /sitemap.xml /sitemap-index.xml 301
+
+# Deleted-post redirects (indexing cleanup, Oct 2026) — posts removed before the merge with no redirect.
+/posts/10-senior-jean-shorts-painting-ideas/ /posts/20-senior-year-jeans-ideas-that-aren-t-basic/ 301
+/posts/10-senior-jean-shorts-painting-ideas /posts/20-senior-year-jeans-ideas-that-aren-t-basic/ 301
+/posts/12-spirit-jeans-ideas-game-day-homecoming/ /posts/12-spirit-jeans-ideas-for-fall-homecoming-game-day/ 301
+/posts/12-spirit-jeans-ideas-game-day-homecoming /posts/12-spirit-jeans-ideas-for-fall-homecoming-game-day/ 301
+/posts/16-easy-fall-outfit-ideas-casual-chic/ /posts/19-casual-outfits-for-women-s-everyday-chic/ 301
+/posts/16-easy-fall-outfit-ideas-casual-chic /posts/19-casual-outfits-for-women-s-everyday-chic/ 301
+/posts/18-classy-casual-winter-outfits-to-try-this-season/ /posts/16-casual-winter-outfit-ideas-flattering-look/ 301
+/posts/18-classy-casual-winter-outfits-to-try-this-season /posts/16-casual-winter-outfit-ideas-flattering-look/ 301
+/posts/20-classy-chic-winter-fashion-outfits-for-a-flattering-look/ /posts/20-fresh-stylish-winter-outfit-inspiration-to-try-now/ 301
+/posts/20-classy-chic-winter-fashion-outfits-for-a-flattering-look /posts/20-fresh-stylish-winter-outfit-inspiration-to-try-now/ 301
+/posts/20-classy-chic-winter-outfits-to-try-now/ /posts/20-fresh-stylish-winter-outfit-inspiration-to-try-now/ 301
+/posts/20-classy-chic-winter-outfits-to-try-now /posts/20-fresh-stylish-winter-outfit-inspiration-to-try-now/ 301
+/posts/20-modern-plus-size-winter-capsule-wardrobe/ /posts/19-cute-plus-size-fall-outfits-for-curvy-women-this-fall/ 301
+/posts/20-modern-plus-size-winter-capsule-wardrobe /posts/19-cute-plus-size-fall-outfits-for-curvy-women-this-fall/ 301
+/posts/7-casual-sports-bar-outfits-for-women-game-day-aesthetic/ /posts/12-spirit-jeans-ideas-for-fall-homecoming-game-day/ 301
+/posts/7-casual-sports-bar-outfits-for-women-game-day-aesthetic /posts/12-spirit-jeans-ideas-for-fall-homecoming-game-day/ 301
+/posts/best-colors-to-wear-this-summer/ /posts/20-easy-summer-to-fall-transition-outfits-to-try-this-year/ 301
+/posts/best-colors-to-wear-this-summer /posts/20-easy-summer-to-fall-transition-outfits-to-try-this-year/ 301
+/posts/best-shoes-in-town/ /posts/15-insanely-cute-puma-speedcat-outfit-ideas-you-need-to-try/ 301
+/posts/best-shoes-in-town /posts/15-insanely-cute-puma-speedcat-outfit-ideas-you-need-to-try/ 301
+/posts/senior-jeans-back-pocket-design-ideas/ /posts/20-senior-year-jeans-ideas-that-aren-t-basic/ 301
+/posts/senior-jeans-back-pocket-design-ideas /posts/20-senior-year-jeans-ideas-that-aren-t-basic/ 301
+/posts/summer-fashion-trends-2026/ /posts/20-easy-summer-to-fall-transition-outfits-to-try-this-year/ 301
+/posts/summer-fashion-trends-2026 /posts/20-easy-summer-to-fall-transition-outfits-to-try-this-year/ 301
