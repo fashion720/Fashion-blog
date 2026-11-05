@@ -36,7 +36,8 @@ async function getPostDescription(post: any, length = 140) {
   const rawContent = (await post.entry.content()) as string;
   if (!rawContent) return 'Explore contemporary style and curated fashion insights inside this editorial.';
   const cleanText = rawContent
-    .replace(/[#*_`~]/g, '')
+  .replace(/!\[([^\]]*)\]\([^)]+\)/g, '')
+.replace(/[#*_`~]/g, '')
     .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
     .replace(/^[-\s]*\n/gm, '')
     .trim();
