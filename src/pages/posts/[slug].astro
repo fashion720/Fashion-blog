@@ -381,6 +381,7 @@ const faqSchema = extractFaqSchema(rawContent ?? '');
   modifiedTime={entry.updatedDate}
   author={author?.name}
   tags={entry.tags}
+  noindex={entry.isNoindex}
 >
   <ReadingProgress />
   <Header currentPath={`/posts/${post.slug}`} />
