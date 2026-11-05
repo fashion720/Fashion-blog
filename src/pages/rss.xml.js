@@ -6,7 +6,8 @@ function getPostDescription(rawContent, length = 140) {
   if (!rawContent) return "Explore contemporary style and curated fashion insights inside this editorial.";
   
   const cleanText = rawContent
-    .replace(/[#*_`~]/g, '') // Remove formatting characters
+        .replace(/!\[([^\]]*)\]\([^)]+\)/g, '' // Remove images (alt text + URL)
+                 .replace(/[#*_`~]/g, '') // Remove formatting characters
     .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // Keep link text, remove URL
     .replace(/^[-\s]*\n/gm, '') // Remove linebreaks
     .trim();
