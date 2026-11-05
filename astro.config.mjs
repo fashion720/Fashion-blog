@@ -17,7 +17,8 @@ export default defineConfig({
     keystatic(), // HAMESHA on — sirf isi se /keystatic panel kaam karta hai
     sitemap({
       // Search results and the CMS are not public landing pages.
-      filter: (page) => !page.includes('/search') && !page.includes('/keystatic'),
+      // N1 + N2 are noindexed (thin/off-topic) — keep them out of the sitemap too.
+      filter: (page) => !page.includes('/search') && !page.includes('/keystatic') && !page.includes('/posts/7-aesthetic-pencil-cases-that-aren-t-boring/') && !page.includes('/posts/6-ways-to-style-platform-sneakers/'),
     }),
   ],
 
