@@ -91,6 +91,7 @@ export default config({
         tags: fields.array(fields.text({ label: 'Tag' }), { label: 'Tags', itemLabel: (props) => props.value }),
         isDraft: fields.checkbox({ label: 'Draft', defaultValue: true }),
         isFeatured: fields.checkbox({ label: 'Featured Post', defaultValue: false }),
+        isNoindex: fields.checkbox({ label: 'Noindex (hide from search)', defaultValue: false }),
         content: fields.mdx({ label: 'Content', extension: 'mdx', options: { image: { directory: 'public/images/content', publicPath: '/images/content/' } } }),
       },
     }),
