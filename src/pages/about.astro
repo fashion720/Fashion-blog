@@ -2,27 +2,14 @@
 import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
-import { getPostsByCategory } from '../lib/keystatic-reader';
 
 const pageTitle = 'About Outfit Edits | Fashion & Style Inspiration';
 const pageDescription = 'Outfit Edits is a fashion and style publication by Hamza Hameed, covering outfit ideas, seasonal trends, and practical style guides for everyday wardrobes.';
 
-async function getPostImage(post: any) {
-  const content = (await post.entry.content()) as string;
-  const match = content?.match(/!\[.*?\]\(.*?\)/);
-  return match?.[1]?.trim() || '/images/placeholder.jpg';
-}
-
-async function categoryImage(slug: string) {
-  const posts = await getPostsByCategory(slug);
-  return posts[0] ? getPostImage(posts[0]) : '/images/placeholder.jpg';
-}
-
-const [menImage, womenImage, trendsImage] = await Promise.all([
-  categoryImage('mens-fashion'),
-  categoryImage('womens-fashion'),
-  categoryImage('trends-and-aesthetics'),
-]);
+const menImage = '/images/content/10-ways-to-style-cargo-pants-for-men/Modern%20Athleisure.webp';
+const womenImage = '/images/content/22-chic-winter-outfit-ideas-for-women/inline-1.webp';
+const trendsImage = '/images/content/20-easy-outfit-ideas-for-y2k-outfits-for-women-street-styles/inline-1.webp';
+const guidesImage = '/images/content/5-timeless-capsule-wardrobe-pieces-for-fall-2026/pinterest-optimized-1782671282963.webp';
 
 const founderName = 'Hamza Hameed';
 const founderPhoto = '/images/authors/hamza-hameed-portrait.webp';
@@ -33,7 +20,7 @@ const coverage = [
   { title: "Men's Style", description: 'Outfit ideas, seasonal dressing, shoes, denim, and everyday wardrobe inspiration.', href: '/category/mens-fashion/', image: menImage },
   { title: "Women's Style", description: 'Outfit inspiration, dresses, casual looks, workwear, and accessories.', href: '/category/womens-fashion/', image: womenImage },
   { title: 'Fashion Trends', description: 'Current trends, aesthetics, viral fashion moments, and seasonal style ideas.', href: '/category/trends-and-aesthetics/', image: trendsImage },
-  { title: 'Style Guides', description: 'Practical styling advice, wardrobe guidance, outfit combinations, and fashion how-tos.', href: '/categories/', image: trendsImage },
+  { title: 'Style Guides', description: 'Practical styling advice, wardrobe guidance, outfit combinations, and fashion how-tos.', href: '/categories/', image: guidesImage },
 ];
 ---
 
