@@ -15,38 +15,31 @@ import {
 const settings = await getSiteSettings();
 const allCategories = await getAllCategories();
 
-// 💸 MONETIZATION CONFIGURATION
+// MONETIZATION CONFIGURATION
 const isMonetized = settings.adsenseEnabled === true && Boolean(settings.adSlotHeader || settings.adSlotContent || settings.adSlotFooter);
-
-// ─── SHARED CONTENT HELPERS (unchanged extraction logic) ───────────────────
 
 async function getPostImage(post: any) {
   const rawContent = (await post.entry.content()) as string;
   if (!rawContent) return '/images/placeholder.jpg';
-
   if (post.entry.sections && post.entry.sections[0]?.image) {
     const img = post.entry.sections[0].image;
     return img.startsWith('/') ? img : `/images/posts/${img}`;
   }
-
   const match = rawContent.match(/!\[.*?\]\((.*?)\)/);
   if (match && match[1]) {
     return match[1].trim();
   }
-
   return '/images/placeholder.jpg';
 }
 
 async function getPostDescription(post: any, length = 140) {
   const rawContent = (await post.entry.content()) as string;
   if (!rawContent) return 'Explore contemporary style and curated fashion insights inside this editorial.';
-
   const cleanText = rawContent
     .replace(/[#*_`~]/g, '')
     .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
     .replace(/^[-\s]*\n/gm, '')
     .trim();
-
   return cleanText.length > length ? `${cleanText.substring(0, length)}...` : cleanText;
 }
 
@@ -66,10 +59,6 @@ const formatDate = (d: string) =>
 const categoryLabel = (slug: string) =>
   allCategories.find((c) => c.slug === slug)?.entry.name || slug.replace(/-/g, ' ');
 
-// ─── BASE POOL ───────────────────────────────────────────────────────────
-// Every section below draws from this pool and removes what it uses, so no
-// article repeats twice on the homepage — even as new posts are published.
-
 const allPosts = await getAllPosts();
 const usedSlugs = new Set<string>();
 
@@ -79,8 +68,6 @@ function take(posts: any[], count: number) {
   return picked;
 }
 
-// 1️⃣ EDITOR'S PICKS — one flagship + three posts from different parent
-// categories, so the selection reads as curated rather than "latest 4".
 const flagship = take(allPosts, 1)[0];
 
 const editorSupportingRaw: any[] = [];
@@ -101,18 +88,14 @@ const flagshipResolved = flagship
   : null;
 const editorSupporting = await resolvePosts(editorSupportingRaw, 90);
 
-// 2️⃣ LATEST POSTS — next 6 chronologically, untouched by curation above.
 const latestPosts = await resolvePosts(take(allPosts, 6), 110);
 
-// 3️⃣ MEN'S STYLE
 const mensPostsRaw = await getPostsByCategory('mens-fashion');
 const mensPosts = await resolvePosts(take(mensPostsRaw, 4), 100);
 
-// 4️⃣ WOMEN'S STYLE
 const womensPostsRaw = await getPostsByCategory('womens-fashion');
 const womensPosts = await resolvePosts(take(womensPostsRaw, 4), 100);
 
-// 5️⃣ TRENDS & AESTHETICS
 const trendSlugs = ['trends-and-aesthetics'];
 const trendPostsRaw = (
   await Promise.all(trendSlugs.map((s) => getPostsByCategory(s)))
@@ -122,11 +105,7 @@ const trendPostsDeduped = trendPostsRaw.filter(
 );
 const trendPosts = await resolvePosts(take(trendPostsDeduped, 4), 100);
 
-// 6️⃣ READER FAVORITES — no view-tracking exists yet, so this is a curated
-// fallback (next strongest remaining posts) rather than invented stats.
 const readerFavorites = await resolvePosts(take(allPosts, 5), 90);
-
-// ─── "WHERE WOULD YOU LIKE TO START" DISCOVERY CARDS ───────────────────────
 
 async function discoveryCard(categorySlug: string, label: string, description: string, href: string) {
   const posts = await getPostsByCategory(categorySlug);
@@ -141,6 +120,43 @@ const discoveryCards = await Promise.all([
   discoveryCard('diy-and-upcycling', 'DIY & Upcycling', 'Creative ways to restyle, customize, and give old clothes a second life.', '/category/diy-and-upcycling/'),
   discoveryCard('accessories-and-footwear', 'Accessories & Footwear', 'Sneakers, bags, jewelry, and the finishing touches that complete a look.', '/category/accessories-and-footwear/'),
 ]);
+
+const faqItems = [
+  {
+    question: 'How do I use the guides on Outfit Edits?',
+    answer: 'Start with the category that matches what you are dressing for — Men’s Style, Women’s Style, Trends & Aesthetics, Campus Style, Denim & Basics, DIY & Upcycling, or Accessories & Footwear — then pick a guide and follow its principle first. Each guide names the pieces, proportions, and layering order, so you can adapt it to your own style, occasion, and wardrobe instead of copying it exactly.',
+  },
+  {
+    question: 'Do I need to buy new clothes to follow the looks?',
+    answer: 'No. Many guides are built around pieces you already own, and the fall guide built on that idea needs no new purchases. Its fifteen ideas mix textures, layer basics, and adjust proportions so your current wardrobe feels new for the season, while keeping budget and sustainability goals in mind.',
+  },
+  {
+    question: 'What does Outfit Edits cover?',
+    answer: 'Outfit ideas, seasonal styling guides, trend coverage, and practical how-tos for everyday wardrobes, across seven categories: Men’s Style, Women’s Style, Trends & Aesthetics, Denim & Basics, Campus Style, DIY & Upcycling, and Accessories & Footwear.',
+  },
+  {
+    question: 'How often are new guides published?',
+    answer: "The site does not state a fixed publishing schedule, so the best way to see what is new is the Latest Posts section on this page, which lists the most recent guides first. Editor's Picks, at the top of the page, highlights the current selection the editor wants you to start with.",
+  },
+  {
+    question: 'Do the guides work for work, class, and everyday occasions?',
+    answer: 'Yes. The guides are written for real occasions: workdays, meetings, and smart lunches; classes and campus life; and weekends, travel, parties, and snow days. Each guide says what the look is for, so pick the occasion first and then the layering, fit, and finishing touches that suit it.',
+  },
+  {
+    question: 'How can I keep up with new outfit ideas?',
+    answer: 'Check Latest Posts on this page for the newest guides, and use the newsletter section below to get outfit ideas, fashion trends, and style inspiration delivered to your inbox. You can also browse by category — for example, Trends & Aesthetics for what is current, or Denim & Basics for the foundations that change least.',
+  },
+];
+
+const faqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqItems.map((item) => ({
+    '@type': 'Question',
+    name: item.question,
+    acceptedAnswer: { '@type': 'Answer', text: item.answer },
+  })),
+};
 ---
 
 <Layout
@@ -151,9 +167,6 @@ const discoveryCards = await Promise.all([
 
   <main class="bg-[#F8F6F2] min-h-screen font-sans antialiased text-neutral-900 w-full overflow-x-hidden">
 
-    {/* ══════════════════════════════════════════════════════════════════
-        1. HERO — editorial thesis, not a SaaS banner
-        ══════════════════════════════════════════════════════════════════ */}
     <section class="hero-section max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 md:pt-12 pb-12 md:pb-16" data-hero-parallax>
       <div class="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-8 lg:gap-10 min-[1440px]:gap-14 items-center">
         <div class="order-2 lg:order-1 text-left space-y-6 md:space-y-7" data-hero-copy>
@@ -175,7 +188,6 @@ const discoveryCards = await Promise.all([
             </a>
           </div>
         </div>
-
         {flagshipResolved && (
           <div class="hero-image-wrap order-1 lg:order-2 w-full aspect-[4/5] bg-white p-2 md:p-3 border border-neutral-200/30 shadow-sm relative overflow-hidden group" data-hero-image>
             <a href={`/posts/${flagshipResolved.slug}/`} class="absolute inset-0 w-full h-full block">
@@ -194,9 +206,6 @@ const discoveryCards = await Promise.all([
       </div>
     </section>
 
-    {/* ══════════════════════════════════════════════════════════════════
-        2. WHERE WOULD YOU LIKE TO START — visual category discovery
-        ══════════════════════════════════════════════════════════════════ */}
     <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16 md:pb-24">
       <div class="text-center mb-8 md:mb-12 space-y-2">
         <h2 class="text-2xl md:text-3xl font-serif font-light tracking-tight text-neutral-950">
@@ -204,7 +213,6 @@ const discoveryCards = await Promise.all([
         </h2>
         <div class="w-12 h-[1px] bg-[#bba15c] mx-auto"></div>
       </div>
-
       <div class="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6">
         {discoveryCards.map((card) => (
           <a href={card.href} class="group relative block w-full aspect-[3/4] overflow-hidden no-underline bg-neutral-900">
@@ -233,9 +241,6 @@ const discoveryCards = await Promise.all([
       </div>
     </section>
 
-    {/* ══════════════════════════════════════════════════════════════════
-        3. EDITORIAL BRAND STATEMENT
-        ══════════════════════════════════════════════════════════════════ */}
     <section class="max-w-2xl mx-auto px-4 sm:px-6 text-center pb-16 md:pb-24">
       <p class="text-[10px] font-bold uppercase tracking-[0.35em] text-[#bba15c] mb-4">
         Make Getting Dressed Easier
@@ -245,20 +250,53 @@ const discoveryCards = await Promise.all([
       </p>
     </section>
 
+    <section class="max-w-3xl mx-auto px-4 sm:px-6 pb-16 md:pb-24">
+      <p class="mb-3 text-[10px] font-bold uppercase tracking-[0.3em] text-[#bba15c]">What We Cover</p>
+      <h2 class="font-serif text-3xl font-light text-neutral-950 md:text-4xl">What Outfit Edits covers</h2>
+      <div class="mt-7 space-y-5 text-base font-light leading-relaxed text-neutral-600 md:text-lg">
+        <p>Outfit Edits is a fashion and style publication for everyday wardrobes. Its guides cover outfit ideas, seasonal styling, trend coverage, and practical how-tos, and each one is built around wearable ideas readers can adapt to their own style, occasion, and wardrobe. Start with the area that matches what you are dressing for, and try the ideas first with clothes you already have.</p>
+      </div>
+      <div class="mt-10 space-y-8">
+        <div>
+          <h3 class="font-serif text-xl font-light text-neutral-950"><a href="/category/mens-fashion/" class="no-underline text-neutral-950 hover:text-[#bba15c] transition-colors">Men's Style</a></h3>
+          <p class="mt-2 text-sm font-light leading-relaxed text-neutral-500">Men's fashion guides and outfit ideas for every season: jackets, layering, smart casual looks, and timeless staples styled for college, work, and weekends.</p>
+        </div>
+        <div>
+          <h3 class="font-serif text-xl font-light text-neutral-950"><a href="/category/womens-fashion/" class="no-underline text-neutral-950 hover:text-[#bba15c] transition-colors">Women's Style</a></h3>
+          <p class="mt-2 text-sm font-light leading-relaxed text-neutral-500">Outfit inspiration, dresses, casual looks, workwear, and accessories, with seasonal looks and styling ideas for women. The guides name the pieces and the layering order, so you can follow a look for work, a dinner out, or an ordinary day.</p>
+        </div>
+        <div>
+          <h3 class="font-serif text-xl font-light text-neutral-950"><a href="/category/trends-and-aesthetics/" class="no-underline text-neutral-950 hover:text-[#bba15c] transition-colors">Trends &amp; Aesthetics</a></h3>
+          <p class="mt-2 text-sm font-light leading-relaxed text-neutral-500">Current trends, aesthetics, viral fashion moments, and seasonal style ideas, with the context to decide what fits your own style. Read a trend guide to understand the look first, then keep only the pieces or proportions that work with clothes you already own.</p>
+        </div>
+        <div>
+          <h3 class="font-serif text-xl font-light text-neutral-950"><a href="/category/denim-and-basics/" class="no-underline text-neutral-950 hover:text-[#bba15c] transition-colors">Denim &amp; Basics</a></h3>
+          <p class="mt-2 text-sm font-light leading-relaxed text-neutral-500">Build a wardrobe on strong foundations: denim fits, basic tees, layering pieces, and timeless staples styled in fresh combinations for easy everyday wear. When an outfit feels stuck, return to these basics and change one thing — the fit, the layer, or the shoes — before adding anything new.</p>
+        </div>
+        <div>
+          <h3 class="font-serif text-xl font-light text-neutral-950"><a href="/category/campus-style/" class="no-underline text-neutral-950 hover:text-[#bba15c] transition-colors">Campus Style</a></h3>
+          <p class="mt-2 text-sm font-light leading-relaxed text-neutral-500">Practical, stylish outfit ideas for college and high school life, from first-day looks and classroom layering to game-day outfits and campus-ready essentials.</p>
+        </div>
+        <div>
+          <h3 class="font-serif text-xl font-light text-neutral-950"><a href="/category/diy-and-upcycling/" class="no-underline text-neutral-950 hover:text-[#bba15c] transition-colors">DIY &amp; Upcycling</a></h3>
+          <p class="mt-2 text-sm font-light leading-relaxed text-neutral-500">Creative ways to restyle, customize, and give old clothes a second life, including ideas that need no sewing machine. Start with a piece you already own and change its shape, length, or surface before you decide whether it still earns a place in your wardrobe.</p>
+        </div>
+        <div>
+          <h3 class="font-serif text-xl font-light text-neutral-950"><a href="/category/accessories-and-footwear/" class="no-underline text-neutral-950 hover:text-[#bba15c] transition-colors">Accessories &amp; Footwear</a></h3>
+          <p class="mt-2 text-sm font-light leading-relaxed text-neutral-500">Sneakers, bags, jewelry, and the finishing touches that complete a look. A change of shoes, a bag, or a piece of jewelry can shift an outfit from casual to polished without changing the clothes underneath.</p>
+        </div>
+      </div>
+    </section>
+
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-      {/* ════════════════════════════════════════════════════════════════
-          4. EDITOR'S PICKS — 1 large + 3 supporting
-          ════════════════════════════════════════════════════════════════ */}
       {flagshipResolved && (
         <section class="py-10 md:py-20 border-b border-neutral-200/40">
           <div class="text-center mb-8 md:mb-14 space-y-2">
             <h2 class="text-[11px] font-sans tracking-[0.35em] uppercase text-neutral-950 font-bold">Editor's Picks</h2>
             <div class="w-12 h-[1px] bg-[#bba15c] mx-auto"></div>
           </div>
-
           <div class="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-8 lg:gap-12">
-            {/* Large featured pick */}
             <a href={`/posts/${flagshipResolved.slug}/`} class="group block no-underline">
               <div class="w-full aspect-[4/5] sm:aspect-[16/11] overflow-hidden bg-neutral-100 relative">
                 <img
@@ -287,8 +325,6 @@ const discoveryCards = await Promise.all([
                 </span>
               </div>
             </a>
-
-            {/* Supporting picks */}
             <div class="space-y-6 lg:space-y-7">
               {editorSupporting.map((post) => (
                 <a href={`/posts/${post.slug}/`} class="group flex gap-4 items-start no-underline border-b border-neutral-200/40 pb-6 last:border-0 last:pb-0">
@@ -329,16 +365,12 @@ const discoveryCards = await Promise.all([
         </div>
       )}
 
-      {/* ════════════════════════════════════════════════════════════════
-          5. LATEST POSTS
-          ════════════════════════════════════════════════════════════════ */}
       {latestPosts.length > 0 && (
         <section class="py-10 md:py-20 border-b border-neutral-200/40">
           <div class="text-center mb-8 md:mb-14 space-y-2">
             <h2 class="text-[11px] font-sans tracking-[0.35em] uppercase text-neutral-950 font-bold">Latest Posts</h2>
             <div class="w-12 h-[1px] bg-[#bba15c] mx-auto"></div>
           </div>
-
           <div class="hidden md:grid grid-cols-3 gap-8">
             {latestPosts.map((post) => (
               <PostCard
@@ -351,7 +383,6 @@ const discoveryCards = await Promise.all([
               />
             ))}
           </div>
-
           <div class="block md:hidden space-y-6">
             {latestPosts.map((post) => (
               <CompactPostRow
@@ -363,7 +394,6 @@ const discoveryCards = await Promise.all([
               />
             ))}
           </div>
-
           <div class="text-center mt-10 md:mt-14">
             <a href="/posts/" class="inline-block text-[11px] uppercase tracking-[0.25em] font-medium text-neutral-950 border-b border-neutral-950/20 pb-1 hover:text-[#bba15c] hover:border-[#bba15c] transition-colors duration-300 no-underline">
               View All Articles →
@@ -372,9 +402,18 @@ const discoveryCards = await Promise.all([
         </section>
       )}
 
-      {/* ════════════════════════════════════════════════════════════════
-          6 / 7 / 8 — MEN'S STYLE · WOMEN'S STYLE · TRENDS & AESTHETICS
-          ════════════════════════════════════════════════════════════════ */}
+      <section class="py-10 md:py-20 border-b border-neutral-200/40">
+        <div class="max-w-3xl mx-auto">
+          <p class="mb-3 text-[10px] font-bold uppercase tracking-[0.3em] text-[#bba15c]">How We Work</p>
+          <h2 class="font-serif text-3xl font-light text-neutral-950 md:text-4xl">How the guides are put together</h2>
+          <div class="mt-7 space-y-5 text-base font-light leading-relaxed text-neutral-600 md:text-lg">
+            <p>Each guide starts with a reusable principle, then shows the outfit that follows from it. A principle you can explain — let one piece carry the volume, keep one clean line, or let the outer layer set the register — transfers to everything you own, while an outfit you merely copy stops working the moment one piece is in the wash. The guides therefore name the principle first, then the pieces, proportions, and layering order, so you can rebuild the look with what is already in your closet.</p>
+            <p>Proportion and texture do most of the work. In fall, that means balancing volume — an oversized blazer over straight-leg jeans, or a chunky knit with slim trousers — and mixing textures within one color family, such as cable knit, wool, and cotton, so a single-color outfit does not look flat. Layering must stay visible to count: the collar above a knit vest, the cuffs past its armholes, the shirttail below its hem. If you cannot see three distinct edges, adjust the layers until you can.</p>
+            <p>Most guides are written for clothes you already own. The fall guide built around that idea offers fifteen practical ways to style trendy fall looks using the clothing you already own, with no new purchases required, keeping budget and sustainability goals in mind. Try the combination first — an oversized blazer over a hoodie, a leather jacket over a midi dress, a turtleneck under a slip dress, or a statement coat over basic denim — and only then decide whether anything is actually missing. Start with <a href="/posts/11-minimalist-fall-outfit-formulas-from-your-closet/" class="text-neutral-950 underline underline-offset-4 hover:text-[#bba15c]">11 Minimalist Fall Outfit Formulas from Your Closet</a> for the principles, and <a href="/posts/15-fall-outfit-ideas-using-clothes-you-already-own/" class="text-neutral-950 underline underline-offset-4 hover:text-[#bba15c]">15 Fall Outfit Ideas Using Clothes You Already Own</a> for the combinations.</p>
+          </div>
+        </div>
+      </section>
+
       {[
         { key: 'mens', title: "Men's Style", href: '/category/mens-fashion/', cta: "View Men's Style →", posts: mensPosts },
         { key: 'womens', title: "Women's Style", href: '/category/womens-fashion/', cta: "View Women's Style →", posts: womensPosts },
@@ -390,7 +429,6 @@ const discoveryCards = await Promise.all([
               {cta}
             </a>
           </div>
-
           <div class={`hidden md:grid gap-6 ${posts.length >= 4 ? 'grid-cols-4' : posts.length === 3 ? 'grid-cols-3 max-w-6xl mx-auto' : 'grid-cols-2 max-w-4xl mx-auto'}`}>
             {posts.map((post) => (
               <PostCard
@@ -403,7 +441,6 @@ const discoveryCards = await Promise.all([
               />
             ))}
           </div>
-
           <div class="block md:hidden space-y-6">
             {posts.map((post) => (
               <CompactPostRow
@@ -425,16 +462,27 @@ const discoveryCards = await Promise.all([
         </div>
       )}
 
-      {/* ════════════════════════════════════════════════════════════════
-          9. READER FAVORITES
-          ════════════════════════════════════════════════════════════════ */}
+      <section class="py-10 md:py-20 border-b border-neutral-200/40">
+        <div class="max-w-3xl mx-auto">
+          <p class="mb-3 text-[10px] font-bold uppercase tracking-[0.3em] text-[#bba15c]">Editor's Note</p>
+          <h2 class="font-serif text-3xl font-light text-neutral-950 md:text-4xl">An editor's note for fall and winter</h2>
+          <div class="mt-7 space-y-5 text-base font-light leading-relaxed text-neutral-600 md:text-lg">
+            <p>Fall and winter reward the same habit: build the outfit in layers, in order, and let each layer do one job. The winter guide puts it plainly — a thin base layer, a warm middle layer, and a coat that actually closes over both, with shoes that handle cold ground. When any one of those layers fails, you spend the day either freezing or overheating, and the outfit stops mattering. Start there, and the rest of the season becomes a series of small choices rather than a daily guess.</p>
+            <p>Keep the proportions simple, too: wear only one bulky piece at a time — a chunky knit with slim trousers or a straight skirt, a long coat over a fitted knit underneath — and build color the same way, with one dark neutral base in black, charcoal, or navy and one warm accent in camel, cream, burgundy, or olive. Wool, cashmere, and down keep you warm without much weight, while cotton holds sweat and leaves you cold. For workdays, snow days, parties, travel, and weekends, the winter guide names twenty-two outfits, with the exact pieces and layering order for each. Read <a href="/posts/22-chic-winter-outfit-ideas-for-women/" class="text-neutral-950 underline underline-offset-4 hover:text-[#bba15c]">22 Chic Winter Outfit Ideas for Women</a> when you are ready to plan the coldest weeks.</p>
+          </div>
+          <h3 class="mt-10 font-serif text-2xl font-light text-neutral-950">Who writes Outfit Edits</h3>
+          <div class="mt-5 space-y-5 text-base font-light leading-relaxed text-neutral-600 md:text-lg">
+            <p>Sara Ahmed is the founder and editor of Outfit Edits. She writes about everyday style — outfit ideas, seasonal dressing, and DIY upcycling — with a focus on practical, wearable looks built from pieces you already own. That is the whole editorial test on this page: if an idea does not work with a real, everyday wardrobe, it does not belong here. You can read more about the publication and its approach on the <a href="/about/" class="text-neutral-950 underline underline-offset-4 hover:text-[#bba15c]">About page</a>.</p>
+          </div>
+        </div>
+      </section>
+
       {readerFavorites.length > 0 && (
         <section class="py-10 md:py-20 border-b border-neutral-200/40">
           <div class="text-center mb-8 md:mb-14 space-y-2">
             <h2 class="text-[11px] font-sans tracking-[0.35em] uppercase text-neutral-950 font-bold">Reader Favorites</h2>
             <div class="w-12 h-[1px] bg-[#bba15c] mx-auto"></div>
           </div>
-
           <div class="hidden md:grid grid-cols-5 gap-5">
             {readerFavorites.map((post) => (
               <a href={`/posts/${post.slug}/`} class="group block no-underline">
@@ -454,7 +502,6 @@ const discoveryCards = await Promise.all([
               </a>
             ))}
           </div>
-
           <div class="block md:hidden space-y-6">
             {readerFavorites.map((post) => (
               <CompactPostRow
@@ -469,9 +516,6 @@ const discoveryCards = await Promise.all([
         </section>
       )}
 
-      {/* ════════════════════════════════════════════════════════════════
-          10. MEET OUTFIT EDITS
-          ════════════════════════════════════════════════════════════════ */}
       <section class="py-14 md:py-24 border-b border-neutral-200/40">
         <div class="max-w-4xl mx-auto flex flex-col md:flex-row items-center gap-8 md:gap-14 bg-white p-6 md:p-12 border border-neutral-200/30">
           <img
@@ -499,9 +543,24 @@ const discoveryCards = await Promise.all([
         </div>
       )}
 
-      {/* ════════════════════════════════════════════════════════════════
-          11. NEWSLETTER
-          ════════════════════════════════════════════════════════════════ */}
+      <section class="py-10 md:py-20 border-b border-neutral-200/40">
+        <div class="max-w-3xl mx-auto">
+          <div class="text-center mb-8 md:mb-12 space-y-2">
+            <h2 class="text-2xl md:text-3xl font-serif font-light tracking-tight text-neutral-950">Frequently asked questions</h2>
+            <div class="w-12 h-[1px] bg-[#bba15c] mx-auto"></div>
+          </div>
+          <p class="text-base font-light leading-relaxed text-neutral-600 md:text-lg mb-10">Questions readers ask most often, answered from how Outfit Edits actually works.</p>
+          <div class="space-y-8">
+            {faqItems.map((item) => (
+              <div>
+                <h3 class="font-serif text-xl font-light text-neutral-950">{item.question}</h3>
+                <p class="mt-2 text-sm font-light leading-relaxed text-neutral-500 md:text-base">{item.answer}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       <section class="bg-neutral-950 text-white py-12 md:py-24 px-4 md:px-6 mt-8 mb-14 md:mb-24">
         <div class="max-w-xl mx-auto text-center space-y-4">
           <span class="text-[10px] tracking-[0.3em] uppercase text-[#bba15c] font-bold">Newsletter</span>
@@ -526,6 +585,8 @@ const discoveryCards = await Promise.all([
     </div>
   </main>
 
+  <script type="application/ld+json" set:html={JSON.stringify(faqSchema)} />
+
   <Footer />
 </Layout>
 
@@ -535,7 +596,6 @@ const discoveryCards = await Promise.all([
   const heroCopy = document.querySelector<HTMLElement>('[data-hero-copy]');
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
   const finePointer = window.matchMedia('(pointer: fine)');
-
   if (hero && heroImage && heroCopy && finePointer.matches && !reducedMotion.matches) {
     let frame = 0;
     let pointerX = 0;
