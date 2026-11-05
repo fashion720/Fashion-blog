@@ -53,18 +53,7 @@ jobs:
             exit 0
           fi
 
-          PAYLOAD=$(python3 -c "
-import json
-urls = json.loads('$URLS_JSON')
-payload = {
-    'host': '${SITE_HOST}',
-    'key': '${INDEXNOW_KEY}',
-    'keyLocation': 'https://${SITE_HOST}/${INDEXNOW_KEY}.txt',
-    'urlList': urls
-}
-print(json.dumps(payload))
-")
-
+          PAYLOAD=$(python3 -c "import json; urls=json.loads('$URLS_JSON'); payload={'host': '${SITE_HOST}', 'key': '${INDEXNOW_KEY}', 'keyLocation': 'https://${SITE_HOST}/${INDEXNOW_KEY}.txt', 'urlList': urls}; print(json.dumps(payload))")
           echo "Submitting $COUNT URL(s) to IndexNow..."
           curl -s -X POST "https://api.indexnow.org/IndexNow" \
             -H "Content-Type: application/json; charset=utf-8" \
