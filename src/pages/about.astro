@@ -2,14 +2,14 @@
 import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
-import { getPostsByCategory, getAuthorBySlug } from '../lib/keystatic-reader';
+import { getPostsByCategory } from '../lib/keystatic-reader';
 
 const pageTitle = 'About Outfit Edits | Fashion & Style Inspiration';
-const pageDescription = 'Outfit Edits is a fashion and style publication covering outfit ideas, seasonal trends, and practical style guides for everyday wardrobes.';
+const pageDescription = 'Outfit Edits is a fashion and style publication by Hamza Hameed, covering outfit ideas, seasonal trends, and practical style guides for everyday wardrobes.';
 
 async function getPostImage(post: any) {
   const content = (await post.entry.content()) as string;
-  const match = content?.match(/!\[.*?\]\((.*?)\)/);
+  const match = content?.match(/!\[.*?\]\(.*?\)/);
   return match?.[1]?.trim() || '/images/placeholder.jpg';
 }
 
@@ -23,8 +23,11 @@ const [menImage, womenImage, trendsImage] = await Promise.all([
   categoryImage('womens-fashion'),
   categoryImage('trends-and-aesthetics'),
 ]);
-const editor = await getAuthorBySlug('sara-ahmed');
-const editorAvatar = editor?.avatar ? `/images/authors/${editor.avatar}` : '/images/authors/sara-profile.webp';
+
+const founderName = 'Hamza Hameed';
+const founderPhoto = '/images/authors/hamza-hameed-portrait.webp';
+const founderPhotoOutdoor = '/images/authors/hamza-hameed-outdoor.webp';
+const founderPhotoCafe = '/images/authors/hamza-hameed-cafe.webp';
 
 const coverage = [
   { title: "Men's Style", description: 'Outfit ideas, seasonal dressing, shoes, denim, and everyday wardrobe inspiration.', href: '/category/mens-fashion/', image: menImage },
@@ -41,18 +44,57 @@ const coverage = [
       <div>
         <p class="mb-4 text-[10px] font-bold uppercase tracking-[0.35em] text-[#bba15c]">About Outfit Edits</p>
         <h1 class="max-w-2xl font-serif text-4xl font-light leading-[1.05] text-neutral-950 sm:text-5xl md:text-7xl">About Outfit Edits</h1>
-        <p class="mt-7 max-w-xl text-base font-light leading-relaxed text-neutral-600 md:text-lg">A fashion and style publication making fashion easier to understand, easier to wear, and more useful in everyday life.</p>
+        <p class="mt-7 max-w-xl text-base font-light leading-relaxed text-neutral-600 md:text-lg">I'm Hamza Hameed, the founder of Outfit Edits. I started this site with a simple goal: to make fashion easier to understand, easier to wear, and more useful in everyday life.</p>
       </div>
-      {editor && <div class="mx-auto w-full max-w-md bg-white p-2"><img src={editorAvatar} alt={editor.name} class="aspect-[4/5] h-full w-full object-cover object-top" onerror="this.onerror=null; this.src='/images/placeholder.jpg';" /></div>}
+      <div class="mx-auto w-full max-w-md bg-white p-2"><img src={founderPhoto} alt="Hamza Hameed, founder of Outfit Edits" class="aspect-[4/5] h-full w-full object-cover object-top" onerror="this.onerror=null; this.src='/images/placeholder.jpg';" /></div>
     </section>
 
     <section class="mx-auto max-w-3xl px-4 pb-16 sm:px-6 md:pb-24">
       <div class="border-t border-neutral-200 pt-8 md:pt-12">
-        <p class="mb-3 text-[10px] font-bold uppercase tracking-[0.3em] text-[#bba15c]">Our Mission</p>
+        <p class="mb-3 text-[10px] font-bold uppercase tracking-[0.3em] text-[#bba15c]">Why I Started Outfit Edits</p>
         <h2 class="font-serif text-3xl font-light text-neutral-950 md:text-4xl">Style advice for real wardrobes.</h2>
         <div class="mt-7 space-y-5 text-base font-light leading-relaxed text-neutral-600 md:text-lg">
-          <p>Outfit Edits exists to make everyday dressing easier to understand, easier to experiment with, and more enjoyable.</p>
-          <p>We publish outfit ideas, seasonal styling guides, trend coverage, and practical how-tos built around wearable ideas readers can adapt to their own style, occasion, and wardrobe.</p>
+          <p>Style advice is everywhere, but useful answers can still be surprisingly hard to find. One guide tells you to buy a whole new wardrobe. Another shows an outfit with no note on where you would actually wear it. A photo looks good on a screen and says nothing about fit, fabric, or whether the pieces work together in real life.</p>
+          <p>That gap is why I started Outfit Edits. I wanted a place that starts from the wardrobe readers already have and answers the questions that come right after the photo. Can this work with what I own? What do I pair it with? What should I skip? Those practical questions shape everything published here.</p>
+          <p>My own interest in style started the practical way, by figuring out how to put together outfits that actually work day to day with pieces already in the closet. That habit of breaking a look down into pairings, colors, and fit is what turned into this site.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="mx-auto max-w-3xl px-4 pb-16 sm:px-6 md:pb-24">
+      <div class="border-t border-neutral-200 pt-8 md:pt-12">
+        <p class="mb-3 text-[10px] font-bold uppercase tracking-[0.3em] text-[#bba15c]">How I Build the Guides You Read</p>
+        <h2 class="font-serif text-3xl font-light text-neutral-950 md:text-4xl">Useful first, pretty second.</h2>
+        <div class="mt-7 space-y-5 text-base font-light leading-relaxed text-neutral-600 md:text-lg">
+          <p>I do not want Outfit Edits to become a site that publishes an article simply because a keyword exists. The subject has to be useful.</p>
+          <p>Before a guide is prepared, I look at the question behind the search. Someone looking for fall outfit formulas needs more than a list of pretty looks. Someone figuring out how to style one pair of jeans needs to know what to pair it with and what to avoid.</p>
+          <p>My approach is to research the subject, organize the useful parts, and turn them into something a reader can actually follow. I pay attention to the details that often get skipped: fit, layering, proportion, fabric, and whether a suggestion makes sense for someone working with the clothes they already own.</p>
+          <p>A beautiful idea is useful only when you have enough information to make it work.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="mx-auto max-w-3xl px-4 pb-16 sm:px-6 md:pb-24">
+      <div class="border-t border-neutral-200 pt-8 md:pt-12">
+        <p class="mb-3 text-[10px] font-bold uppercase tracking-[0.3em] text-[#bba15c]">How Outfit Edits Handles Accuracy</p>
+        <h2 class="font-serif text-3xl font-light text-neutral-950 md:text-4xl">Checked before it goes live.</h2>
+        <div class="mt-7 space-y-5 text-base font-light leading-relaxed text-neutral-600 md:text-lg">
+          <p>Reader trust matters more to me than filling the site with as many articles as possible.</p>
+          <p>Every piece published on Outfit Edits is reviewed before it goes live. Articles are edited for accuracy, usefulness, and clarity, not simply written and posted untouched. Older content is reviewed and updated when newer or better information becomes available.</p>
+          <p>Style depends on body, budget, weather, and occasion. Advice that works beautifully in one situation may need adjusting in another. Where those differences matter, the guide should say so. That is more useful than pretending one rule works for everyone.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="mx-auto max-w-3xl px-4 pb-16 sm:px-6 md:pb-24">
+      <div class="border-t border-neutral-200 pt-8 md:pt-12">
+        <p class="mb-3 text-[10px] font-bold uppercase tracking-[0.3em] text-[#bba15c]">Who Outfit Edits Is Written For</p>
+        <h2 class="font-serif text-3xl font-light text-neutral-950 md:text-4xl">For readers who start with what they own.</h2>
+        <div class="mt-7 space-y-5 text-base font-light leading-relaxed text-neutral-600 md:text-lg">
+          <p>You might feel at home here if you are building outfits from a closet you already own and want them to look intentional.</p>
+          <p>You might be dressing for work, for a season change, or for an occasion, and want clear guidance instead of a shopping list.</p>
+          <p>You might be trying to make one pair of jeans, one blazer, or one dress work in five different ways.</p>
+          <p>Outfit Edits is especially for readers who value clear explanations over complicated language. You do not need to know every fashion term before you begin. You just need a good place to start.</p>
         </div>
       </div>
     </section>
@@ -79,7 +121,20 @@ const coverage = [
       </div>
     </section>
 
-    {editor && <section class="mx-auto max-w-4xl px-4 pb-20 sm:px-6 md:pb-28"><div class="flex flex-col gap-7 border border-neutral-200/70 bg-white p-6 md:flex-row md:items-center md:p-10"><img src={editorAvatar} alt={editor.name} class="h-28 w-28 shrink-0 rounded-full object-cover" onerror="this.onerror=null; this.src='/images/placeholder.jpg';" /><div><p class="mb-3 text-[10px] font-bold uppercase tracking-[0.3em] text-[#bba15c]">Meet the Editor</p><h2 class="font-serif text-3xl font-light text-neutral-950">{editor.name}</h2><p class="mt-4 text-sm font-light leading-relaxed text-neutral-600">{editor.bio}</p></div></div></section>}
+    <section class="mx-auto max-w-4xl px-4 pb-16 sm:px-6 md:pb-24"><div class="border border-neutral-200/70 bg-white p-6 md:p-10"><div class="flex flex-col gap-7 md:flex-row md:items-center"><img src={founderPhoto} alt="Hamza Hameed" class="h-28 w-28 shrink-0 rounded-full object-cover object-top" onerror="this.onerror=null; this.src='/images/placeholder.jpg';" /><div><p class="mb-3 text-[10px] font-bold uppercase tracking-[0.3em] text-[#bba15c]">Meet the Founder</p><h2 class="font-serif text-3xl font-light text-neutral-950">{founderName}</h2><p class="mt-4 text-sm font-light leading-relaxed text-neutral-600">Hamza Hameed is the founder of Outfit Edits and a frontend developer from Karachi, Pakistan. He works with React and Next.js, currently as a frontend developer intern at Neural Hub, where he builds interfaces for a healthcare patient portal. He runs Outfit Edits with one rule: practical style first, built from pieces readers already own. You can find his code on <a href="https://github.com/hamzagithameed" class="underline underline-offset-4">GitHub</a> and <a href="https://www.linkedin.com/in/hamza-hameed-84335a272" class="underline underline-offset-4">LinkedIn</a>, his outfit ideas on <a href="https://www.pinterest.com/outfiteditssocial/" class="underline underline-offset-4">Pinterest</a>, and his style answers on <a href="https://www.quora.com/profile/Hamza-Hameed-92" class="underline underline-offset-4">Quora</a>.</p></div></div><div class="mt-8 grid grid-cols-2 gap-4"><img src={founderPhotoOutdoor} alt="Hamza Hameed outdoors" loading="lazy" class="aspect-[4/5] w-full object-cover" onerror="this.onerror=null; this.src='/images/placeholder.jpg';" /><img src={founderPhotoCafe} alt="Hamza Hameed at a cafe" loading="lazy" class="aspect-[4/5] w-full object-cover" onerror="this.onerror=null; this.src='/images/placeholder.jpg';" /></div></div></section>
+
+    <section class="mx-auto max-w-3xl px-4 pb-20 sm:px-6 md:pb-28">
+      <div class="border-t border-neutral-200 pt-8 md:pt-12">
+        <p class="mb-3 text-[10px] font-bold uppercase tracking-[0.3em] text-[#bba15c]">A Note From Hamza</p>
+        <h2 class="font-serif text-3xl font-light text-neutral-950 md:text-4xl">Still growing, guide by guide.</h2>
+        <div class="mt-7 space-y-5 text-base font-light leading-relaxed text-neutral-600 md:text-lg">
+          <p>Outfit Edits is still growing, which feels right for a style site. My goal is to build it guide by guide into a resource you can return to when you are planning an outfit, solving a wardrobe problem, or simply looking for an idea worth trying.</p>
+          <p>If one guide helps you wear something you already own in a new way, rescue an outfit you thought was finished, or get dressed faster on a busy morning, then the site has done what I built it to do.</p>
+          <p>Start with the closet you have. Give it a little attention, and see what you can build.</p>
+          <p class="pt-2"><strong class="font-normal text-neutral-950">Hamza Hameed</strong><br /><span class="text-sm">Founder, Outfit Edits</span></p>
+        </div>
+      </div>
+    </section>
   </main>
   <Footer />
 </Layout>
