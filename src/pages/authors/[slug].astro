@@ -1,0 +1,224 @@
+// ─── Author page — src/pages/authors/[slug].astro ───────────────────────────
+// Renders /authors/<slug>/ (e.g. /authors/hamza-hameed/).
+// Built ONLY from patterns that already exist in the repo at HEAD
+// 78bf7131b5735b13db2cbdfbbfce1d7f2364bcb4:
+//   • getStaticPaths shape + post-listing markup: src/pages/category/[slug].astro
+//   • author bio card markup (name / bio / social icons):
+//     src/pages/posts/[slug].astro, "Meet the Author" sidebar card
+//   • data helpers: src/lib/keystatic-reader.ts (getAllAuthors, getAllPosts)
+// No new components, helpers, or fields. No avatar/photo reference —
+// src/content/authors/hamza-hameed.yaml has no avatar value.
+// ─────────────────────────────────────────────────────────────────────────────
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import { getAllAuthors, getAllPosts } from '../../lib/keystatic-reader';
+
+export async function getStaticPaths() {
+  const authors = await getAllAuthors();
+  // getAllPosts() already filters isDraft === false and sorts by
+  // publishedDate desc (newest first) — see src/lib/keystatic-reader.ts.
+  // post.entry.author is the author slug string (the posts schema defines
+  // author as a relationship to the authors collection; the post template
+  // passes it straight to getAuthorBySlug(entry.author)).
+  const posts = await getAllPosts();
+  return authors.map((author) => ({
+    params: { slug: author.slug },
+    props: { author, posts: posts.filter((post) => post.entry.author === author.slug) },
+  }));
+}
+
+const { author, posts = [] } = Astro.props;
+const { entry } = author;
+
+async function getPostImage(post: any) {
+  const content = (await post.entry.content()) as string;
+  const match = content?.match(/!\[.*?\]\((.*?)\)/);
+  return match?.[1]?.trim() || '/images/placeholder.jpg';
+}
+
+async function getPostDescription(post: any, length = 145) {
+  const content = (await post.entry.content()) as string;
+  const clean = (content || 'Explore contemporary style and curated fashion insights inside this editorial.')
+    .replace(/[#*_`~]/g, '')
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+    .replace(/^[-\s]*\n/gm, '')
+    .trim();
+  return clean.length > length ? `${clean.substring(0, length)}…` : clean;
+}
+
+const enrichedPosts = await Promise.all(posts.map(async (post: any) => ({
+  ...post,
+  image: await getPostImage(post),
+  excerpt: await getPostDescription(post),
+})));
+const featured = enrichedPosts[0];
+const stories = enrichedPosts.slice(1);
+const baseUrl = `/authors/${author.slug}`;
+// The bio is 207 characters; keep the meta description inside ~155 chars
+// the same way the category template passes its description verbatim.
+const seoDescription = entry.bio && entry.bio.length > 155
+  ? `${entry.bio.slice(0, 152)}…`
+  : entry.bio || `Stories by ${entry.name} on Outfit Edits`;
+const breadcrumb = [
+  { label: 'Home', href: '/' },
+  { label: entry.name, href: `${baseUrl}/` },
+];
+---
+
+<Layout
+  title={`${entry.name} — Outfit Edits`}
+  description={seoDescription}
+>
+  <Header currentPath={baseUrl} />
+
+  <main class="min-h-screen overflow-x-hidden bg-[#F8F6F2] px-4 pb-20 text-neutral-900 sm:px-6 lg:px-8">
+    <div class="mx-auto max-w-7xl">
+      <nav aria-label="Breadcrumb" class="flex flex-wrap gap-2 pt-7 text-[10px] uppercase tracking-[0.16em] text-neutral-400">
+        {breadcrumb.map((item, index) => (
+          <span class="flex items-center gap-2">
+            {index > 0 && <span aria-hidden="true">/</span>}
+            {index === breadcrumb.length - 1 ? <span class="text-neutral-950">{item.label}</span> : <a href={item.href} class="transition-colors hover:text-neutral-950">{item.label}</a>}
+          </span>
+        ))}
+      </nav>
+
+      {/* 👤 AUTHOR BIO CARD: the post template's "Meet the Author" card
+          (src/pages/posts/[slug].astro), centred as the page header instead
+          of a sidebar. The avatar <img> block is deliberately omitted: the
+          author file has no avatar value. The name is an <h1> here (the only
+          heading on the page); in the post template it is a <p> because the
+          article title is the <h1>. */}
+      <section class="mx-auto max-w-xl py-10 text-center md:py-14">
+        <div class="bg-white border border-neutral-200/30 shadow-sm/5 rounded-sm overflow-hidden">
+          <div class="p-6 text-center space-y-3">
+            <p class="text-[10px] font-sans font-bold uppercase tracking-[0.25em] text-[#bba15c]">Meet the Author</p>
+            <h1 class="font-serif text-xl font-light text-neutral-950">{entry.name}</h1>
+            {entry.bio && (
+              <p class="text-xs text-neutral-500 font-light leading-relaxed break-words">{entry.bio}</p>
+            )}
+            {entry.social && (entry.social.pinterest || entry.social.instagram || entry.social.twitter) && (
+              <div class="flex items-center justify-center gap-4 pt-2">
+                {entry.social.pinterest && (
+                  <a href={entry.social.pinterest} target="_blank" rel="noopener noreferrer" aria-label={`${entry.name} on Pinterest`} class="text-neutral-400 hover:text-[#bba15c] transition">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.372 0 12c0 5.084 3.163 9.426 7.627 11.174-.105-.949-.2-2.405.042-3.441.218-.937 1.407-5.965 1.407-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.992 3.993-.283 1.194.599 2.169 1.775 2.169 2.13 0 3.769-2.247 3.769-5.491 0-2.871-2.063-4.878-5.01-4.878-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738a.36.36 0 0 1 .083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.359-.631-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.179 23.774 10.551 24 12 24c6.627 0 12-5.373 12-12 0-6.628-5.373-12-12-12z"/></svg>
+                  </a>
+                )}
+                {entry.social.instagram && (
+                  <a href={entry.social.instagram} target="_blank" rel="noopener noreferrer" aria-label={`${entry.name} on Instagram`} class="text-neutral-400 hover:text-[#bba15c] transition">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+                  </a>
+                )}
+                {entry.social.twitter && (
+                  <a href={entry.social.twitter} target="_blank" rel="noopener noreferrer" aria-label={`${entry.name} on X`} class="text-neutral-400 hover:text-[#bba15c] transition">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                  </a>
+                )}
+              </div>
+            )}
+            {entry.social?.pinterest && (
+              <p class="pt-1">
+                <a href={entry.social.pinterest} target="_blank" rel="noopener noreferrer" class="text-[10px] uppercase tracking-[0.2em] text-neutral-700 transition-colors hover:text-[#bba15c]">Follow on Pinterest →</a>
+              </p>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {featured ? (
+        <section class="grid items-center gap-8 border-b border-neutral-200/70 py-9 md:py-14 lg:grid-cols-[1.12fr_0.88fr] lg:gap-14">
+          <a href={`/posts/${featured.slug}/`} class="group relative block aspect-[4/3] overflow-hidden bg-neutral-200 no-underline md:aspect-[16/10]">
+            <img src={featured.image} alt={featured.entry.title} loading="eager" fetchpriority="high" class="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" onerror="this.onerror=null; this.src='/images/placeholder.jpg';" />
+          </a>
+          <div class="max-w-xl">
+            <span class="mb-3 block text-[10px] font-bold uppercase tracking-[0.24em] text-[#bba15c]">Featured Story</span>
+            <h2 class="font-serif text-3xl font-light leading-tight text-neutral-950 md:text-5xl">{featured.entry.title}</h2>
+            <p class="mt-5 text-sm font-light leading-relaxed text-neutral-500">{featured.excerpt}</p>
+            <a href={`/posts/${featured.slug}/`} class="mt-6 inline-block border-b border-neutral-950/30 pb-1 text-[10px] font-medium uppercase tracking-[0.2em] text-neutral-950 transition-colors hover:border-[#bba15c] hover:text-[#bba15c]">Read Story →</a>
+          </div>
+        </section>
+      ) : (
+        <section class="border-b border-neutral-200/70 py-20 text-center text-sm font-light text-neutral-500">No stories by this author yet.</section>
+      )}
+
+      {stories.length > 0 && (
+        <section class="pt-10">
+          <div class="mb-7 flex items-end justify-between border-b border-neutral-200/70 pb-3">
+            <h2 class="font-serif text-2xl font-light text-neutral-950">Latest Stories</h2>
+            <span class="text-[10px] uppercase tracking-[0.16em] text-neutral-400">{posts.length} {posts.length === 1 ? 'Story' : 'Stories'}</span>
+          </div>
+
+          <div id="author-story-grid" class="grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
+            {stories.map((post: any, index: number) => (
+              <article data-story-index={index} class="group flex min-w-0 flex-col overflow-hidden border border-neutral-200/60 bg-white p-4 transition-shadow duration-300 hover:shadow-sm">
+                <a href={`/posts/${post.slug}/`} class="relative block aspect-[4/5] overflow-hidden bg-neutral-100 no-underline">
+                  <img src={post.image} alt={post.entry.title} loading="lazy" decoding="async" class="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" onerror="this.onerror=null; this.src='/images/placeholder.jpg';" />
+                </a>
+                <div class="flex flex-1 flex-col pt-5">
+                  {post.entry.categories?.length > 0 && <span class="mb-2 block text-[10px] font-bold uppercase tracking-[0.2em] text-[#bba15c]">{post.entry.categories[0].replace(/-/g, ' ')}</span>}
+                  <a href={`/posts/${post.slug}/`} class="no-underline"><h3 class="line-clamp-2 min-h-[3.2rem] font-serif text-xl font-light leading-tight text-neutral-950 transition-colors group-hover:text-neutral-600">{post.entry.title}</h3></a>
+                  <p class="mt-3 line-clamp-2 text-xs font-light leading-relaxed text-neutral-500">{post.excerpt}</p>
+                  <div class="mt-auto flex items-center justify-between border-t border-neutral-100 pt-4">
+                    <time datetime={post.entry.publishedDate} class="text-[10px] uppercase tracking-[0.14em] text-neutral-400">{new Date(post.entry.publishedDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</time>
+                    <a href={`/posts/${post.slug}/`} class="text-[10px] uppercase tracking-[0.14em] text-neutral-700 transition-colors hover:text-[#bba15c]">Read Story →</a>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+
+          <div id="author-pagination" class="mt-14 flex flex-wrap items-center justify-center gap-2 border-t border-neutral-200/60 pt-8 text-[10px] uppercase tracking-[0.16em]"></div>
+        </section>
+      )}
+    </div>
+  </main>
+
+  <Footer />
+</Layout>
+
+<script>
+  const pageSize = 12;
+  const grid = document.querySelector<HTMLElement>('#author-story-grid');
+  const pagination = document.querySelector<HTMLElement>('#author-pagination');
+  const cards = grid ? Array.from(grid.querySelectorAll<HTMLElement>('[data-story-index]')) : [];
+  const totalPages = Math.max(1, Math.ceil(cards.length / pageSize));
+  const params = new URLSearchParams(window.location.search);
+  let currentPage = Math.min(Math.max(Number(params.get('page') || '1'), 1), totalPages);
+
+  function renderPage(page: number) {
+    currentPage = page;
+    cards.forEach((card, index) => {
+      card.hidden = index < (page - 1) * pageSize || index >= page * pageSize;
+    });
+    if (!pagination || totalPages <= 1) return;
+    pagination.innerHTML = '';
+    const addLink = (label: string, target: number, disabled = false) => {
+      const element = document.createElement(disabled ? 'span' : 'a');
+      element.textContent = label;
+      element.className = disabled ? 'px-3 py-2 text-neutral-300' : 'cursor-pointer px-3 py-2 text-neutral-500 transition-colors hover:text-neutral-950';
+      if (!disabled) {
+        element.setAttribute('href', `${window.location.pathname}?page=${target}`);
+        element.addEventListener('click', (event) => { event.preventDefault(); renderPage(target); history.pushState({}, '', `${window.location.pathname}?page=${target}`); window.scrollTo({ top: 0, behavior: 'smooth' }); });
+      }
+      pagination.appendChild(element);
+    };
+    addLink('Previous', page - 1, page === 1);
+    for (let number = 1; number <= totalPages; number += 1) {
+      const element = document.createElement(number === page ? 'span' : 'a');
+      element.textContent = String(number);
+      element.className = number === page ? 'min-w-8 border border-neutral-950 px-3 py-2 text-center text-neutral-950' : 'min-w-8 cursor-pointer border border-transparent px-3 py-2 text-center text-neutral-500 hover:border-neutral-200';
+      if (number !== page) element.addEventListener('click', () => { renderPage(number); history.pushState({}, '', `${window.location.pathname}?page=${number}`); window.scrollTo({ top: 0, behavior: 'smooth' }); });
+      pagination.appendChild(element);
+    }
+    addLink('Next', page + 1, page === totalPages);
+  }
+
+  renderPage(currentPage);
+  window.addEventListener('popstate', () => renderPage(Number(new URLSearchParams(window.location.search).get('page') || '1')));
+</script>
+
+<style>
+  [data-story-index][hidden] { display: none; }
+</style>
