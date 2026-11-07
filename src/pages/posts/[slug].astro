@@ -493,6 +493,9 @@ const faqSchema = extractFaqSchema(rawContent ?? '');
             />
           )}
           <div class="p-6 text-center space-y-3">
+    {author.avatar && (
+      <img src={`/images/authors/${author.avatar}`} alt={author.name} class="w-20 h-20 rounded-full object-cover mx-auto" loading="lazy" />
+    )}
             <p class="text-[10px] font-sans font-bold uppercase tracking-[0.25em] text-[#bba15c]">Meet the Author</p>
             <p class="font-serif text-xl font-light text-neutral-950">{author.name}</p>
             {author.bio && (
