@@ -481,17 +481,6 @@ const faqSchema = extractFaqSchema(rawContent ?? '');
     {author && (
       <aside class="mt-10 lg:mt-0 lg:w-[300px] lg:shrink-0">
         <div class="lg:sticky lg:top-28 bg-white border border-neutral-200/30 shadow-sm/5 rounded-sm overflow-hidden max-w-[420px] mx-auto lg:max-w-none lg:mx-0">
-          {author.avatar && (
-            <img
-              src={`/images/authors/${author.avatar}`}
-              alt={author.name}
-              width="400"
-              height="400"
-              loading="lazy"
-              decoding="async"
-              class="w-full aspect-square object-cover block select-none pointer-events-none"
-            />
-          )}
           <div class="p-6 text-center space-y-3">
     {author.avatar && (
       <img src={`/images/authors/${author.avatar}`} alt={author.name} class="w-20 h-20 rounded-full object-cover mx-auto" loading="lazy" />
