@@ -95,6 +95,9 @@ const breadcrumb = [
       <section class="mx-auto max-w-xl py-10 text-center md:py-14">
         <div class="bg-white border border-neutral-200/30 shadow-sm/5 rounded-sm overflow-hidden">
           <div class="p-6 text-center space-y-3">
+    {entry.avatar && (
+      <img src={`/images/authors/${entry.avatar}`} alt={entry.name} class="w-20 h-20 rounded-full object-cover mx-auto" loading="lazy" />
+    )}
             <p class="text-[10px] font-sans font-bold uppercase tracking-[0.25em] text-[#bba15c]">Meet the Author</p>
             <h1 class="font-serif text-xl font-light text-neutral-950">{entry.name}</h1>
             {entry.bio && (
