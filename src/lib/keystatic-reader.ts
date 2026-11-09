@@ -181,6 +181,11 @@ export async function getSiteSettings() {
       showDmcaPage:                s.showDmcaPage               ?? true,
       showEditorialGuidelinesPage: s.showEditorialGuidelinesPage ?? true,
       showTermsOfServicePage:      s.showTermsOfServicePage      ?? true,
+      showInstagram:             s.showInstagram             ?? true,
+      showTwitter:               s.showTwitter               ?? true,
+      showPinterest:             s.showPinterest             ?? true,
+      showFacebook:              s.showFacebook              ?? true,
+      
     };
   } catch {
     return defaultSettings();
@@ -214,5 +219,9 @@ function defaultSettings() {
     showDmcaPage:                true,
     showEditorialGuidelinesPage: true,
     showTermsOfServicePage:      true,
+    showInstagram:             true,
+    showTwitter:               true,
+    showPinterest:             true,
+    showFacebook:              true,
   };
 }
