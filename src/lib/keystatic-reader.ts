@@ -185,7 +185,6 @@ export async function getSiteSettings() {
       showTwitter:               s.showTwitter               ?? true,
       showPinterest:             s.showPinterest             ?? true,
       showFacebook:              s.showFacebook              ?? true,
-      
     };
   } catch {
     return defaultSettings();
