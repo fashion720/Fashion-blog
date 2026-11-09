@@ -17,7 +17,8 @@ showTermsOfServicePage: true
 showRSSFeed: true
 showInstagram: false
 showTwitter: false
-showPinterest: false
+showPinterest: true
 showFacebook: false
+pinterestUrl: https://www.pinterest.com/outfiteditssocial/
 adsenseEnabled: false
 ga4Id: G-JBQVBDQ27Z
