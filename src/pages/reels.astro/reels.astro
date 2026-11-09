@@ -1,0 +1,47 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+
+const pageTitle = 'Instagram Reels | Outfit Edits';
+const pageDescription = 'Every Instagram Reel from Outfit Edits, with the full style guide linked. Tap any look to read the guide.';
+
+// Add each new Reel at the TOP of this list (newest first).
+const reels = [
+  {
+    title: '15 Bleach Shirt Designs to DIY This Weekend',
+    href: '/posts/15-bleach-shirt-designs-to-diy-this-weekend/',
+    image: '/images/content/15-bleach-shirt-designs-to-diy-this-weekend/Bleached%20Butterfly%20Symmetry%20Tee.webp',
+    blurb: 'Marble, constellation, botanical and more — the full step-by-step guide.',
+    date: '9 November 2026',
+  },
+];
+---
+
+<Layout title={pageTitle} description={pageDescription}>
+  <Header currentPath="/reels" />
+  <main class="min-h-screen overflow-x-hidden bg-[#F8F6F2] text-neutral-900">
+    <section class="mx-auto max-w-3xl px-4 py-12 sm:px-6 md:py-16">
+      <p class="mb-4 text-[10px] font-bold uppercase tracking-[0.35em] text-[#bba15c]">Instagram Reels</p>
+      <h1 class="font-serif text-4xl font-light leading-[1.05] text-neutral-950 sm:text-5xl">Shop the Reels</h1>
+      <p class="mt-5 max-w-xl text-base font-light leading-relaxed text-neutral-600 md:text-lg">Every Reel we post on Instagram, with the full guide linked below. Tap any look to read the step-by-step guide.</p>
+    </section>
+
+    <section class="mx-auto max-w-3xl px-4 pb-16 sm:px-6 md:pb-24">
+      <div class="space-y-4">
+        {reels.map((reel) => (
+          <a href={reel.href} class="flex items-center gap-4 bg-white p-3 shadow-sm">
+            <img src={reel.image} alt={reel.title} class="h-24 w-24 shrink-0 object-cover" loading="lazy" onerror="this.onerror=null; this.src='/images/placeholder.jpg';" />
+            <div class="min-w-0">
+              <p class="text-[10px] font-bold uppercase tracking-[0.3em] text-[#bba15c]">{reel.date}</p>
+              <h2 class="mt-1 font-serif text-lg font-light leading-snug text-neutral-950">{reel.title}</h2>
+              <p class="mt-1 text-sm font-light leading-relaxed text-neutral-600">{reel.blurb}</p>
+            </div>
+          </a>
+        ))}
+      </div>
+      <p class="mt-10 text-center text-sm font-light text-neutral-600">New Reels every day on <a class="font-bold text-neutral-950 underline" href="https://www.instagram.com/outfitedits.co/">@outfitedits.co</a>.</p>
+    </section>
+  </main>
+  <Footer />
+</Layout>
