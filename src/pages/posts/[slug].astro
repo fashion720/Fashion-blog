@@ -1000,6 +1000,14 @@ const faqSchema = extractFaqSchema(rawContent ?? '');
     line-height: 1.8 !important;
   }
 
+  /* ── Task-list checklists: checkbox only, no bullet dot ─────────────── */
+  .fashion-prose-content li:has(> input[type="checkbox"]) {
+    list-style: none !important;
+  }
+  .fashion-prose-content li:has(> input[type="checkbox"])::marker {
+    content: none !important;
+  }
+
   /* ── Numbered idea/outfit sections ──────────────────────────────────────
      Headings tagged with data-idx (same ordinal already shown in the TOC)
      get an elegant number treatment — a large outline numeral beside the
