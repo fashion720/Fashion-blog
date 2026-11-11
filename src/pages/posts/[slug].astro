@@ -881,7 +881,13 @@ const faqSchema = extractFaqSchema(rawContent ?? '');
         const text = (node.textContent || '').replace(/\u00a0/g, ' ').trim();
         return /^Q\d*\s*[:.]/i.test(text) || /\?$/.test(text);
       };
-      const isAnswerNode = (node) => node && ['P', 'UL', 'OL', 'BLOCKQUOTE', 'LI'].includes(node.tagName) && !isQuestionNode(node);
+      const isAnswerNode = (node) => {
+        if (!node || !['P', 'UL', 'OL', 'BLOCKQUOTE', 'LI'].includes(node.tagName)) return false;
+        const text = (node.textContent || '').replace(/\u00a0/g, ' ').trim();
+        // An answer may itself end with a rhetorical question ("...for four hours?").
+        // Only a Q-labelled paragraph counts as a question here, never a plain answer.
+        return !/^Q\d*\s*[:.]/i.test(text);
+      };
       const questionText = (node) => {
         const text = (node.textContent || '').replace(/\u00a0/g, ' ').trim();
         return text.replace(/^Q\d*\s*[:.]\s*/i, '').trim();
