@@ -18,7 +18,8 @@ export default defineConfig({
     sitemap({
       // Search results and the CMS are not public landing pages.
       // N1 + N2 are noindexed (thin/off-topic) — keep them out of the sitemap too.
-      filter: (page) => !page.includes('/search') && !page.includes('/keystatic') && !page.includes('/posts/7-aesthetic-pencil-cases-that-aren-t-boring/') && !page.includes('/posts/6-ways-to-style-platform-sneakers/'),
+      // N3 + N4 are noindexed, so keep them out of the sitemap too.
+      filter: (page) => !page.includes('/search') && !page.includes('/keystatic') && !page.includes('/posts/7-aesthetic-pencil-cases-that-aren-t-boring/') && !page.includes('/posts/6-ways-to-style-platform-sneakers/') && !page.includes('/posts/12-back-pocket-jean-designs-for-senior-women-s-style/') && !page.includes('/posts/8-heart-tie-dye-shirt-ideas-for-summer-diy-projects/'),
     }),
   ],
 
