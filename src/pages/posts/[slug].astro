@@ -411,7 +411,7 @@ const faqSchema = extractFaqSchema(rawContent ?? '');
         </h1>
 
         <div class="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[10px] uppercase tracking-[0.2em] text-neutral-400 font-sans pt-2">
-          {author && <span class="font-bold text-neutral-800 tracking-widest">{author.name}</span>}
+          {author && <a href={`/authors/${entry.author}/`} class="font-bold text-neutral-800 tracking-widest hover:text-[#bba15c] transition">By {author.name}</a>}
           {author && <span class="text-neutral-300">•</span>}
           <time datetime={entry.publishedDate}>{formattedDate}</time>
           {formattedUpdatedDate && (
