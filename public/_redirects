@@ -1,3 +1,5 @@
+# Mediavine ads.txt — point /ads.txt at Mediavine's hosted file (kept up to date by Mediavine).
+/ads.txt https://adstxt.journeymv.com/sites/60e02a7d-8105-4744-bb54-60b495b2e933/ads.txt 301
 # Merged-post redirects (AdSense cleanup, Oct 2026) — specific post rules first, then legacy rules.
 /posts/15-chic-old-money-fall-outfits-to-inspire-your-next-look/ /posts/17-outfits-to-try-for-old-money-outfits-for-women-timeless-aesthetic/ 301
 /posts/15-chic-old-money-fall-outfits-to-inspire-your-next-look /posts/17-outfits-to-try-for-old-money-outfits-for-women-timeless-aesthetic/ 301
