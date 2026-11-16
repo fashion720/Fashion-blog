@@ -7,18 +7,8 @@
 const GA4_ID = import.meta.env.PUBLIC_GA4_ID;
 const PINTEREST_TAG = import.meta.env.PUBLIC_PINTEREST_TAG;
 const CLOUDFLARE_ANALYTICS = import.meta.env.PUBLIC_CLOUDFLARE_ANALYTICS;
-const ADSENSE_CLIENT = import.meta.env.PUBLIC_ADSENSE_CLIENT;
-const ADSENSE_ENABLED = import.meta.env.PUBLIC_ADSENSE_ENABLED === 'true';
 ---
 
-<!-- Google AdSense loader (loaded ONCE here; AdSlot.astro only pushes its own slots) -->
-{ADSENSE_ENABLED && ADSENSE_CLIENT && (
-  <script
-    async
-    src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`}
-    crossorigin="anonymous"
-  ></script>
-)}
 
 <!-- Google Analytics 4 -->
 {GA4_ID && (
