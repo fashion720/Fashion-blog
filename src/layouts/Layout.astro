@@ -80,6 +80,12 @@ const schemaData = article
         publisher: {
           '@type': 'Organization',
           name: siteName,
+          url: Astro.site?.toString(),
+          logo: {
+            '@type': 'ImageObject',
+            url: new URL('/favicon.svg', Astro.site).toString(),
+          },
+          sameAs: ['https://www.pinterest.com/outfiteditssocial'],
         },
       }
     : {
@@ -96,6 +102,12 @@ const schemaData = article
         publisher: {
           '@type': 'Organization',
           name: siteName,
+          url: Astro.site?.toString(),
+          logo: {
+            '@type': 'ImageObject',
+            url: new URL('/favicon.svg', Astro.site).toString(),
+          },
+          sameAs: ['https://www.pinterest.com/outfiteditssocial'],
         },
       };
 ---
