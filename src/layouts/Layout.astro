@@ -110,17 +110,26 @@ const schemaData = article
           sameAs: ['https://www.pinterest.com/outfiteditssocial'],
         },
       };
+
+// The publisher as a standalone entity with a stable @id, emitted on every
+// page alongside the page schema above (audit fix, 2026-11-27).
+const organizationSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  '@id': `${Astro.site?.toString()}#organization`,
+  name: siteName,
+  url: Astro.site?.toString(),
+  logo: {
+    '@type': 'ImageObject',
+    url: new URL('/favicon.svg', Astro.site).toString(),
+  },
+  sameAs: ['https://www.pinterest.com/outfiteditssocial'],
+};
 ---
 
 <!doctype html>
 <html lang="en">
   <head>
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="generator" content={Astro.generator} />
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="generator" content={Astro.generator} />
@@ -210,6 +219,7 @@ const schemaData = article
 
     <!-- Schema.org structured data -->
     <script type="application/ld+json" set:html={JSON.stringify(schemaData)} />
+    <script type="application/ld+json" set:html={JSON.stringify(organizationSchema)} />
 
     
     <!-- Google Analytics 4 -->
