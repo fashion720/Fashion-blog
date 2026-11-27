@@ -53,6 +53,11 @@ type P = any;
 
 function buildGraph(posts: P[]) {
   const n = posts.length;
+  // Noindexed posts (merged-away content kept readable) still get their own
+  // outbound "You Might Also Like" block, but nothing may link TO them —
+  // pointing crawl attention at pages we ask Google to ignore wastes it
+  // (audit fix, 2026-11-27).
+  const eligible = posts.map((p) => !p.entry.isNoindex);
 
   // 1) weighted term vectors
   const vecs: Map<string, number>[] = posts.map((p) => {
@@ -111,7 +116,7 @@ function buildGraph(posts: P[]) {
   pairs.sort((a, b) => b[2] - a[2] || posts[a[0]].slug.localeCompare(posts[b[0]].slug) || posts[a[1]].slug.localeCompare(posts[b[1]].slug));
 
   for (const [i, j] of pairs) {
-    if (out[i].length < OUTBOUND && inc[j] < MAX_INBOUND && !has(i, j)) {
+    if (out[i].length < OUTBOUND && inc[j] < MAX_INBOUND && !has(i, j) && eligible[j]) {
       out[i].push({ to: j, forced: false });
       inc[j]++;
     }
@@ -119,7 +124,7 @@ function buildGraph(posts: P[]) {
   // anyone still short of OUTBOUND links: fill with their best remaining matches
   for (let i = 0; i < n; i++) {
     if (out[i].length >= OUTBOUND) continue;
-    const cand = posts.map((_, j) => j).filter((j) => j !== i && !has(i, j)).sort((a, b) => sim[i][b] - sim[i][a]);
+    const cand = posts.map((_, j) => j).filter((j) => j !== i && !has(i, j) && eligible[j]).sort((a, b) => sim[i][b] - sim[i][a]);
     for (const j of cand) {
       if (out[i].length >= OUTBOUND) break;
       out[i].push({ to: j, forced: false });
@@ -128,7 +133,7 @@ function buildGraph(posts: P[]) {
   }
 
   // 5) floor pass: nobody may be left (almost) orphaned
-  const needy = posts.map((_, j) => j).filter((j) => inc[j] < MIN_INBOUND).sort((a, b) => inc[a] - inc[b]);
+  const needy = posts.map((_, j) => j).filter((j) => eligible[j] && inc[j] < MIN_INBOUND).sort((a, b) => inc[a] - inc[b]);
   for (const j of needy) {
     const cand = posts
       .map((_, i) => i)
